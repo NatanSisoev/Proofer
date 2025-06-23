@@ -34,6 +34,7 @@ const EDGE_LABEL: Record<string, string> = {
   generalizes: "generalizes",
   equivalent_to: "equivalent to",
   instance_of: "instance of",
+  proven_by: "proven by",
   contradicts: "contradicts",
   related: "related to",
 };
@@ -42,6 +43,7 @@ const INV_LABEL: Record<string, string> = {
   generalizes: "specializes",
   equivalent_to: "equivalent to",
   instance_of: "has instance",
+  proven_by: "proves",
   contradicts: "contradicted by",
   related: "related to",
 };
