@@ -8,8 +8,9 @@ const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY || "";
 export const PROVIDER: "gemini" | "anthropic" | "none" = GEMINI_KEY ? "gemini" : ANTHROPIC_KEY ? "anthropic" : "none";
 export const HAS_KEY = PROVIDER !== "none";
 
-// Models. Gemini 2.0 Flash is on the free tier and solid at math reasoning.
-const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-2.0-flash";
+// Models. Gemini 2.5 Flash has free-tier quota (2.0-flash is limit:0 in some
+// regions, e.g. the EU) and is stronger at math reasoning.
+const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
 const ANTHROPIC_PROBLEM_MODEL = "claude-opus-4-8";
 const ANTHROPIC_GRADE_MODEL = "claude-opus-4-8";
 
@@ -165,7 +166,16 @@ async function geminiCall(system: string, userText: string, schema: unknown, tem
     body: JSON.stringify({
       systemInstruction: { parts: [{ text: system }] },
       contents: [{ role: "user", parts: [{ text: userText }] }],
-      generationConfig: { temperature, maxOutputTokens: 8192, responseMimeType: "application/json", responseSchema: schema },
+      generationConfig: {
+        temperature,
+        maxOutputTokens: 8192,
+        responseMimeType: "application/json",
+        responseSchema: schema,
+        // Disable 2.5's dynamic "thinking" for these calls: it would eat into the
+        // output budget and can truncate the structured JSON. Ignored by models
+        // that don't support thinking.
+        thinkingConfig: { thinkingBudget: 0 },
+      },
     }),
   });
   const data = await res.json().catch(() => ({}) as any);
