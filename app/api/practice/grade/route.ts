@@ -1,0 +1,52 @@
+import { NextRequest, NextResponse } from "next/server";
+import { db, type NodeRow } from "@/lib/db";
+import { getNode } from "@/lib/queries";
+import { applyAttempt, getMasteryP, recordAttempt } from "@/lib/mastery";
+import { gradeAnswer, HAS_KEY } from "@/lib/llm";
+
+export const dynamic = "force-dynamic";
+export const maxDuration = 120;
+
+export async function POST(req: NextRequest) {
+  const { problemId, answer } = await req.json();
+  const prob = db().prepare("SELECT * FROM problems WHERE id = ?").get(problemId) as any;
+  if (!prob) return NextResponse.json({ error: "unknown problem" }, { status: 404 });
+
+  const node = getNode(prob.node_id) as NodeRow | undefined;
+  if (!node) return NextResponse.json({ error: "unknown node" }, { status: 404 });
+
+  const prereqs: string[] = JSON.parse(prob.prereqs || "[]");
+  const rubric: string[] = JSON.parse(prob.rubric || "[]");
+
+  const grade = await gradeAnswer({
+    node,
+    problem: prob.problem,
+    idealSolution: prob.ideal_solution || "",
+    rubric,
+    answer: answer || "",
+    prereqs,
+  });
+
+  const masteryBefore = getMasteryP(node.id);
+  const blamed = grade.blamed_prerequisite && prereqs.includes(grade.blamed_prerequisite) ? grade.blamed_prerequisite : null;
+
+  applyAttempt(node.id, grade.mastery_evidence, blamed, prereqs);
+  recordAttempt({
+    node_id: node.id,
+    kind: prob.kind,
+    problem: prob.problem,
+    answer: answer || "",
+    verdict: grade.verdict,
+    evidence: grade.mastery_evidence,
+    gap: grade.gap,
+    blamed_prereq: blamed || "",
+    mode: HAS_KEY ? "ai" : "demo",
+  });
+
+  return NextResponse.json({
+    ...grade,
+    blamed_prerequisite: blamed || "",
+    masteryBefore,
+    masteryAfter: getMasteryP(node.id),
+  });
+}

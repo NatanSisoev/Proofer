@@ -4,6 +4,7 @@ import Markdown from "@/app/components/Markdown";
 import EgoGraph from "@/app/components/EgoGraph";
 import KnownButton from "@/app/components/KnownButton";
 import { getNode, edgesOf, isKnown, readiness, prerequisites } from "@/lib/queries";
+import { getMasteryP } from "@/lib/mastery";
 import type { EdgeRow } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
@@ -52,6 +53,7 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
 
   const { outgoing, incoming } = edgesOf(id);
   const known = isKnown(id);
+  const mastery = getMasteryP(id);
   const ready = readiness(id);
   const { depth } = prerequisites(id);
 
@@ -92,8 +94,16 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
               {node.type && <span className={`type-badge t-${node.type}`}>{node.type}</span>}
               <h1 style={{ marginTop: 8 }}>{node.title}</h1>
               {node.overview && <p className="muted" style={{ marginTop: -2, maxWidth: 640 }}>{node.overview}</p>}
+              <div className="mastery-chip" style={{ marginTop: 6 }}>
+                <span className="muted small">mastery</span>
+                <div className="bar"><span style={{ width: `${Math.round(mastery * 100)}%` }} /></div>
+                <span className="small">{Math.round(mastery * 100)}%</span>
+              </div>
             </div>
-            <KnownButton slug={id} initial={known} />
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "flex-end" }}>
+              <Link href={`/learn?node=${encodeURIComponent(id)}`} className="cta">Practice this →</Link>
+              <KnownButton slug={id} initial={known} />
+            </div>
           </div>
 
           {ready.total > 0 && (

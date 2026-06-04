@@ -38,6 +38,51 @@ CREATE INDEX IF NOT EXISTS idx_nodes_type ON nodes(type);
 
 -- Single-user "what I know" state. This is the moat ChatGPT can't have:
 -- personalized readiness + frontier are computed against this set.
+-- (Kept for back-compat; mastery below is now the source of truth.)
 CREATE TABLE IF NOT EXISTS user_knows (
   node_id  TEXT PRIMARY KEY
+);
+
+-- MASTERY: the real signal. Not "I clicked known" — an INFERRED probability that
+-- you understand each concept, updated by Bayesian Knowledge Tracing from your
+-- performance on generated problems. A node counts as "known" when p >= 0.8.
+CREATE TABLE IF NOT EXISTS mastery (
+  node_id    TEXT PRIMARY KEY,
+  p          REAL NOT NULL DEFAULT 0.15,  -- P(you have mastered this)
+  attempts   INTEGER NOT NULL DEFAULT 0,
+  last_seen  TEXT,                         -- ISO date of last practice
+  half_life  REAL NOT NULL DEFAULT 1.0     -- FSRS-style retention horizon (days)
+);
+
+-- ATTEMPTS: every generated problem + your free-form answer + the grader's verdict
+-- and the prerequisite it blamed. This log IS the long-term dataset — the record of
+-- which misconception precedes which error, impossible for a stateless chatbot to own.
+CREATE TABLE IF NOT EXISTS attempts (
+  id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  node_id       TEXT NOT NULL,
+  kind          TEXT,            -- compute | prove | counterexample | explain
+  problem       TEXT NOT NULL,
+  answer        TEXT,
+  verdict       TEXT,            -- correct | partial | incorrect
+  evidence      REAL,            -- 0..1 mastery evidence from the grader
+  gap           TEXT,            -- the specific identified misunderstanding
+  blamed_prereq TEXT,            -- prerequisite the error was attributed to
+  created_at    TEXT,
+  mode          TEXT             -- 'ai' (real grading) | 'demo' (no API key)
+);
+
+CREATE INDEX IF NOT EXISTS idx_attempts_node ON attempts(node_id);
+
+-- Generated problems live here so the ideal solution / rubric stay server-side
+-- (the student grades against a problemId, never sees the answer key).
+CREATE TABLE IF NOT EXISTS problems (
+  id             INTEGER PRIMARY KEY AUTOINCREMENT,
+  node_id        TEXT NOT NULL,
+  kind           TEXT,
+  problem        TEXT NOT NULL,
+  ideal_solution TEXT,
+  rubric         TEXT,   -- JSON array
+  prereqs        TEXT,   -- JSON array of prerequisite node ids
+  mode           TEXT,   -- ai | demo
+  created_at     TEXT
 );

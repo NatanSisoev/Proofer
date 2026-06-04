@@ -12,14 +12,17 @@ export default function Home() {
     <div className="wrap">
       <header className="top">
         <h1>Proofer</h1>
-        <span className="tag">a typed knowledge graph of mathematics · imported from your vault</span>
+        <span className="tag">a tutor that models your understanding of mathematics</span>
+        <span style={{ marginLeft: "auto" }}>
+          <Link href="/learn" className="cta">Start practicing →</Link>
+        </span>
       </header>
 
       <div className="stat-row">
         <div className="stat"><div className="n">{s.real}</div><div className="l">concepts</div></div>
-        <div className="stat"><div className="n">{s.edges}</div><div className="l">relationships</div></div>
         <div className="stat"><div className="n">{s.dependsOn}</div><div className="l">prerequisites</div></div>
-        <div className="stat"><div className="n">{s.known}</div><div className="l">you know</div></div>
+        <div className="stat"><div className="n">{s.known}</div><div className="l">mastered</div></div>
+        <div className="stat"><div className="n">{s.practiced}</div><div className="l">attempts</div></div>
         <div className="stat"><div className="n">{s.ghost}</div><div className="l">gaps</div></div>
       </div>
 
@@ -41,7 +44,10 @@ export default function Home() {
                 <Link href={`/node/${encodeURIComponent(n.id)}`}>{n.title}</Link>
                 {n.area && <span className="meta"> · {n.area}</span>}
               </div>
-              {n.unlocks > 0 && <span className="pill unlock">unlocks {n.unlocks}</span>}
+              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                {n.unlocks > 0 && <span className="pill unlock">unlocks {n.unlocks}</span>}
+                <Link href={`/learn?node=${encodeURIComponent(n.id)}`} className="pill" style={{ color: "var(--accent)", borderColor: "var(--accent-soft)" }}>practice →</Link>
+              </div>
             </div>
           ))}
         </div>

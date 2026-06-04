@@ -1,4 +1,5 @@
-import { db, type NodeRow, type EdgeRow } from "./db";
+import { db, MASTERED_SUBQUERY, MASTERY_THRESHOLD, type NodeRow, type EdgeRow } from "./db";
+import { getMasteryP, setKnown as masterySetKnown } from "./mastery";
 
 export function getNode(id: string): NodeRow | undefined {
   return db().prepare("SELECT * FROM nodes WHERE id = ?").get(id) as NodeRow | undefined;
@@ -15,12 +16,11 @@ export function edgesOf(id: string): { outgoing: EdgeRow[]; incoming: EdgeRow[] 
 }
 
 export function isKnown(id: string): boolean {
-  return !!db().prepare("SELECT 1 FROM user_knows WHERE node_id = ?").get(id);
+  return getMasteryP(id) >= MASTERY_THRESHOLD;
 }
 
 export function setKnown(id: string, known: boolean) {
-  if (known) db().prepare("INSERT OR IGNORE INTO user_knows(node_id) VALUES (?)").run(id);
-  else db().prepare("DELETE FROM user_knows WHERE node_id = ?").run(id);
+  masterySetKnown(id, known);
 }
 
 /**
@@ -67,7 +67,7 @@ export function readiness(id: string): { score: number; known: number; total: nu
   const real = closure.filter((n) => n.exists_ === 1);
   if (real.length === 0) return { score: 1, known: 0, total: 0, missing: [] };
   const knownSet = new Set(
-    (db().prepare("SELECT node_id FROM user_knows").all() as { node_id: string }[]).map((r) => r.node_id)
+    (db().prepare(MASTERED_SUBQUERY).all() as { node_id: string }[]).map((r) => r.node_id)
   );
   const missing = real.filter((n) => !knownSet.has(n.id));
   const known = real.length - missing.length;
@@ -86,12 +86,12 @@ export function frontier(limit = 40): (NodeRow & { unlocks: number })[] {
               (SELECT COUNT(*) FROM edges e2 WHERE e2.dst = n.id AND e2.type='depends_on') AS unlocks
          FROM nodes n
         WHERE n.exists_ = 1
-          AND n.id NOT IN (SELECT node_id FROM user_knows)
+          AND n.id NOT IN (${MASTERED_SUBQUERY})
           AND NOT EXISTS (
             SELECT 1 FROM edges e
              WHERE e.src = n.id AND e.type = 'depends_on'
                AND e.dst <> n.id
-               AND e.dst NOT IN (SELECT node_id FROM user_knows)
+               AND e.dst NOT IN (${MASTERED_SUBQUERY})
                AND e.dst IN (SELECT id FROM nodes WHERE exists_ = 1)
           )
         ORDER BY unlocks DESC, n.title ASC
@@ -126,7 +126,7 @@ export function egoGraph(id: string, depth = 1) {
     )
     .all(...ids, ...ids) as Pick<EdgeRow, "src" | "dst" | "type" | "confidence">[];
   const knownSet = new Set(
-    (db().prepare("SELECT node_id FROM user_knows").all() as { node_id: string }[]).map((r) => r.node_id)
+    (db().prepare(MASTERED_SUBQUERY).all() as { node_id: string }[]).map((r) => r.node_id)
   );
   return {
     nodes: nodes.map((n) => ({ ...n, known: knownSet.has(n.id) ? 1 : 0 })),
@@ -155,7 +155,8 @@ export function stats() {
     ghost: c("SELECT COUNT(*) c FROM nodes WHERE exists_=0"),
     edges: c("SELECT COUNT(*) c FROM edges"),
     dependsOn: c("SELECT COUNT(*) c FROM edges WHERE type='depends_on'"),
-    known: c("SELECT COUNT(*) c FROM user_knows"),
+    known: c(`SELECT COUNT(*) c FROM (${MASTERED_SUBQUERY})`),
+    practiced: c("SELECT COUNT(*) c FROM attempts"),
     areas: d.prepare("SELECT area, COUNT(*) c FROM nodes WHERE exists_=1 AND area IS NOT NULL GROUP BY area ORDER BY c DESC").all() as { area: string; c: number }[],
   };
 }

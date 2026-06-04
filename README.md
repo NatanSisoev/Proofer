@@ -1,11 +1,14 @@
 # Proofer
 
-A **typed knowledge graph of mathematics**, bootstrapped from an existing Obsidian vault.
+**An AI tutor that models your understanding of mathematics**, built on a typed
+knowledge graph bootstrapped from an existing Obsidian vault. See [VISION.md](VISION.md)
+for the strategy and the moat.
 
-Mathematics is not a pile of notes — it's concepts joined by *typed* relationships
-(`depends_on`, `generalizes`, `equivalent_to`, …). Proofer makes that graph explicit
-and navigable, and adds the one thing a chatbot structurally cannot: **personalized
-state** — what *you* know — so it can compute readiness and show your learning frontier.
+The graph is the skeleton; the product is the tutor living on it. Proofer infers your
+mastery of each concept from your performance on generated problems (not a "known"
+button), traces a wrong answer to the specific *prerequisite* you're missing, and grades
+your free-form proofs/explanations — the things a chatbot structurally cannot do because
+it has no persistent model of *you*.
 
 ## What's here (MVP vertical slice)
 
@@ -20,7 +23,15 @@ state** — what *you* know — so it can compute readiness and show your learni
 - **Readiness score** — fraction of a concept's prerequisite closure you've marked known.
 - **Knowledge frontier** — concepts whose every prerequisite you already know, ranked by
   how much they unlock. Start knowing nothing → the frontier is the foundations.
+- **The tutor loop** (`/learn`) — generate a targeted problem for a concept → you answer in
+  free form → an LLM grades it, names the specific gap, attributes it to a prerequisite, and
+  gives a Socratic hint (never the answer) → **Bayesian Knowledge Tracing** updates your mastery,
+  which feeds back into the frontier. Every attempt is logged (the seed of the misconception dataset).
 - **Search** over titles + overviews.
+
+> **AI is real but optional.** Problem generation and grading use the Anthropic SDK
+> (`claude-opus-4-8`, structured output + prompt caching). Without an API key, Proofer runs
+> in **demo mode** (templated problems, length-based grading) so the loop is still runnable.
 
 ## Stack
 
@@ -36,9 +47,10 @@ Cytoscape (ego-graph) · react-markdown + KaTeX.
 
 ```bash
 pnpm install
+cp .env.local.example .env.local   # optional: add ANTHROPIC_API_KEY for real AI tutoring
 pnpm run import          # imports C:\Users\natan\Mathematics\Notes by default
                          # or: pnpm run import "C:\path\to\OtherVault\Notes"
-pnpm run dev             # http://localhost:3000
+pnpm run dev             # http://localhost:3000  ·  practice at /learn
 ```
 
 The importer is idempotent: it rebuilds `nodes` and `edges` on each run but preserves
