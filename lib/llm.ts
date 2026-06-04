@@ -10,6 +10,25 @@ const GRADE_MODEL = "claude-opus-4-8";
 export const HAS_KEY = !!process.env.ANTHROPIC_API_KEY;
 const client = HAS_KEY ? new Anthropic() : null;
 
+/** Turn an SDK/API error into a user-facing { status, message } the UI can show. */
+export function friendlyLLMError(e: unknown): { status: number; message: string } {
+  if (e instanceof Anthropic.APIError) {
+    const raw = (e as any)?.error?.error?.message || e.message || "API error";
+    if (e.status === 400 && /credit balance/i.test(raw))
+      return {
+        status: 402,
+        message:
+          "Your Anthropic API account is out of credits. Add credits at console.anthropic.com → Plans & Billing. (A Claude Pro/Max subscription does NOT fund the API — it's separate, pay-as-you-go billing.)",
+      };
+    if (e.status === 401)
+      return { status: 401, message: "Invalid ANTHROPIC_API_KEY. Check the key in .env.local and restart." };
+    if (e.status === 429)
+      return { status: 429, message: "Rate limited by the Anthropic API. Wait a moment and try again." };
+    return { status: e.status ?? 502, message: raw };
+  }
+  return { status: 500, message: e instanceof Error ? e.message : "Unexpected error" };
+}
+
 export type GeneratedProblem = {
   problem: string;
   kind: "compute" | "prove" | "counterexample" | "explain";

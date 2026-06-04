@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db, type NodeRow } from "@/lib/db";
 import { getNode } from "@/lib/queries";
 import { getMasteryP } from "@/lib/mastery";
-import { generateProblem, HAS_KEY } from "@/lib/llm";
+import { generateProblem, friendlyLLMError, HAS_KEY } from "@/lib/llm";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 120;
@@ -25,7 +25,13 @@ export async function POST(req: NextRequest) {
   if (!node || node.exists_ === 0) return NextResponse.json({ error: "unknown node" }, { status: 404 });
 
   const prereqs = directPrereqs(nodeId);
-  const gen = await generateProblem(node, prereqs);
+  let gen;
+  try {
+    gen = await generateProblem(node, prereqs);
+  } catch (e) {
+    const { status, message } = friendlyLLMError(e);
+    return NextResponse.json({ error: message }, { status });
+  }
 
   const info = db()
     .prepare(

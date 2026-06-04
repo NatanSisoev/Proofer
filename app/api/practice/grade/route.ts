@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db, type NodeRow } from "@/lib/db";
 import { getNode } from "@/lib/queries";
 import { applyAttempt, getMasteryP, recordAttempt } from "@/lib/mastery";
-import { gradeAnswer, HAS_KEY } from "@/lib/llm";
+import { gradeAnswer, friendlyLLMError, HAS_KEY } from "@/lib/llm";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 120;
@@ -18,14 +18,20 @@ export async function POST(req: NextRequest) {
   const prereqs: string[] = JSON.parse(prob.prereqs || "[]");
   const rubric: string[] = JSON.parse(prob.rubric || "[]");
 
-  const grade = await gradeAnswer({
-    node,
-    problem: prob.problem,
-    idealSolution: prob.ideal_solution || "",
-    rubric,
-    answer: answer || "",
-    prereqs,
-  });
+  let grade;
+  try {
+    grade = await gradeAnswer({
+      node,
+      problem: prob.problem,
+      idealSolution: prob.ideal_solution || "",
+      rubric,
+      answer: answer || "",
+      prereqs,
+    });
+  } catch (e) {
+    const { status, message } = friendlyLLMError(e);
+    return NextResponse.json({ error: message }, { status });
+  }
 
   const masteryBefore = getMasteryP(node.id);
   const blamed = grade.blamed_prerequisite && prereqs.includes(grade.blamed_prerequisite) ? grade.blamed_prerequisite : null;

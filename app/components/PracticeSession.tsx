@@ -57,8 +57,9 @@ export default function PracticeSession({ initialNodeId }: { initialNodeId?: str
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ nodeId: id }),
       });
-      if (!res.ok) throw new Error("generation failed");
-      setProblem(await res.json());
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "generation failed");
+      setProblem(data);
     } catch (e: any) {
       setError(e.message || "Something went wrong");
     } finally {
@@ -80,8 +81,9 @@ export default function PracticeSession({ initialNodeId }: { initialNodeId?: str
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ problemId: problem.problemId, answer }),
       });
-      if (!res.ok) throw new Error("grading failed");
-      setGrade(await res.json());
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "grading failed");
+      setGrade(data);
     } catch (e: any) {
       setError(e.message || "Grading failed");
     } finally {
