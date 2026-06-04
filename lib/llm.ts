@@ -1,33 +1,19 @@
 import Anthropic from "@anthropic-ai/sdk";
 import type { NodeRow } from "./db";
 
-// Default to the most capable model for BOTH tasks. Grading a free-form proof is
-// the most intelligence-sensitive thing this app does, so we do not downgrade.
-// (You can drop PROBLEM_MODEL to "claude-sonnet-4-6" later to cut cost on gen.)
-const PROBLEM_MODEL = "claude-opus-4-8";
-const GRADE_MODEL = "claude-opus-4-8";
+// Provider selection: Gemini (free tier) wins if its key is set; else Anthropic;
+// else a demo stub. The LLM layer is the only provider-aware part of the app.
+const GEMINI_KEY = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || "";
+const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY || "";
+export const PROVIDER: "gemini" | "anthropic" | "none" = GEMINI_KEY ? "gemini" : ANTHROPIC_KEY ? "anthropic" : "none";
+export const HAS_KEY = PROVIDER !== "none";
 
-export const HAS_KEY = !!process.env.ANTHROPIC_API_KEY;
-const client = HAS_KEY ? new Anthropic() : null;
+// Models. Gemini 2.0 Flash is on the free tier and solid at math reasoning.
+const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-2.0-flash";
+const ANTHROPIC_PROBLEM_MODEL = "claude-opus-4-8";
+const ANTHROPIC_GRADE_MODEL = "claude-opus-4-8";
 
-/** Turn an SDK/API error into a user-facing { status, message } the UI can show. */
-export function friendlyLLMError(e: unknown): { status: number; message: string } {
-  if (e instanceof Anthropic.APIError) {
-    const raw = (e as any)?.error?.error?.message || e.message || "API error";
-    if (e.status === 400 && /credit balance/i.test(raw))
-      return {
-        status: 402,
-        message:
-          "Your Anthropic API account is out of credits. Add credits at console.anthropic.com → Plans & Billing. (A Claude Pro/Max subscription does NOT fund the API — it's separate, pay-as-you-go billing.)",
-      };
-    if (e.status === 401)
-      return { status: 401, message: "Invalid ANTHROPIC_API_KEY. Check the key in .env.local and restart." };
-    if (e.status === 429)
-      return { status: 429, message: "Rate limited by the Anthropic API. Wait a moment and try again." };
-    return { status: e.status ?? 502, message: raw };
-  }
-  return { status: 500, message: e instanceof Error ? e.message : "Unexpected error" };
-}
+const anthropic = ANTHROPIC_KEY ? new Anthropic() : null;
 
 export type GeneratedProblem = {
   problem: string;
@@ -47,8 +33,7 @@ export type GradeResult = {
 };
 
 // ---------------------------------------------------------------------------
-// Shared, FROZEN system prompts (cache_control caches them across requests).
-// Keep them byte-stable — volatile per-concept content goes in the user turn.
+// Shared, FROZEN system prompts.
 // ---------------------------------------------------------------------------
 const AUTHOR_SYSTEM = `You are an expert mathematics problem author embedded in a learning tool.
 Given one concept (a definition, theorem, lemma, etc.) and its prerequisites, you write ONE problem that tests genuine UNDERSTANDING of that concept — not recall.
@@ -63,21 +48,149 @@ const GRADER_SYSTEM = `You are a rigorous but encouraging mathematics tutor grad
 Your job is DIAGNOSIS, not delivery. You must:
 - Judge whether the answer demonstrates real understanding of the TARGET concept (verdict: correct | partial | incorrect).
 - Identify precisely what the student understood and where the specific gap is — name the exact misconception, not a vague "review this".
-- Attribute the gap to ONE prerequisite concept from the provided list when the error traces to a missing prerequisite; otherwise leave it empty.
+- Attribute the gap to ONE prerequisite concept from the provided list when the error traces to a missing prerequisite; otherwise use "none".
 - Give a Socratic hint that guides without revealing the full solution. NEVER hand them the answer — make them produce it.
 - mastery_evidence is your calibrated probability (0..1) that the student has mastered the target concept based on this answer alone.
 Be fair: partial credit for partial understanding. Be honest: do not praise a wrong proof.`;
 
-function firstJson<T>(msg: Anthropic.Message): T {
-  const block = msg.content.find((b) => b.type === "text");
-  if (!block || block.type !== "text") throw new Error("no text block in response");
-  return JSON.parse(block.text) as T;
+function problemUserText(node: NodeRow, prereqs: string[]): string {
+  return [
+    `TARGET CONCEPT: ${node.title}`,
+    node.type ? `Type: ${node.type}` : "",
+    node.area ? `Area: ${node.area}` : "",
+    node.overview ? `Overview: ${node.overview}` : "",
+    node.content ? `\nFull note:\n${node.content.slice(0, 4000)}` : "",
+    prereqs.length ? `\nPrerequisites you may use: ${prereqs.join(", ")}` : "",
+    `\nWrite one problem that tests genuine understanding of "${node.title}". Respond as JSON.`,
+  ]
+    .filter(Boolean)
+    .join("\n");
 }
 
-// ---------------------------------------------------------------------------
-// Problem generation
-// ---------------------------------------------------------------------------
-const PROBLEM_SCHEMA = {
+function gradeUserText(a: {
+  node: NodeRow;
+  problem: string;
+  idealSolution: string;
+  rubric: string[];
+  answer: string;
+  prereqs: string[];
+}): string {
+  return [
+    `TARGET CONCEPT: ${a.node.title}` + (a.node.type ? ` (${a.node.type})` : ""),
+    a.node.overview ? `Overview: ${a.node.overview}` : "",
+    `\nPROBLEM:\n${a.problem}`,
+    `\nIDEAL SOLUTION (reference, do not reveal):\n${a.idealSolution}`,
+    a.rubric.length ? `\nRUBRIC:\n- ${a.rubric.join("\n- ")}` : "",
+    a.prereqs.length
+      ? `\nPREREQUISITES (set blamed_prerequisite to one of these EXACT names, or "none"): ${a.prereqs.join(", ")}`
+      : `\n(There are no prerequisites; set blamed_prerequisite to "none".)`,
+    `\nSTUDENT ANSWER:\n${a.answer || "(blank)"}`,
+    `\nGrade it. Respond as JSON.`,
+  ]
+    .filter(Boolean)
+    .join("\n");
+}
+
+// ===========================================================================
+// Dispatch
+// ===========================================================================
+export async function generateProblem(node: NodeRow, prereqs: string[]): Promise<GeneratedProblem> {
+  if (PROVIDER === "gemini") return geminiGenerate(node, prereqs);
+  if (PROVIDER === "anthropic") return anthropicGenerate(node, prereqs);
+  return stubProblem(node);
+}
+
+export async function gradeAnswer(args: {
+  node: NodeRow;
+  problem: string;
+  idealSolution: string;
+  rubric: string[];
+  answer: string;
+  prereqs: string[];
+}): Promise<GradeResult> {
+  let r: GradeResult;
+  if (PROVIDER === "gemini") r = await geminiGrade(args);
+  else if (PROVIDER === "anthropic") r = await anthropicGrade(args);
+  else r = stubGrade(args.answer);
+  if (r.blamed_prerequisite === "none") r.blamed_prerequisite = "";
+  r.mastery_evidence = Math.max(0, Math.min(1, r.mastery_evidence));
+  return r;
+}
+
+// ===========================================================================
+// Gemini (free tier) — REST, structured JSON output
+// ===========================================================================
+class ProviderError extends Error {
+  status: number;
+  constructor(status: number, message: string) {
+    super(message);
+    this.status = status;
+  }
+}
+
+const G_PROBLEM_SCHEMA = {
+  type: "OBJECT",
+  properties: {
+    problem: { type: "STRING" },
+    kind: { type: "STRING", enum: ["compute", "prove", "counterexample", "explain"] },
+    ideal_solution: { type: "STRING" },
+    rubric: { type: "ARRAY", items: { type: "STRING" } },
+    prerequisites_used: { type: "ARRAY", items: { type: "STRING" } },
+  },
+  required: ["problem", "kind", "ideal_solution", "rubric", "prerequisites_used"],
+  propertyOrdering: ["problem", "kind", "ideal_solution", "rubric", "prerequisites_used"],
+};
+
+function gGradeSchema(prereqs: string[]) {
+  return {
+    type: "OBJECT",
+    properties: {
+      verdict: { type: "STRING", enum: ["correct", "partial", "incorrect"] },
+      mastery_evidence: { type: "NUMBER" },
+      understood: { type: "ARRAY", items: { type: "STRING" } },
+      gap: { type: "STRING" },
+      blamed_prerequisite: { type: "STRING", enum: [...prereqs, "none"] },
+      socratic_hint: { type: "STRING" },
+    },
+    required: ["verdict", "mastery_evidence", "understood", "gap", "blamed_prerequisite", "socratic_hint"],
+    propertyOrdering: ["verdict", "mastery_evidence", "understood", "gap", "blamed_prerequisite", "socratic_hint"],
+  };
+}
+
+async function geminiCall(system: string, userText: string, schema: unknown, temperature: number): Promise<any> {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "x-goog-api-key": GEMINI_KEY },
+    body: JSON.stringify({
+      systemInstruction: { parts: [{ text: system }] },
+      contents: [{ role: "user", parts: [{ text: userText }] }],
+      generationConfig: { temperature, maxOutputTokens: 8192, responseMimeType: "application/json", responseSchema: schema },
+    }),
+  });
+  const data = await res.json().catch(() => ({}) as any);
+  if (!res.ok) throw new ProviderError(res.status, data?.error?.message || `Gemini HTTP ${res.status}`);
+  const cand = data?.candidates?.[0];
+  const text: string = (cand?.content?.parts || []).map((p: any) => p.text).filter(Boolean).join("");
+  if (!text) {
+    const reason = cand?.finishReason || data?.promptFeedback?.blockReason || "empty response";
+    throw new ProviderError(502, `Gemini returned no content (${reason})`);
+  }
+  return JSON.parse(text);
+}
+
+async function geminiGenerate(node: NodeRow, prereqs: string[]): Promise<GeneratedProblem> {
+  return geminiCall(AUTHOR_SYSTEM, problemUserText(node, prereqs), G_PROBLEM_SCHEMA, 0.8);
+}
+
+async function geminiGrade(a: Parameters<typeof gradeAnswer>[0]): Promise<GradeResult> {
+  return geminiCall(GRADER_SYSTEM, gradeUserText(a), gGradeSchema(a.prereqs), 0.2);
+}
+
+// ===========================================================================
+// Anthropic (kept for when the API is funded)
+// ===========================================================================
+const A_PROBLEM_SCHEMA = {
   type: "object",
   additionalProperties: false,
   properties: {
@@ -90,35 +203,7 @@ const PROBLEM_SCHEMA = {
   required: ["problem", "kind", "ideal_solution", "rubric", "prerequisites_used"],
 };
 
-export async function generateProblem(node: NodeRow, prereqs: string[]): Promise<GeneratedProblem> {
-  if (!client) return stubProblem(node);
-  const userText = [
-    `TARGET CONCEPT: ${node.title}`,
-    node.type ? `Type: ${node.type}` : "",
-    node.area ? `Area: ${node.area}` : "",
-    node.overview ? `Overview: ${node.overview}` : "",
-    node.content ? `\nFull note:\n${node.content.slice(0, 4000)}` : "",
-    prereqs.length ? `\nPrerequisites you may use: ${prereqs.join(", ")}` : "",
-    `\nWrite one problem that tests genuine understanding of "${node.title}".`,
-  ]
-    .filter(Boolean)
-    .join("\n");
-
-  const msg = await client.messages.create({
-    model: PROBLEM_MODEL,
-    max_tokens: 16000,
-    thinking: { type: "adaptive" },
-    output_config: { effort: "medium", format: { type: "json_schema", schema: PROBLEM_SCHEMA } },
-    system: [{ type: "text", text: AUTHOR_SYSTEM, cache_control: { type: "ephemeral" } }],
-    messages: [{ role: "user", content: userText }],
-  });
-  return firstJson<GeneratedProblem>(msg);
-}
-
-// ---------------------------------------------------------------------------
-// Grading
-// ---------------------------------------------------------------------------
-function gradeSchema(prereqIds: string[]) {
+function aGradeSchema(prereqs: string[]) {
   return {
     type: "object",
     additionalProperties: false,
@@ -127,58 +212,81 @@ function gradeSchema(prereqIds: string[]) {
       mastery_evidence: { type: "number" },
       understood: { type: "array", items: { type: "string" } },
       gap: { type: "string" },
-      blamed_prerequisite: { type: "string", enum: [...prereqIds, ""] },
+      blamed_prerequisite: { type: "string", enum: [...prereqs, "none"] },
       socratic_hint: { type: "string" },
     },
     required: ["verdict", "mastery_evidence", "understood", "gap", "blamed_prerequisite", "socratic_hint"],
   };
 }
 
-export async function gradeAnswer(args: {
-  node: NodeRow;
-  problem: string;
-  idealSolution: string;
-  rubric: string[];
-  answer: string;
-  prereqs: string[];
-}): Promise<GradeResult> {
-  if (!client) return stubGrade(args.answer);
-  const userText = [
-    `TARGET CONCEPT: ${args.node.title}` + (args.node.type ? ` (${args.node.type})` : ""),
-    args.node.overview ? `Overview: ${args.node.overview}` : "",
-    `\nPROBLEM:\n${args.problem}`,
-    `\nIDEAL SOLUTION (reference, do not reveal):\n${args.idealSolution}`,
-    args.rubric.length ? `\nRUBRIC:\n- ${args.rubric.join("\n- ")}` : "",
-    args.prereqs.length ? `\nPREREQUISITES (attribute a gap to one of these exact names, or ""): ${args.prereqs.join(", ")}` : "",
-    `\nSTUDENT ANSWER:\n${args.answer || "(blank)"}`,
-    `\nGrade it.`,
-  ]
-    .filter(Boolean)
-    .join("\n");
-
-  const msg = await client.messages.create({
-    model: GRADE_MODEL,
-    max_tokens: 16000,
-    thinking: { type: "adaptive" },
-    output_config: { effort: "high", format: { type: "json_schema", schema: gradeSchema(args.prereqs) } },
-    system: [{ type: "text", text: GRADER_SYSTEM, cache_control: { type: "ephemeral" } }],
-    messages: [{ role: "user", content: userText }],
-  });
-  const r = firstJson<GradeResult>(msg);
-  r.mastery_evidence = Math.max(0, Math.min(1, r.mastery_evidence));
-  return r;
+function firstJson<T>(msg: Anthropic.Message): T {
+  const block = msg.content.find((b) => b.type === "text");
+  if (!block || block.type !== "text") throw new Error("no text block in response");
+  return JSON.parse(block.text) as T;
 }
 
-// ---------------------------------------------------------------------------
-// Stub fallback (no API key) — keeps the loop runnable; clearly marked "demo".
-// ---------------------------------------------------------------------------
+async function anthropicGenerate(node: NodeRow, prereqs: string[]): Promise<GeneratedProblem> {
+  const msg = await anthropic!.messages.create({
+    model: ANTHROPIC_PROBLEM_MODEL,
+    max_tokens: 16000,
+    thinking: { type: "adaptive" },
+    output_config: { effort: "medium", format: { type: "json_schema", schema: A_PROBLEM_SCHEMA } },
+    system: [{ type: "text", text: AUTHOR_SYSTEM, cache_control: { type: "ephemeral" } }],
+    messages: [{ role: "user", content: problemUserText(node, prereqs) }],
+  });
+  return firstJson<GeneratedProblem>(msg);
+}
+
+async function anthropicGrade(a: Parameters<typeof gradeAnswer>[0]): Promise<GradeResult> {
+  const msg = await anthropic!.messages.create({
+    model: ANTHROPIC_GRADE_MODEL,
+    max_tokens: 16000,
+    thinking: { type: "adaptive" },
+    output_config: { effort: "high", format: { type: "json_schema", schema: aGradeSchema(a.prereqs) } },
+    system: [{ type: "text", text: GRADER_SYSTEM, cache_control: { type: "ephemeral" } }],
+    messages: [{ role: "user", content: gradeUserText(a) }],
+  });
+  return firstJson<GradeResult>(msg);
+}
+
+// ===========================================================================
+// Error surfacing
+// ===========================================================================
+export function friendlyLLMError(e: unknown): { status: number; message: string } {
+  if (e instanceof ProviderError) {
+    if (e.status === 400 && /api[_ ]?key/i.test(e.message))
+      return { status: 401, message: "Invalid GEMINI_API_KEY. Check the key in .env.local and restart the dev server." };
+    if (e.status === 429)
+      return { status: 429, message: "Gemini free-tier rate limit hit (~15 requests/min, or the daily cap). Wait a minute and try again." };
+    if (e.status === 403)
+      return { status: 403, message: "Gemini rejected the key (403). Make sure the Generative Language API is enabled for it at aistudio.google.com." };
+    return { status: e.status || 502, message: `Gemini error: ${e.message}` };
+  }
+  if (e instanceof Anthropic.APIError) {
+    const raw = (e as any)?.error?.error?.message || e.message || "API error";
+    if (e.status === 400 && /credit balance/i.test(raw))
+      return {
+        status: 402,
+        message:
+          "Your Anthropic API account is out of credits. Either add credits at console.anthropic.com → Plans & Billing, or use the free Gemini path (set GEMINI_API_KEY in .env.local).",
+      };
+    if (e.status === 401) return { status: 401, message: "Invalid ANTHROPIC_API_KEY." };
+    if (e.status === 429) return { status: 429, message: "Rate limited by the Anthropic API. Wait a moment." };
+    return { status: e.status ?? 502, message: raw };
+  }
+  return { status: 500, message: e instanceof Error ? e.message : "Unexpected error" };
+}
+
+// ===========================================================================
+// Demo stub (no key)
+// ===========================================================================
 function stubProblem(node: NodeRow): GeneratedProblem {
   const verb =
     node.type === "Definition"
       ? `State the definition of **${node.title}** precisely, then give one example and one non-example, justifying each.`
       : `State **${node.title}** precisely and sketch why it holds (or give the key idea of its proof).`;
   return {
-    problem: `${verb}\n\n_(Demo problem — set ANTHROPIC_API_KEY for AI-authored problems.)_`,
+    problem: `${verb}\n\n_(Demo problem — set GEMINI_API_KEY (free) or ANTHROPIC_API_KEY for AI-authored problems.)_`,
     kind: node.type === "Definition" ? "explain" : "prove",
     ideal_solution: node.content?.slice(0, 1200) || node.overview || "",
     rubric: ["States the concept correctly", "Justifies with a correct example or argument"],
@@ -190,11 +298,11 @@ function stubGrade(answer: string): GradeResult {
   const words = answer.trim().split(/\s+/).filter(Boolean).length;
   const evidence = Math.max(0.1, Math.min(0.85, words / 60));
   return {
-    verdict: words > 40 ? "partial" : words > 8 ? "partial" : "incorrect",
+    verdict: words > 8 ? "partial" : "incorrect",
     mastery_evidence: evidence,
     understood: words > 8 ? ["You attempted an explanation."] : [],
     gap: "Demo mode: real diagnosis needs an API key. This placeholder scores by answer length only.",
     blamed_prerequisite: "",
-    socratic_hint: "Set ANTHROPIC_API_KEY to get a real Socratic hint that pinpoints your specific gap.",
+    socratic_hint: "Set GEMINI_API_KEY (free at aistudio.google.com) to get a real Socratic hint that pinpoints your specific gap.",
   };
 }

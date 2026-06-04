@@ -29,9 +29,12 @@ it has no persistent model of *you*.
   which feeds back into the frontier. Every attempt is logged (the seed of the misconception dataset).
 - **Search** over titles + overviews.
 
-> **AI is real but optional.** Problem generation and grading use the Anthropic SDK
-> (`claude-opus-4-8`, structured output + prompt caching). Without an API key, Proofer runs
-> in **demo mode** (templated problems, length-based grading) so the loop is still runnable.
+> **AI is real but optional, and the default path is free.** Problem generation and grading
+> work with **Google Gemini's free tier** (`gemini-2.0-flash`, structured JSON output) — set
+> `GEMINI_API_KEY` (free key, no card, at aistudio.google.com). The **Anthropic Claude** path
+> (`claude-opus-4-8`, best grading quality) is also wired in for when `ANTHROPIC_API_KEY` is set
+> on a funded account. With neither, Proofer runs in **demo mode** (templated problems,
+> length-based grading) so the loop is still runnable. Provider logic is isolated in `lib/llm.ts`.
 
 ## Stack
 
