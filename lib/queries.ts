@@ -550,7 +550,6 @@ export function todayStats(): { today_concepts: number; today_attempts: number; 
   ).all() as { day: string }[];
 
   let streak = 0;
-  const today_date = new Date().toISOString().slice(0, 10);
   for (let i = 0; i < days.length; i++) {
     const expected = new Date(Date.now() - i * 86400000).toISOString().slice(0, 10);
     if (days[i].day === expected) streak++;

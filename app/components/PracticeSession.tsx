@@ -36,6 +36,8 @@ export default function PracticeSession({ initialNodeId }: { initialNodeId?: str
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [revealed, setRevealed] = useState<string | null>(null);
+  const [elapsed, setElapsed] = useState(0);
+  const [timerStart, setTimerStart] = useState<number | null>(null);
 
   const generate = useCallback(async (nodeId?: string, signal?: AbortSignal) => {
     setBusy(true);
@@ -44,6 +46,8 @@ export default function PracticeSession({ initialNodeId }: { initialNodeId?: str
     setAnswer("");
     setProblem(null);
     setRevealed(null);
+    setElapsed(0);
+    setTimerStart(null);
     try {
       let id = nodeId;
       if (!id) {
@@ -62,7 +66,10 @@ export default function PracticeSession({ initialNodeId }: { initialNodeId?: str
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "generation failed");
-      if (!signal?.aborted) setProblem(data);
+      if (!signal?.aborted) {
+        setProblem(data);
+        setTimerStart(Date.now());
+      }
     } catch (e: any) {
       if (e.name === "AbortError") return;
       if (!signal?.aborted) setError(e.message || "Something went wrong");
@@ -113,6 +120,13 @@ export default function PracticeSession({ initialNodeId }: { initialNodeId?: str
     }
   }
 
+  // Timer tick while problem is showing and not yet graded
+  useEffect(() => {
+    if (!timerStart || grade || revealed) return;
+    const id = setInterval(() => setElapsed(Math.floor((Date.now() - timerStart) / 1000)), 1000);
+    return () => clearInterval(id);
+  }, [timerStart, grade, revealed]);
+
   // Ctrl+Enter to submit
   useEffect(() => {
     function handler(e: KeyboardEvent) {
@@ -141,7 +155,14 @@ export default function PracticeSession({ initialNodeId }: { initialNodeId?: str
               {problem.node.area && <span className="muted small"> · {problem.node.area}</span>}
               {problem.mode === "demo" && <span className="pill" style={{ marginLeft: 10 }}>demo mode — no API key</span>}
             </div>
-            <span className="pill">{problem.kind}</span>
+            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              {!grade && !revealed && elapsed > 0 && (
+                <span className="muted small" style={{ fontVariantNumeric: "tabular-nums" }}>
+                  {Math.floor(elapsed / 60)}:{String(elapsed % 60).padStart(2, "0")}
+                </span>
+              )}
+              <span className="pill">{problem.kind}</span>
+            </div>
           </div>
 
           <div className="panel">
@@ -228,7 +249,7 @@ export default function PracticeSession({ initialNodeId }: { initialNodeId?: str
 
               <div className="practice-actions">
                 <button className="btn-primary" onClick={() => generate(problem.node.id, undefined)} disabled={busy}>
-                  Another on this concept
+                  {grade.verdict === "correct" ? "Another on this concept" : "Retry with hint →"}
                 </button>
                 {grade.blamed_prerequisite ? (
                   <button className="btn-ghost" onClick={() => generate(grade.blamed_prerequisite, undefined)} disabled={busy}>
@@ -237,6 +258,11 @@ export default function PracticeSession({ initialNodeId }: { initialNodeId?: str
                 ) : (
                   <button className="btn-ghost" onClick={() => generate(undefined, undefined)} disabled={busy}>
                     Next concept →
+                  </button>
+                )}
+                {grade.verdict !== "correct" && (
+                  <button className="btn-ghost" onClick={() => generate(undefined, undefined)} disabled={busy} style={{ fontSize: 13, color: "var(--muted)" }}>
+                    I get it now, move on →
                   </button>
                 )}
               </div>
