@@ -20,7 +20,9 @@ function directPrereqs(id: string): string[] {
 }
 
 export async function POST(req: NextRequest) {
-  const { nodeId } = await req.json();
+  let body: { nodeId?: string };
+  try { body = await req.json(); } catch { return NextResponse.json({ error: "bad request" }, { status: 400 }); }
+  const { nodeId } = body;
   const node = getNode(nodeId) as NodeRow | undefined;
   if (!node || node.exists_ === 0) return NextResponse.json({ error: "unknown node" }, { status: 404 });
 

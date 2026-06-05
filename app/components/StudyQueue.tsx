@@ -53,6 +53,8 @@ export default function StudyQueue({ queue }: { queue: QueueNode[] }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [revealed, setRevealed] = useState<string | null>(null);
+  const [followUp, setFollowUp] = useState("");
+  const [followUpBusy, setFollowUpBusy] = useState(false);
   const [results, setResults] = useState<SessionResult[]>([]);
   const [done, setDone] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -66,6 +68,8 @@ export default function StudyQueue({ queue }: { queue: QueueNode[] }) {
     setAnswer("");
     setProblem(null);
     setRevealed(null);
+    setFollowUp("");
+    setFollowUpBusy(false);
     try {
       const res = await fetch("/api/practice/generate", {
         method: "POST",
@@ -123,6 +127,39 @@ export default function StudyQueue({ queue }: { queue: QueueNode[] }) {
       }
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function submitFollowUp() {
+    if (!problem || !followUp.trim()) return;
+    setFollowUpBusy(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/practice/grade", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ problemId: problem.problemId, answer: followUp }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "grading failed");
+      setGrade(data);
+      setFollowUp("");
+      // Update the last result with the new verdict
+      setResults((prev) => {
+        const updated = [...prev];
+        if (updated.length > 0) {
+          updated[updated.length - 1] = {
+            ...updated[updated.length - 1],
+            verdict: data.verdict,
+            masteryAfter: data.masteryAfter,
+          };
+        }
+        return updated;
+      });
+    } catch (e: any) {
+      setError(e.message || "Grading failed");
+    } finally {
+      setFollowUpBusy(false);
     }
   }
 
@@ -365,7 +402,39 @@ export default function StudyQueue({ queue }: { queue: QueueNode[] }) {
                 <div className="markdown"><Markdown>{grade.socratic_hint}</Markdown></div>
               </div>
 
-              <div className="practice-actions">
+              {grade.verdict !== "correct" && (
+                <div style={{ borderTop: "1px solid var(--border)", paddingTop: 14, marginTop: 4 }}>
+                  <p className="muted small" style={{ margin: "0 0 8px" }}>
+                    Address the gap — no need to start over:
+                  </p>
+                  <textarea
+                    className="answer-box"
+                    placeholder="Show the missing step, fix the misconception…"
+                    value={followUp}
+                    onChange={(e) => setFollowUp(e.target.value)}
+                    disabled={followUpBusy}
+                    style={{ minHeight: 90 }}
+                    onKeyDown={(e) => {
+                      if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+                        e.preventDefault();
+                        if (followUp.trim()) submitFollowUp();
+                      }
+                    }}
+                  />
+                  <div className="practice-actions" style={{ marginTop: 8 }}>
+                    <button
+                      className="btn-primary"
+                      onClick={submitFollowUp}
+                      disabled={followUpBusy || !followUp.trim()}
+                    >
+                      {followUpBusy ? "Checking…" : "Submit follow-up"}
+                    </button>
+                    <span className="muted small" style={{ alignSelf: "center" }}>Ctrl+Enter</span>
+                  </div>
+                </div>
+              )}
+
+              <div className="practice-actions" style={{ marginTop: 12 }}>
                 <button className="btn-primary" onClick={advance} disabled={busy}>
                   {index + 1 >= queue.length ? "Finish session →" : "Next concept →"}
                 </button>

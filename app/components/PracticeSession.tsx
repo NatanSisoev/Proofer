@@ -38,6 +38,8 @@ export default function PracticeSession({ initialNodeId }: { initialNodeId?: str
   const [revealed, setRevealed] = useState<string | null>(null);
   const [elapsed, setElapsed] = useState(0);
   const [timerStart, setTimerStart] = useState<number | null>(null);
+  const [followUp, setFollowUp] = useState("");
+  const [followUpBusy, setFollowUpBusy] = useState(false);
 
   const generate = useCallback(async (nodeId?: string, signal?: AbortSignal) => {
     setBusy(true);
@@ -48,6 +50,8 @@ export default function PracticeSession({ initialNodeId }: { initialNodeId?: str
     setRevealed(null);
     setElapsed(0);
     setTimerStart(null);
+    setFollowUp("");
+    setFollowUpBusy(false);
     try {
       let id = nodeId;
       if (!id) {
@@ -117,6 +121,27 @@ export default function PracticeSession({ initialNodeId }: { initialNodeId?: str
       setError(e.message || "Grading failed");
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function submitFollowUp() {
+    if (!problem || !followUp.trim()) return;
+    setFollowUpBusy(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/practice/grade", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ problemId: problem.problemId, answer: followUp }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "grading failed");
+      setGrade(data);
+      setFollowUp("");
+    } catch (e: any) {
+      setError(e.message || "Grading failed");
+    } finally {
+      setFollowUpBusy(false);
     }
   }
 
@@ -247,7 +272,40 @@ export default function PracticeSession({ initialNodeId }: { initialNodeId?: str
                 <div className="markdown"><Markdown>{grade.socratic_hint}</Markdown></div>
               </div>
 
-              <div className="practice-actions">
+              {/* Follow-up reply — shown when answer was not fully correct */}
+              {grade.verdict !== "correct" && (
+                <div style={{ marginTop: 4, borderTop: "1px solid var(--border)", paddingTop: 14 }}>
+                  <p className="muted small" style={{ margin: "0 0 8px" }}>
+                    Address the gap directly — no need to start over:
+                  </p>
+                  <textarea
+                    className="answer-box"
+                    placeholder="Show the missing step, fix the misconception, or complete the calculation…"
+                    value={followUp}
+                    onChange={(e) => setFollowUp(e.target.value)}
+                    disabled={followUpBusy}
+                    style={{ minHeight: 100 }}
+                    onKeyDown={(e) => {
+                      if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+                        e.preventDefault();
+                        if (followUp.trim()) submitFollowUp();
+                      }
+                    }}
+                  />
+                  <div className="practice-actions" style={{ marginTop: 8 }}>
+                    <button
+                      className="btn-primary"
+                      onClick={submitFollowUp}
+                      disabled={followUpBusy || !followUp.trim()}
+                    >
+                      {followUpBusy ? "Checking…" : "Submit follow-up"}
+                    </button>
+                    <span className="muted small" style={{ alignSelf: "center" }}>Ctrl+Enter</span>
+                  </div>
+                </div>
+              )}
+
+              <div className="practice-actions" style={{ marginTop: grade.verdict !== "correct" ? 12 : 0 }}>
                 <button className="btn-primary" onClick={() => generate(problem.node.id, undefined)} disabled={busy}>
                   {grade.verdict === "correct" ? "Another on this concept" : "Retry with hint →"}
                 </button>
