@@ -404,8 +404,10 @@ export function weakSpots(limit = 20): BrowseNode[] {
 }
 
 export function searchWithMastery(q: string, limit = 25): (NodeRow & { mastery_p: number })[] {
-  const like = `%${q.replace(/[%_]/g, "")}%`;
-  return db()
+  const safe = q.replace(/[%_]/g, "");
+  const like = `%${safe}%`;
+  const prefix = `${safe}%`;
+  const primary = db()
     .prepare(
       `SELECT n.*, COALESCE(m.p, 0) AS mastery_p
          FROM nodes n
@@ -414,7 +416,26 @@ export function searchWithMastery(q: string, limit = 25): (NodeRow & { mastery_p
         ORDER BY CASE WHEN n.title LIKE ? THEN 0 ELSE 1 END, n.title ASC
         LIMIT ?`
     )
-    .all(like, like, `${q.replace(/[%_]/g, "")}%`, limit) as (NodeRow & { mastery_p: number })[];
+    .all(like, like, prefix, limit) as (NodeRow & { mastery_p: number })[];
+
+  // If few primary hits, supplement with content matches
+  if (primary.length < 5) {
+    const seen = new Set(primary.map((r) => r.id));
+    const secondary = db()
+      .prepare(
+        `SELECT n.*, COALESCE(m.p, 0) AS mastery_p
+           FROM nodes n
+           LEFT JOIN mastery m ON m.node_id = n.id
+          WHERE n.exists_ = 1 AND n.content LIKE ?
+            AND n.id NOT IN (${[...seen].map(() => "?").join(",") || "''"})
+          ORDER BY n.title ASC
+          LIMIT ?`
+      )
+      .all(like, ...[...seen], limit - primary.length) as (NodeRow & { mastery_p: number })[];
+    return [...primary, ...secondary];
+  }
+
+  return primary;
 }
 
 export function search(q: string, limit = 25): NodeRow[] {
@@ -561,6 +582,17 @@ export function todayStats(): { today_concepts: number; today_attempts: number; 
     today_attempts: today.attempts ?? 0,
     streak_days: streak,
   };
+}
+
+/** Concepts mastered in the last 7 and 30 days (for velocity display). */
+export function masteryVelocity(): { last7: number; last30: number } {
+  const d = db();
+  const count = (days: number) =>
+    (d.prepare(
+      `SELECT COUNT(*) AS n FROM mastery_history
+        WHERE p >= 0.8 AND recorded_at >= date('now', '-${days} days')`
+    ).get() as any).n as number;
+  return { last7: count(7), last30: count(30) };
 }
 
 export function stats() {

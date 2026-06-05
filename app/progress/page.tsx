@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { masteryHistogram, recentAttemptsGlobal, weakSpots, stats, todayStats, reviewForecast } from "@/lib/queries";
+import { masteryHistogram, recentAttemptsGlobal, weakSpots, stats, todayStats, reviewForecast, masteryVelocity } from "@/lib/queries";
 
 export const dynamic = "force-dynamic";
 
@@ -34,6 +34,7 @@ export default function ProgressPage() {
   const weak = weakSpots(12);
   const today = todayStats();
   const forecast = reviewForecast();
+  const velocity = masteryVelocity();
 
   const masteredPct = s.real > 0 ? Math.round((s.known / s.real) * 100) : 0;
   const maxBucket = Math.max(...hist.map((h) => h.count), 1);
@@ -83,6 +84,12 @@ export default function ProgressPage() {
           </div>
           <div className="l">today's goal</div>
         </div>
+        {(velocity.last7 > 0 || velocity.last30 > 0) && (
+          <div className="stat">
+            <div className="n" style={{ color: "var(--green)" }}>{velocity.last7}</div>
+            <div className="l">mastered this week</div>
+          </div>
+        )}
       </div>
 
       <div className="grid" style={{ gap: 20 }}>

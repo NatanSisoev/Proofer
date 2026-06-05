@@ -21,7 +21,9 @@ function preprocess(src: string): string {
   s = s.replace(/^\^[\w-]+\s*$/gm, "");
   // callouts: > [!Theorem] Title  ->  > **Title**
   s = s.replace(/^(>\s*)\[!([^\]]+)\][+-]?\s*(.*)$/gm, (_m, q, type, title) => `${q}**${title || type}**`);
-  // wikilinks
+  // embedded notes: ![[note]] → just remove (no useful content to show)
+  s = s.replace(/!\[\[[^\]]+\]\]/g, "");
+  // wikilinks: [[Target|alias]] or [[Target]] → link
   s = s.replace(/\[\[([^\]]+)\]\]/g, (_m, inner) => {
     const [targetRaw, alias] = inner.split("|");
     const target = targetRaw.split("#")[0].trim();
@@ -29,6 +31,9 @@ function preprocess(src: string): string {
     if (!target) return display; // self-anchor
     return `[${display}](/node/${encodeURIComponent(target)})`;
   });
+  // Obsidian metadata/dataview fences
+  s = s.replace(/^---[\s\S]*?^---\n?/m, ""); // strip frontmatter if not already stripped
+  s = s.replace(/```dataview[\s\S]*?```/g, ""); // strip dataview blocks
   return s;
 }
 
