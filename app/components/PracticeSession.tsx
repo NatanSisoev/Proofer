@@ -234,7 +234,7 @@ export default function PracticeSession({ initialNodeId }: { initialNodeId?: str
 
           {grade && (
             <div className="panel feedback">
-              <div className="verdict" style={{ background: VERDICT_STYLE[grade.verdict]?.bg }}>
+              <div className={`verdict${grade.verdict === "correct" ? " verdict-correct" : ""}`} style={{ background: VERDICT_STYLE[grade.verdict]?.bg }}>
                 {VERDICT_STYLE[grade.verdict]?.label || grade.verdict}
               </div>
 

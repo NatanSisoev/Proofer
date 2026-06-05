@@ -175,7 +175,20 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
 
           <div className="grid" style={{ marginTop: 20 }}>
             <div>
-              {node.content && <Markdown>{node.content}</Markdown>}
+              {node.content && (
+                <>
+                  {(() => {
+                    const words = node.content!.split(/\s+/).length;
+                    const mins = Math.max(1, Math.round(words / 200));
+                    return (
+                      <p className="muted small" style={{ marginTop: 0, marginBottom: 12 }}>
+                        ~{mins} min read · {words} words
+                      </p>
+                    );
+                  })()}
+                  <Markdown>{node.content}</Markdown>
+                </>
+              )}
             </div>
             <div>
               <div className="panel" style={{ marginBottom: 16 }}>
