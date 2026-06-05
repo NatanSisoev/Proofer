@@ -29,11 +29,21 @@ export default async function QualityPage({
 
   const suggestions = tab === "links" ? linkSuggestions(60) : [];
 
+  // Generate an actionable summary
+  const topIssue = Object.entries(byIssue).sort((a, b) => b[1] - a[1])[0];
+  const topArea = topAreas[0];
+
   return (
     <div className="wrap">
       <header className="top">
         <h1>Note quality</h1>
-        <span className="tag">scan for gaps in your knowledge graph</span>
+        <span className="tag">
+          {structural.length === 0
+            ? "Your knowledge graph looks solid ✓"
+            : topIssue
+              ? `Top action: fix "${topIssue[0]}" (${topIssue[1]} notes${topArea ? ` — especially ${topArea[0]}` : ""})`
+              : "scan for gaps in your knowledge graph"}
+        </span>
       </header>
 
       <div className="stat-row" style={{ marginBottom: 20 }}>

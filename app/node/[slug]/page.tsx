@@ -78,7 +78,9 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
     <div className="wrap">
       <div className="breadcrumb">
         <Link href="/">← map</Link>
-        {node.area && <> · {node.area}</>}
+        {node.area && (
+          <> · <Link href={`/browse?area=${encodeURIComponent(node.area)}`} style={{ color: "var(--muted)" }}>{node.area}</Link></>
+        )}
       </div>
 
       {node.exists_ === 0 ? (

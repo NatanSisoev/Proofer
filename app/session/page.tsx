@@ -9,7 +9,7 @@ export default async function SessionPage({
   searchParams: Promise<{ mode?: string; area?: string }>;
 }) {
   const { mode, area } = await searchParams;
-  const areas = browseAreas().map((a) => a.area);
+  const areas = browseAreas().sort((a, b) => b.count - a.count).map((a) => a.area);
   return (
     <div className="wrap">
       <header className="top">
