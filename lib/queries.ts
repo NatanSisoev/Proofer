@@ -162,6 +162,16 @@ export function attemptCount(nodeId: string): number {
   return row.n;
 }
 
+/** Recent attempts for a single concept (for the node page timeline). */
+export function nodeAttempts(nodeId: string, limit = 10): { verdict: string; created_at: string; kind: string }[] {
+  return db()
+    .prepare(
+      `SELECT verdict, created_at, kind FROM attempts
+        WHERE node_id = ? ORDER BY id DESC LIMIT ?`
+    )
+    .all(nodeId, limit) as { verdict: string; created_at: string; kind: string }[];
+}
+
 /** Time series of mastery for one concept, for sparklines. */
 export function masteryHistory(nodeId: string, limit = 30): { p: number; recorded_at: string }[] {
   return db()

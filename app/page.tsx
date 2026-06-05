@@ -59,9 +59,10 @@ export default function Home() {
       {/* Daily goal + streak */}
       <div className="daily-goal-bar" style={{ marginBottom: 20 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-          <span style={{ fontSize: 13, fontWeight: 600 }}>
-            Today: {today.today_concepts} / {DAILY_GOAL} concepts
-            {today.today_concepts >= DAILY_GOAL && " ✓"}
+          <span style={{ fontSize: 13, fontWeight: 600, color: today.today_concepts >= DAILY_GOAL ? "var(--green)" : undefined }}>
+            {today.today_concepts >= DAILY_GOAL
+              ? `🎉 Daily goal reached! ${today.today_concepts} concepts`
+              : `Today: ${today.today_concepts} / ${DAILY_GOAL} concepts`}
           </span>
           <span style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13 }}>
             {today.streak_days > 0 && (

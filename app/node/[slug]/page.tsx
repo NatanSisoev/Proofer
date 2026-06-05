@@ -10,7 +10,7 @@ import BookmarkButton from "@/app/components/BookmarkButton";
 import GhostCreate from "@/app/components/GhostCreate";
 import MathText from "@/app/components/MathText";
 import MasterySparkline from "@/app/components/MasterySparkline";
-import { getNode, edgesOf, isKnown, readiness, prerequisites, attemptCount, isBookmarked } from "@/lib/queries";
+import { getNode, edgesOf, isKnown, readiness, prerequisites, attemptCount, isBookmarked, nodeAttempts } from "@/lib/queries";
 import { getMasteryP } from "@/lib/mastery";
 import { HAS_KEY } from "@/lib/llm";
 import type { EdgeRow } from "@/lib/db";
@@ -66,6 +66,7 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
   const { depth } = prerequisites(id);
   const attempts = attemptCount(id);
   const bookmarked = isBookmarked(id);
+  const history = nodeAttempts(id, 10);
 
   // group outgoing by semantic priority
   const order = ["depends_on", "generalizes", "equivalent_to", "instance_of", "contradicts", "related"];
@@ -110,6 +111,11 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
                     depth {depth}
                   </span>
                 )}
+                {mastery >= 0.8 && (
+                  <span style={{ fontSize: 11, fontWeight: 700, color: "var(--green)", background: "#0d2a1a", padding: "2px 8px", borderRadius: 999, border: "1px solid #1a5a2a" }}>
+                    ✓ mastered
+                  </span>
+                )}
                 {attempts > 0 && (
                   <span className="muted small">{attempts} attempt{attempts !== 1 ? "s" : ""}</span>
                 )}
@@ -120,11 +126,26 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
                   {node.overview}
                 </MathText>
               )}
-              <div className="mastery-chip" style={{ marginTop: 10, padding: "8px 12px", background: "var(--bg-soft)", borderRadius: 10, border: "1px solid var(--border)" }}>
+              <div className="mastery-chip" style={{ marginTop: 10, padding: "10px 14px", background: "var(--bg-soft)", borderRadius: 10, border: "1px solid var(--border)", flexWrap: "wrap", gap: 10 }}>
                 <span className="muted small">mastery</span>
                 <div className="bar" style={{ width: 120 }}><span style={{ width: `${Math.round(mastery * 100)}%` }} /></div>
                 <span style={{ fontWeight: 700, fontSize: 15, letterSpacing: "-0.02em" }}>{Math.round(mastery * 100)}%</span>
                 <MasterySparkline nodeId={id} />
+                {history.length > 0 && (
+                  <div style={{ display: "flex", gap: 4, alignItems: "center", marginLeft: 4 }}>
+                    {history.slice().reverse().map((a, i) => (
+                      <span
+                        key={i}
+                        title={`${a.verdict} · ${a.kind}`}
+                        style={{
+                          width: 8, height: 8, borderRadius: "50%",
+                          background: a.verdict === "correct" ? "var(--green)" : a.verdict === "partial" ? "var(--amber)" : "var(--red)",
+                          opacity: 0.6 + i / history.length * 0.4,
+                        }}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
               {HAS_KEY && <WeaknessDiagnosis nodeId={id} attemptCount={attempts} />}
             </div>
