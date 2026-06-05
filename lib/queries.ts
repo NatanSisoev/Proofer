@@ -130,6 +130,38 @@ export function dueForReview(limit = 20): (BrowseNode & { days_overdue: number; 
   }));
 }
 
+/** How many reviews are expected each day over the next 8 days. */
+export function reviewForecast(): { date: string; count: number }[] {
+  const rows = db()
+    .prepare(
+      `SELECT
+         date(m.last_seen, '+' || CAST(m.half_life * 0.8 AS INTEGER) || ' days') AS due_date,
+         COUNT(*) AS count
+         FROM mastery m
+         JOIN nodes n ON n.id = m.node_id
+        WHERE n.exists_ = 1 AND m.last_seen IS NOT NULL AND m.p > 0.1
+          AND date(m.last_seen, '+' || CAST(m.half_life * 0.8 AS INTEGER) || ' days') >= date('now')
+          AND date(m.last_seen, '+' || CAST(m.half_life * 0.8 AS INTEGER) || ' days') < date('now', '+8 days')
+        GROUP BY due_date
+        ORDER BY due_date`
+    )
+    .all() as { due_date: string; count: number }[];
+
+  // Fill all 8 days, even those with 0 reviews
+  const map = new Map(rows.map((r) => [r.due_date, r.count]));
+  return Array.from({ length: 8 }, (_, i) => {
+    const d = new Date(Date.now() + i * 86400000);
+    const key = d.toISOString().slice(0, 10);
+    return { date: key, count: map.get(key) ?? 0 };
+  });
+}
+
+/** Attempt count for a single concept. */
+export function attemptCount(nodeId: string): number {
+  const row = db().prepare("SELECT COUNT(*) AS n FROM attempts WHERE node_id = ?").get(nodeId) as { n: number };
+  return row.n;
+}
+
 /** Time series of mastery for one concept, for sparklines. */
 export function masteryHistory(nodeId: string, limit = 30): { p: number; recorded_at: string }[] {
   return db()
@@ -220,7 +252,7 @@ export function browseAreas(): BrowseArea[] {
     .prepare(
       `SELECT n.area,
               COUNT(*) AS count,
-              AVG(COALESCE(m.p, 0.15)) AS avg_mastery
+              AVG(COALESCE(m.p, 0)) AS avg_mastery
          FROM nodes n
          LEFT JOIN mastery m ON m.node_id = n.id
         WHERE n.exists_ = 1 AND n.area IS NOT NULL
@@ -239,7 +271,7 @@ export function nodesInArea(
     sort === "mastery_desc" ? "mastery_p DESC" : sort === "alpha" ? "n.title ASC" : "mastery_p ASC";
   const rows = db()
     .prepare(
-      `SELECT n.*, COALESCE(m.p, 0.15) AS mastery_p
+      `SELECT n.*, COALESCE(m.p, 0) AS mastery_p
          FROM nodes n
          LEFT JOIN mastery m ON m.node_id = n.id
         WHERE n.exists_ = 1
@@ -326,6 +358,24 @@ export type AttemptRow = {
   created_at: string; mode: string; title?: string;
 };
 
+/** Distinct concepts recently practiced (deduped, most recent first). */
+export function recentlyPracticed(limit = 6): (BrowseNode & { last_verdict: string; last_at: string })[] {
+  return db()
+    .prepare(
+      `SELECT n.*, COALESCE(m.p, 0) AS mastery_p,
+              a.verdict AS last_verdict, a.created_at AS last_at
+         FROM (
+           SELECT node_id, MAX(id) AS max_id FROM attempts GROUP BY node_id ORDER BY max_id DESC LIMIT ?
+         ) AS recent
+         JOIN attempts a ON a.id = recent.max_id
+         JOIN nodes n ON n.id = recent.node_id
+         LEFT JOIN mastery m ON m.node_id = n.id
+        WHERE n.exists_ = 1
+        ORDER BY recent.max_id DESC`
+    )
+    .all(limit) as (BrowseNode & { last_verdict: string; last_at: string })[];
+}
+
 /** Recent attempts across all concepts, with node title joined in. */
 export function recentAttemptsGlobal(limit = 30): AttemptRow[] {
   return db()
@@ -377,6 +427,51 @@ export function search(q: string, limit = 25): NodeRow[] {
         LIMIT ?`
     )
     .all(like, like, `${q.replace(/[%_]/g, "")}%`, limit) as NodeRow[];
+}
+
+export type LinkSuggestion = {
+  src_id: string; src_title: string; src_area: string | null;
+  tgt_id: string; tgt_title: string; tgt_area: string | null;
+  snippet: string;
+};
+
+/** Scan note content for mentions of other concept titles with no existing edge. */
+export function linkSuggestions(limit = 60): LinkSuggestion[] {
+  const nodes = db()
+    .prepare(`SELECT id, title, area, content FROM nodes WHERE exists_ = 1 AND content IS NOT NULL`)
+    .all() as { id: string; title: string; area: string | null; content: string }[];
+
+  const edgeSet = new Set(
+    (db().prepare(`SELECT src || '|' || dst AS k FROM edges`).all() as { k: string }[]).map((r) => r.k)
+  );
+
+  const results: LinkSuggestion[] = [];
+
+  for (const src of nodes) {
+    if (!src.content || results.length >= limit) break;
+    const contentLower = src.content.toLowerCase();
+
+    for (const tgt of nodes) {
+      if (tgt.id === src.id || results.length >= limit) continue;
+      if (tgt.title.length < 4) continue; // skip very short titles (too noisy)
+      if (edgeSet.has(`${src.id}|${tgt.id}`) || edgeSet.has(`${tgt.id}|${src.id}`)) continue;
+
+      const idx = contentLower.indexOf(tgt.title.toLowerCase());
+      if (idx === -1) continue;
+
+      const start = Math.max(0, idx - 30);
+      const end = Math.min(src.content.length, idx + tgt.title.length + 30);
+      const snippet = (start > 0 ? "…" : "") + src.content.slice(start, end).trim() + (end < src.content.length ? "…" : "");
+
+      results.push({
+        src_id: src.id, src_title: src.title, src_area: src.area,
+        tgt_id: tgt.id, tgt_title: tgt.title, tgt_area: tgt.area,
+        snippet,
+      });
+    }
+  }
+
+  return results;
 }
 
 export type QualityIssue = {

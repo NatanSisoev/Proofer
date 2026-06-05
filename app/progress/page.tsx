@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { masteryHistogram, recentAttemptsGlobal, weakSpots, stats, todayStats } from "@/lib/queries";
+import { masteryHistogram, recentAttemptsGlobal, weakSpots, stats, todayStats, reviewForecast } from "@/lib/queries";
 
 export const dynamic = "force-dynamic";
 
@@ -33,6 +33,7 @@ export default function ProgressPage() {
   const recent = recentAttemptsGlobal(40);
   const weak = weakSpots(12);
   const today = todayStats();
+  const forecast = reviewForecast();
 
   const masteredPct = s.real > 0 ? Math.round((s.known / s.real) * 100) : 0;
   const maxBucket = Math.max(...hist.map((h) => h.count), 1);
@@ -167,7 +168,51 @@ export default function ProgressPage() {
         </div>
 
         {/* Right column */}
-        <div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          {/* 7-day review forecast */}
+          <div className="panel">
+            <h2>Review forecast — next 7 days</h2>
+            {forecast.every((d) => d.count === 0) ? (
+              <p className="muted small">No reviews scheduled — practice more concepts to build a review queue.</p>
+            ) : (
+              <div>
+                {(() => {
+                  const maxCount = Math.max(...forecast.map((d) => d.count), 1);
+                  const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+                  return (
+                    <div style={{ display: "flex", gap: 6, alignItems: "flex-end", height: 64, marginBottom: 6 }}>
+                      {forecast.map((d, i) => {
+                        const date = new Date(d.date + "T12:00:00");
+                        const isToday = i === 0;
+                        const barH = d.count > 0 ? Math.max(8, Math.round((d.count / maxCount) * 56)) : 3;
+                        return (
+                          <div key={d.date} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+                            <span className="muted small" style={{ fontSize: 10, lineHeight: 1 }}>
+                              {d.count > 0 ? d.count : ""}
+                            </span>
+                            <div
+                              style={{
+                                width: "100%", height: barH,
+                                background: isToday ? "var(--amber)" : "var(--accent)",
+                                borderRadius: 3, opacity: d.count === 0 ? 0.2 : 0.85,
+                              }}
+                            />
+                            <span className="muted small" style={{ fontSize: 10, lineHeight: 1, color: isToday ? "var(--amber)" : undefined }}>
+                              {isToday ? "today" : days[date.getDay()]}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })()}
+                <p className="muted small" style={{ margin: 0 }}>
+                  {forecast.reduce((s, d) => s + d.count, 0)} reviews coming up · practice now to shift them later
+                </p>
+              </div>
+            )}
+          </div>
+
           <div className="panel">
             <h2>Weak spots</h2>
             <p className="muted small" style={{ marginTop: -4, marginBottom: 12 }}>
@@ -194,7 +239,7 @@ export default function ProgressPage() {
               </div>
             ))}
           </div>
-        </div>
+        </div>{/* end right column */}
       </div>
     </div>
   );

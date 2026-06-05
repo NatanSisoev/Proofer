@@ -1,6 +1,7 @@
 import Link from "next/link";
 import SearchBox from "./components/SearchBox";
-import { frontier, stats, dueForReview, todayStats } from "@/lib/queries";
+import QuickKnown from "./components/QuickKnown";
+import { frontier, stats, dueForReview, todayStats, recentlyPracticed } from "@/lib/queries";
 
 export const dynamic = "force-dynamic";
 
@@ -25,6 +26,7 @@ export default function Home() {
   const front = frontier(20);
   const due = dueForReview(8);
   const today = todayStats();
+  const recent = recentlyPracticed(6);
 
   return (
     <div className="wrap">
@@ -107,7 +109,40 @@ export default function Home() {
       )}
 
       <div className="grid">
-        <div className="panel">
+        <div>
+          {/* Recently practiced — jump back in */}
+          {recent.length > 0 && (
+            <div className="panel" style={{ marginBottom: 16 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                <h2 style={{ margin: 0 }}>Jump back in</h2>
+                <Link href="/progress" className="small" style={{ color: "var(--accent)" }}>All activity →</Link>
+              </div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                {recent.map((n) => (
+                  <Link
+                    key={n.id}
+                    href={`/learn?node=${encodeURIComponent(n.id)}`}
+                    style={{
+                      display: "flex", alignItems: "center", gap: 7,
+                      padding: "6px 10px", borderRadius: 8,
+                      border: "1px solid var(--border)", background: "var(--bg-soft)",
+                      color: "var(--text)", fontSize: 13, textDecoration: "none",
+                    }}
+                  >
+                    <span style={{
+                      width: 8, height: 8, borderRadius: "50%", flexShrink: 0,
+                      background: n.last_verdict === "correct" ? "var(--green)"
+                        : n.last_verdict === "partial" ? "var(--amber)"
+                        : "var(--red)",
+                    }} />
+                    {n.title}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="panel">
           <h2>Knowledge frontier — ready to learn next</h2>
           <p className="muted small" style={{ marginTop: -4 }}>
             Concepts whose every prerequisite you already know.{" "}
@@ -126,8 +161,9 @@ export default function Home() {
                 <Link href={`/node/${encodeURIComponent(n.id)}`}>{n.title}</Link>
                 {n.area && <span className="meta"> · {n.area}</span>}
               </div>
-              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
                 {n.unlocks > 0 && <span className="pill unlock">unlocks {n.unlocks}</span>}
+                <QuickKnown nodeId={n.id} />
                 <Link
                   href={`/learn?node=${encodeURIComponent(n.id)}`}
                   className="pill"
@@ -138,7 +174,8 @@ export default function Home() {
               </div>
             </div>
           ))}
-        </div>
+          </div>{/* end frontier panel */}
+        </div>{/* end left column */}
 
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           <div className="panel">

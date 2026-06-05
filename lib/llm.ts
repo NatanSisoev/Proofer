@@ -55,7 +55,7 @@ You must:
 - mastery_evidence is your calibrated probability (0..1) that the student has mastered the target concept based on this answer alone.
 Be fair: partial credit for partial understanding. Be honest: do not praise a wrong proof.`;
 
-function problemUserText(node: NodeRow, prereqs: string[]): string {
+function problemUserText(node: NodeRow, prereqs: string[], recentGaps: string[] = []): string {
   return [
     `TARGET CONCEPT: ${node.title}`,
     node.type ? `Type: ${node.type}` : "",
@@ -63,7 +63,10 @@ function problemUserText(node: NodeRow, prereqs: string[]): string {
     node.overview ? `Overview: ${node.overview}` : "",
     node.content ? `\nFull note:\n${node.content.slice(0, 4000)}` : "",
     prereqs.length ? `\nPrerequisites you may use: ${prereqs.join(", ")}` : "",
-    `\nWrite one problem that tests genuine understanding of "${node.title}". Respond as JSON.`,
+    recentGaps.length
+      ? `\nThis student has struggled before. Recent gaps in their understanding:\n${recentGaps.map((g, i) => `${i + 1}. ${g}`).join("\n")}\nWrite a problem that DIRECTLY ADDRESSES one of these specific gaps — do not repeat the aspect they already got right.`
+      : `\nWrite one problem that tests genuine understanding of "${node.title}".`,
+    `\nRespond as JSON.`,
   ]
     .filter(Boolean)
     .join("\n");
@@ -96,9 +99,9 @@ function gradeUserText(a: {
 // ===========================================================================
 // Dispatch
 // ===========================================================================
-export async function generateProblem(node: NodeRow, prereqs: string[]): Promise<GeneratedProblem> {
-  if (PROVIDER === "gemini") return geminiGenerate(node, prereqs);
-  if (PROVIDER === "anthropic") return anthropicGenerate(node, prereqs);
+export async function generateProblem(node: NodeRow, prereqs: string[], recentGaps: string[] = []): Promise<GeneratedProblem> {
+  if (PROVIDER === "gemini") return geminiGenerate(node, prereqs, recentGaps);
+  if (PROVIDER === "anthropic") return anthropicGenerate(node, prereqs, recentGaps);
   return stubProblem(node);
 }
 
@@ -117,6 +120,53 @@ export async function gradeAnswer(args: {
   if (r.blamed_prerequisite === "none") r.blamed_prerequisite = "";
   r.mastery_evidence = Math.max(0, Math.min(1, r.mastery_evidence));
   return r;
+}
+
+export async function diagnoseWeakness(
+  nodeTitle: string,
+  gaps: string[],
+  blamedPrereqs: string[]
+): Promise<string> {
+  if (PROVIDER === "none") return "";
+  const uniq = (arr: string[]) => [...new Set(arr.filter(Boolean))];
+  const prompt = [
+    `A student has attempted the concept "${nodeTitle}" ${gaps.length} time(s) without mastering it.`,
+    `Here are the specific gaps identified in each attempt:`,
+    gaps.map((g, i) => `${i + 1}. ${g}`).join("\n"),
+    blamedPrereqs.length
+      ? `Prerequisite concepts they keep struggling with: ${uniq(blamedPrereqs).join(", ")}`
+      : "",
+    `In 2–4 sentences, diagnose the ROOT CAUSE of their persistent struggle with "${nodeTitle}". ` +
+    `Be specific — name the exact misconception or missing foundation. ` +
+    `End with one targeted advice sentence. Address the student as "you".`,
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  if (PROVIDER === "gemini") {
+    const resp = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_KEY}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }),
+      }
+    );
+    if (!resp.ok) return "";
+    const data = await resp.json();
+    return data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ?? "";
+  }
+
+  if (PROVIDER === "anthropic" && anthropic) {
+    const msg = await anthropic.messages.create({
+      model: ANTHROPIC_GRADE_MODEL,
+      max_tokens: 300,
+      messages: [{ role: "user", content: prompt }],
+    });
+    return (msg.content[0] as any)?.text?.trim() ?? "";
+  }
+
+  return "";
 }
 
 // ===========================================================================
@@ -190,8 +240,8 @@ async function geminiCall(system: string, userText: string, schema: unknown, tem
   return JSON.parse(text);
 }
 
-async function geminiGenerate(node: NodeRow, prereqs: string[]): Promise<GeneratedProblem> {
-  return geminiCall(AUTHOR_SYSTEM, problemUserText(node, prereqs), G_PROBLEM_SCHEMA, 0.8);
+async function geminiGenerate(node: NodeRow, prereqs: string[], recentGaps: string[] = []): Promise<GeneratedProblem> {
+  return geminiCall(AUTHOR_SYSTEM, problemUserText(node, prereqs, recentGaps), G_PROBLEM_SCHEMA, 0.8);
 }
 
 async function geminiGrade(a: Parameters<typeof gradeAnswer>[0]): Promise<GradeResult> {
@@ -236,14 +286,14 @@ function firstJson<T>(msg: Anthropic.Message): T {
   return JSON.parse(block.text) as T;
 }
 
-async function anthropicGenerate(node: NodeRow, prereqs: string[]): Promise<GeneratedProblem> {
+async function anthropicGenerate(node: NodeRow, prereqs: string[], recentGaps: string[] = []): Promise<GeneratedProblem> {
   const msg = await anthropic!.messages.create({
     model: ANTHROPIC_PROBLEM_MODEL,
     max_tokens: 16000,
     thinking: { type: "adaptive" },
     output_config: { effort: "medium", format: { type: "json_schema", schema: A_PROBLEM_SCHEMA } },
     system: [{ type: "text", text: AUTHOR_SYSTEM, cache_control: { type: "ephemeral" } }],
-    messages: [{ role: "user", content: problemUserText(node, prereqs) }],
+    messages: [{ role: "user", content: problemUserText(node, prereqs, recentGaps) }],
   });
   return firstJson<GeneratedProblem>(msg);
 }

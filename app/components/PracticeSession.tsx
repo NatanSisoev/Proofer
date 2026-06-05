@@ -35,6 +35,7 @@ export default function PracticeSession({ initialNodeId }: { initialNodeId?: str
   const [grade, setGrade] = useState<Grade | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [revealed, setRevealed] = useState<string | null>(null);
 
   const generate = useCallback(async (nodeId?: string, signal?: AbortSignal) => {
     setBusy(true);
@@ -42,6 +43,7 @@ export default function PracticeSession({ initialNodeId }: { initialNodeId?: str
     setGrade(null);
     setAnswer("");
     setProblem(null);
+    setRevealed(null);
     try {
       let id = nodeId;
       if (!id) {
@@ -74,6 +76,22 @@ export default function PracticeSession({ initialNodeId }: { initialNodeId?: str
     generate(initialNodeId, ctrl.signal);
     return () => ctrl.abort();
   }, [generate, initialNodeId]);
+
+  async function reveal() {
+    if (!problem) return;
+    setBusy(true);
+    try {
+      const res = await fetch("/api/practice/reveal", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ problemId: problem.problemId }),
+      });
+      const data = await res.json();
+      if (res.ok) setRevealed(data.idealSolution);
+    } finally {
+      setBusy(false);
+    }
+  }
 
   async function submit() {
     if (!problem || !answer.trim()) return;
@@ -138,13 +156,31 @@ export default function PracticeSession({ initialNodeId }: { initialNodeId?: str
             disabled={!!grade || busy}
           />
 
-          {!grade && (
+          {revealed && (
+            <div className="panel" style={{ borderColor: "#2a3a2a", background: "#0d1a0d", marginTop: 4 }}>
+              <h4 style={{ color: "var(--green)", margin: "0 0 8px" }}>Ideal solution</h4>
+              <div className="markdown"><Markdown>{revealed}</Markdown></div>
+              <button
+                className="btn-ghost"
+                onClick={() => generate(problem.node.id, undefined)}
+                disabled={busy}
+                style={{ marginTop: 10, fontSize: 13 }}
+              >
+                Try another on this concept →
+              </button>
+            </div>
+          )}
+
+          {!grade && !revealed && (
             <div className="practice-actions">
               <button className="btn-primary" onClick={submit} disabled={busy || !answer.trim()}>
                 {busy ? "Grading…" : "Submit answer"}
               </button>
               <button className="btn-ghost" onClick={() => generate(problem.node.id, undefined)} disabled={busy}>
                 Skip / new problem
+              </button>
+              <button className="btn-ghost" onClick={reveal} disabled={busy} style={{ color: "var(--muted)", fontSize: 13 }}>
+                I don't know
               </button>
               <span className="muted small" style={{ marginLeft: "auto", alignSelf: "center" }}>Ctrl+Enter</span>
             </div>

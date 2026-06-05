@@ -52,6 +52,7 @@ export default function StudyQueue({ queue }: { queue: QueueNode[] }) {
   const [grade, setGrade] = useState<Grade | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [revealed, setRevealed] = useState<string | null>(null);
   const [results, setResults] = useState<SessionResult[]>([]);
   const [done, setDone] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -64,6 +65,7 @@ export default function StudyQueue({ queue }: { queue: QueueNode[] }) {
     setGrade(null);
     setAnswer("");
     setProblem(null);
+    setRevealed(null);
     try {
       const res = await fetch("/api/practice/generate", {
         method: "POST",
@@ -101,6 +103,28 @@ export default function StudyQueue({ queue }: { queue: QueueNode[] }) {
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   });
+
+  async function reveal() {
+    if (!problem) return;
+    setBusy(true);
+    try {
+      const res = await fetch("/api/practice/reveal", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ problemId: problem.problemId }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setRevealed(data.idealSolution);
+        setResults((prev) => [
+          ...prev,
+          { node: currentNode, verdict: "incorrect", masteryBefore: data.masteryBefore, masteryAfter: data.masteryAfter },
+        ]);
+      }
+    } finally {
+      setBusy(false);
+    }
+  }
 
   async function submit() {
     if (!problem || !answer.trim()) return;
@@ -276,7 +300,17 @@ export default function StudyQueue({ queue }: { queue: QueueNode[] }) {
             disabled={!!grade || busy}
           />
 
-          {!grade && (
+          {revealed && (
+            <div className="panel" style={{ borderColor: "#2a3a2a", background: "#0d1a0d", marginTop: 4 }}>
+              <h4 style={{ color: "var(--green)", margin: "0 0 8px" }}>Ideal solution</h4>
+              <div className="markdown"><Markdown>{revealed}</Markdown></div>
+              <button className="btn-ghost" onClick={advance} disabled={busy} style={{ marginTop: 10, fontSize: 13 }}>
+                {index + 1 >= queue.length ? "Finish session →" : "Next concept →"}
+              </button>
+            </div>
+          )}
+
+          {!grade && !revealed && (
             <div className="practice-actions">
               <button className="btn-primary" onClick={submit} disabled={busy || !answer.trim()}>
                 {busy ? "Grading…" : "Submit"}
@@ -284,7 +318,10 @@ export default function StudyQueue({ queue }: { queue: QueueNode[] }) {
               <button className="btn-ghost" onClick={advance} disabled={busy}>
                 Skip →
               </button>
-              <span className="muted small" style={{ marginLeft: "auto", alignSelf: "center" }}>Ctrl+Enter to submit</span>
+              <button className="btn-ghost" onClick={reveal} disabled={busy} style={{ color: "var(--muted)", fontSize: 13 }}>
+                I don't know
+              </button>
+              <span className="muted small" style={{ marginLeft: "auto", alignSelf: "center" }}>Ctrl+Enter</span>
             </div>
           )}
 

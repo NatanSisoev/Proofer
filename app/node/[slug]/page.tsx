@@ -5,10 +5,11 @@ import EgoGraph from "@/app/components/EgoGraph";
 import KnownButton from "@/app/components/KnownButton";
 import NodeActions from "@/app/components/NodeActions";
 import LearningPath from "@/app/components/LearningPath";
+import WeaknessDiagnosis from "@/app/components/WeaknessDiagnosis";
 import GhostCreate from "@/app/components/GhostCreate";
 import MathText from "@/app/components/MathText";
 import MasterySparkline from "@/app/components/MasterySparkline";
-import { getNode, edgesOf, isKnown, readiness, prerequisites } from "@/lib/queries";
+import { getNode, edgesOf, isKnown, readiness, prerequisites, attemptCount } from "@/lib/queries";
 import { getMasteryP } from "@/lib/mastery";
 import { HAS_KEY } from "@/lib/llm";
 import type { EdgeRow } from "@/lib/db";
@@ -62,6 +63,7 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
   const mastery = getMasteryP(id);
   const ready = readiness(id);
   const { depth } = prerequisites(id);
+  const attempts = attemptCount(id);
 
   // group outgoing by semantic priority
   const order = ["depends_on", "generalizes", "equivalent_to", "instance_of", "contradicts", "related"];
@@ -98,8 +100,19 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
         <>
           <div className="node-head">
             <div>
-              {node.type && <span className={`type-badge t-${node.type}`}>{node.type}</span>}
-              <h1 style={{ marginTop: 8 }}>{node.title}</h1>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                {node.type && <span className={`type-badge t-${node.type}`}>{node.type}</span>}
+                {node.area && <span className="muted small">{node.area}</span>}
+                {depth > 0 && (
+                  <span className="pill" style={{ fontSize: 10 }}>
+                    depth {depth}
+                  </span>
+                )}
+                {attempts > 0 && (
+                  <span className="muted small">{attempts} attempt{attempts !== 1 ? "s" : ""}</span>
+                )}
+              </div>
+              <h1 style={{ marginTop: 6 }}>{node.title}</h1>
               {node.overview && (
                 <MathText className="muted" style={{ display: "block", marginTop: -2, maxWidth: 640, lineHeight: 1.5 }}>
                   {node.overview}
@@ -111,6 +124,7 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
                 <span className="small">{Math.round(mastery * 100)}%</span>
                 <MasterySparkline nodeId={id} />
               </div>
+              {HAS_KEY && <WeaknessDiagnosis nodeId={id} attemptCount={attempts} />}
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "flex-end" }}>
               <Link href={`/learn?node=${encodeURIComponent(id)}`} className="cta">Practice this →</Link>

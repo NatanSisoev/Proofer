@@ -25,9 +25,24 @@ export async function POST(req: NextRequest) {
   if (!node || node.exists_ === 0) return NextResponse.json({ error: "unknown node" }, { status: 404 });
 
   const prereqs = directPrereqs(nodeId);
+
+  // Pass recent non-correct gaps so the AI avoids repeating working parts
+  // and focuses on the specific misconceptions the student keeps hitting.
+  const recentGaps = (
+    db()
+      .prepare(
+        `SELECT gap, verdict FROM attempts
+          WHERE node_id = ? AND verdict != 'correct'
+          ORDER BY id DESC LIMIT 3`
+      )
+      .all(nodeId) as { gap: string; verdict: string }[]
+  )
+    .map((r) => r.gap)
+    .filter(Boolean);
+
   let gen;
   try {
-    gen = await generateProblem(node, prereqs);
+    gen = await generateProblem(node, prereqs, recentGaps);
   } catch (e) {
     const { status, message } = friendlyLLMError(e);
     return NextResponse.json({ error: message }, { status });

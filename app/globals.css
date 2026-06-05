@@ -65,9 +65,12 @@ header.top .tag { color: var(--muted); font-size: 13px; }
   border-radius: 6px; text-transform: uppercase; letter-spacing: 0.04em;
 }
 .t-Definition { background: #14304a; color: #7fc4ff; }
+.t-Axiom, .t-Notation { background: #0d2a3a; color: #5ba8d4; }
 .t-Theorem, .t-Proposition, .t-Lemma, .t-Corollary { background: #2a1f43; color: #c4a6ff; }
+.t-Claim, .t-Conjecture, .t-Hypothesis { background: #2a1f35; color: #a87fd4; }
 .t-Algorithm { background: #1d3a2e; color: #7fe0b0; }
 .t-Example { background: #3a341c; color: #f0d77a; }
+.t-Remark { background: #1e2a1e; color: #8ab88a; }
 .t-ghost { background: #2a1c1c; color: #ff9b9b; }
 
 .search-box { width: 100%; padding: 11px 14px; background: var(--bg-soft); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-size: 15px; }
@@ -163,10 +166,11 @@ button.know.on { background: #173a2c; border-color: #2e6b50; color: var(--green)
   max-width: 1200px; margin: 0 auto; padding: 0 24px;
   height: 48px; display: flex; align-items: center; justify-content: space-between;
 }
-.nav-links { display: flex; align-items: center; gap: 6px; }
-.nav-brand { font-weight: 700; font-size: 15px; color: var(--text); letter-spacing: -0.01em; }
+.nav-links { display: flex; align-items: center; gap: 4px; overflow-x: auto; scrollbar-width: none; }
+.nav-links::-webkit-scrollbar { display: none; }
+.nav-brand { font-weight: 700; font-size: 15px; color: var(--text); letter-spacing: -0.01em; white-space: nowrap; flex-shrink: 0; margin-right: 4px; }
 .nav-brand:hover { text-decoration: none; color: var(--text); }
-.nav-link { font-size: 14px; color: var(--muted); padding: 6px 10px; border-radius: 8px; }
+.nav-link { font-size: 13px; color: var(--muted); padding: 5px 9px; border-radius: 8px; white-space: nowrap; flex-shrink: 0; }
 .nav-link:hover { color: var(--text); text-decoration: none; background: var(--bg-soft); }
 .nav-spacer { height: 48px; }
 
