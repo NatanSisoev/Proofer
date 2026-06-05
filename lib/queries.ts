@@ -1,5 +1,5 @@
 import { db, MASTERED_SUBQUERY, MASTERY_THRESHOLD, type NodeRow, type EdgeRow } from "./db";
-import { getMasteryP, setKnown as masterySetKnown } from "./mastery";
+import { getMasteryP, setKnown as masterySetKnown, P_INIT } from "./mastery";
 
 export function getNode(id: string): NodeRow | undefined {
   return db().prepare("SELECT * FROM nodes WHERE id = ?").get(id) as NodeRow | undefined;
@@ -100,6 +100,83 @@ export function frontier(limit = 40): (NodeRow & { unlocks: number })[] {
     .all(limit) as (NodeRow & { unlocks: number })[];
 }
 
+/**
+ * Concepts due for spaced-repetition review: has been practiced, mastery has
+ * decayed past half_life since last_seen. Sorted by most overdue first.
+ */
+export function dueForReview(limit = 20): (BrowseNode & { days_overdue: number; p_decayed: number })[] {
+  const rows = db()
+    .prepare(
+      `SELECT n.*,
+              COALESCE(m.p, 0) AS mastery_p,
+              m.half_life,
+              m.last_seen,
+              (julianday('now') - julianday(m.last_seen)) AS days_elapsed,
+              (julianday('now') - julianday(m.last_seen)) - m.half_life AS days_overdue
+         FROM nodes n
+         JOIN mastery m ON m.node_id = n.id
+        WHERE n.exists_ = 1
+          AND m.last_seen IS NOT NULL
+          AND m.p > 0.1
+          AND (julianday('now') - julianday(m.last_seen)) > m.half_life * 0.8
+        ORDER BY days_overdue DESC
+        LIMIT ?`
+    )
+    .all(limit) as any[];
+  // compute exponential decay in JS (node:sqlite has no math functions)
+  return rows.map((r) => ({
+    ...r,
+    p_decayed: r.mastery_p * Math.pow(0.5, r.days_elapsed / r.half_life),
+  }));
+}
+
+/** Time series of mastery for one concept, for sparklines. */
+export function masteryHistory(nodeId: string, limit = 30): { p: number; recorded_at: string }[] {
+  return db()
+    .prepare(
+      `SELECT p, recorded_at FROM mastery_history
+        WHERE node_id = ?
+        ORDER BY id ASC
+        LIMIT ?`
+    )
+    .all(nodeId, limit) as { p: number; recorded_at: string }[];
+}
+
+/** Full graph data for the global graph view. */
+export function graphData(area?: string) {
+  const nodeRows = db()
+    .prepare(
+      `SELECT n.id, n.title, n.type, n.area, n.exists_,
+              COALESCE(m.p, 0) AS mastery_p,
+              (SELECT COUNT(*) FROM edges e WHERE e.dst = n.id AND e.type='depends_on') AS dep_count
+         FROM nodes n
+         LEFT JOIN mastery m ON m.node_id = n.id
+        WHERE n.exists_ = 1
+          ${area ? "AND n.area = ?" : ""}
+        ORDER BY dep_count DESC`
+    )
+    .all(...(area ? [area] : [])) as {
+      id: string; title: string; type: string | null; area: string | null;
+      exists_: number; mastery_p: number; dep_count: number;
+    }[];
+
+  const ids = new Set(nodeRows.map((n) => n.id));
+  const edgeRows = db()
+    .prepare(
+      `SELECT src, dst, type FROM edges
+        WHERE type IN ('depends_on','generalizes','equivalent_to','contradicts')
+          AND src IN (SELECT id FROM nodes WHERE exists_=1)
+          AND dst IN (SELECT id FROM nodes WHERE exists_=1)`
+    )
+    .all() as { src: string; dst: string; type: string }[];
+
+  const filteredEdges = area
+    ? edgeRows.filter((e) => ids.has(e.src) && ids.has(e.dst))
+    : edgeRows;
+
+  return { nodes: nodeRows, edges: filteredEdges };
+}
+
 /** k-hop ego subgraph around a node (we never render the whole graph). */
 export function egoGraph(id: string, depth = 1) {
   const seen = new Set<string>([id]);
@@ -135,6 +212,161 @@ export function egoGraph(id: string, depth = 1) {
   };
 }
 
+export type BrowseArea = { area: string; count: number; avg_mastery: number };
+export type BrowseNode = NodeRow & { mastery_p: number };
+
+export function browseAreas(): BrowseArea[] {
+  return db()
+    .prepare(
+      `SELECT n.area,
+              COUNT(*) AS count,
+              AVG(COALESCE(m.p, 0.15)) AS avg_mastery
+         FROM nodes n
+         LEFT JOIN mastery m ON m.node_id = n.id
+        WHERE n.exists_ = 1 AND n.area IS NOT NULL
+        GROUP BY n.area
+        ORDER BY n.area ASC`
+    )
+    .all() as BrowseArea[];
+}
+
+export function nodesInArea(
+  area: string,
+  opts: { type?: string; sort?: "mastery_asc" | "mastery_desc" | "alpha" } = {}
+): BrowseNode[] {
+  const { type, sort = "mastery_asc" } = opts;
+  const order =
+    sort === "mastery_desc" ? "mastery_p DESC" : sort === "alpha" ? "n.title ASC" : "mastery_p ASC";
+  const rows = db()
+    .prepare(
+      `SELECT n.*, COALESCE(m.p, 0.15) AS mastery_p
+         FROM nodes n
+         LEFT JOIN mastery m ON m.node_id = n.id
+        WHERE n.exists_ = 1
+          AND n.area = ?
+          ${type ? "AND n.type = ?" : ""}
+        ORDER BY ${order}`
+    )
+    .all(...([area, ...(type ? [type] : [])] as any[])) as BrowseNode[];
+  return rows;
+}
+
+export function nodeTypes(): string[] {
+  return (
+    db()
+      .prepare(
+        `SELECT DISTINCT type FROM nodes WHERE exists_ = 1 AND type IS NOT NULL ORDER BY type`
+      )
+      .all() as { type: string }[]
+  ).map((r) => r.type);
+}
+
+/**
+ * Learning path to a target: unmastered prerequisites sorted foundations-first
+ * (deepest dependency depth first = the things you need to learn before anything else).
+ */
+export function learningPath(targetId: string): (BrowseNode & { pdepth: number })[] {
+  const rows = db()
+    .prepare(
+      `WITH RECURSIVE closure(id, depth, path) AS (
+         SELECT dst, 1, '/' || ? || '/' || dst || '/'
+           FROM edges WHERE src = ? AND type = 'depends_on'
+         UNION ALL
+         SELECT e.dst, c.depth + 1, c.path || e.dst || '/'
+           FROM edges e
+           JOIN closure c ON e.src = c.id
+          WHERE e.type = 'depends_on'
+            AND instr(c.path, '/' || e.dst || '/') = 0
+            AND c.depth < 50
+       )
+       SELECT id, MAX(depth) AS depth FROM closure GROUP BY id`
+    )
+    .all(targetId, targetId) as { id: string; depth: number }[];
+
+  if (rows.length === 0) return [];
+  const ids = rows.map((r) => r.id);
+  const ph = ids.map(() => "?").join(",");
+  const nodes = db()
+    .prepare(
+      `SELECT n.*, COALESCE(m.p, 0) AS mastery_p
+         FROM nodes n
+         LEFT JOIN mastery m ON m.node_id = n.id
+        WHERE n.id IN (${ph}) AND n.exists_ = 1`
+    )
+    .all(...ids) as BrowseNode[];
+
+  const depthMap = new Map(rows.map((r) => [r.id, r.depth]));
+  return nodes
+    .filter((n) => n.mastery_p < MASTERY_THRESHOLD)
+    .map((n) => ({ ...n, pdepth: depthMap.get(n.id) ?? 0 }))
+    .sort((a, b) => b.pdepth - a.pdepth || a.title.localeCompare(b.title));
+}
+
+/** Mastery histogram in 10-point buckets (0..9 → 0-9%, 10 → 90-99%, 11 → 100%). */
+export function masteryHistogram(): { bucket: number; count: number }[] {
+  const rows = db()
+    .prepare(
+      `SELECT CAST(COALESCE(m.p, 0) * 10 AS INTEGER) AS bucket,
+              COUNT(*) AS count
+         FROM nodes n
+         LEFT JOIN mastery m ON m.node_id = n.id
+        WHERE n.exists_ = 1
+        GROUP BY bucket
+        ORDER BY bucket`
+    )
+    .all() as { bucket: number; count: number }[];
+  // fill missing buckets (CAST truncates toward zero, same as FLOOR for 0..1)
+  const map = new Map(rows.map((r) => [r.bucket, r.count]));
+  return Array.from({ length: 11 }, (_, i) => ({ bucket: i, count: map.get(i) ?? 0 }));
+}
+
+export type AttemptRow = {
+  id: number; node_id: string; kind: string; answer: string;
+  verdict: string; evidence: number; gap: string; blamed_prereq: string;
+  created_at: string; mode: string; title?: string;
+};
+
+/** Recent attempts across all concepts, with node title joined in. */
+export function recentAttemptsGlobal(limit = 30): AttemptRow[] {
+  return db()
+    .prepare(
+      `SELECT a.*, n.title
+         FROM attempts a
+         LEFT JOIN nodes n ON n.id = a.node_id
+        ORDER BY a.id DESC
+        LIMIT ?`
+    )
+    .all(limit) as AttemptRow[];
+}
+
+/** Weakest concepts you've actually attempted, sorted by mastery ascending. */
+export function weakSpots(limit = 20): BrowseNode[] {
+  return db()
+    .prepare(
+      `SELECT n.*, COALESCE(m.p, 0) AS mastery_p
+         FROM nodes n
+         JOIN mastery m ON m.node_id = n.id
+        WHERE n.exists_ = 1 AND m.attempts > 0
+        ORDER BY mastery_p ASC
+        LIMIT ?`
+    )
+    .all(limit) as BrowseNode[];
+}
+
+export function searchWithMastery(q: string, limit = 25): (NodeRow & { mastery_p: number })[] {
+  const like = `%${q.replace(/[%_]/g, "")}%`;
+  return db()
+    .prepare(
+      `SELECT n.*, COALESCE(m.p, 0) AS mastery_p
+         FROM nodes n
+         LEFT JOIN mastery m ON m.node_id = n.id
+        WHERE n.exists_ = 1 AND (n.title LIKE ? OR n.overview LIKE ?)
+        ORDER BY CASE WHEN n.title LIKE ? THEN 0 ELSE 1 END, n.title ASC
+        LIMIT ?`
+    )
+    .all(like, like, `${q.replace(/[%_]/g, "")}%`, limit) as (NodeRow & { mastery_p: number })[];
+}
+
 export function search(q: string, limit = 25): NodeRow[] {
   const like = `%${q.replace(/[%_]/g, "")}%`;
   return db()
@@ -145,6 +377,96 @@ export function search(q: string, limit = 25): NodeRow[] {
         LIMIT ?`
     )
     .all(like, like, `${q.replace(/[%_]/g, "")}%`, limit) as NodeRow[];
+}
+
+export type QualityIssue = {
+  node_id: string;
+  title: string;
+  area: string | null;
+  type: string | null;
+  mastery_p: number;
+  issues: string[];
+  score: number; // 0-100, higher = more issues
+};
+
+export function noteQuality(): QualityIssue[] {
+  const rows = db()
+    .prepare(
+      `SELECT n.id AS node_id, n.title, n.area, n.type,
+              COALESCE(m.p, 0) AS mastery_p,
+              COALESCE(LENGTH(n.content), 0) AS content_len,
+              COALESCE(LENGTH(n.overview), 0) AS overview_len,
+              (SELECT COUNT(*) FROM edges e WHERE e.src = n.id AND e.type = 'depends_on') AS prereq_count,
+              (SELECT COUNT(*) FROM edges e2 WHERE e2.dst = n.id) AS incoming_count,
+              COALESCE(m.attempts, 0) AS attempts
+         FROM nodes n
+         LEFT JOIN mastery m ON m.node_id = n.id
+        WHERE n.exists_ = 1
+        ORDER BY n.title`
+    )
+    .all() as {
+      node_id: string; title: string; area: string | null; type: string | null;
+      mastery_p: number; content_len: number; overview_len: number;
+      prereq_count: number; incoming_count: number; attempts: number;
+    }[];
+
+  // "atomic" types: definitions are foundational — no prereqs expected
+  const atomicTypes = new Set(["definition", "axiom", "notation", "Definition", "Axiom", "Notation", "Example", "Remark"]);
+
+  return rows
+    .map((r) => {
+      const issues: string[] = [];
+      let score = 0;
+
+      if (r.content_len < 100) { issues.push("no content"); score += 40; }
+      else if (r.content_len < 400) { issues.push("thin content"); score += 15; }
+
+      if (r.overview_len === 0) { issues.push("no overview"); score += 20; }
+
+      if (r.prereq_count === 0 && !atomicTypes.has(r.type ?? "")) {
+        issues.push("no prerequisites");
+        score += 10;
+      }
+
+      if (r.incoming_count === 0) { issues.push("isolated"); score += 15; }
+
+      if (r.attempts === 0) { issues.push("never practiced"); score += 5; }
+
+      return { ...r, issues, score };
+    })
+    .filter((r) => r.issues.length > 0)
+    .sort((a, b) => b.score - a.score || a.title.localeCompare(b.title));
+}
+
+/** Count of distinct concepts practiced today and the last N days. */
+export function todayStats(): { today_concepts: number; today_attempts: number; streak_days: number } {
+  const d = db();
+  const today = (d.prepare(
+    `SELECT COUNT(DISTINCT node_id) AS concepts, COUNT(*) AS attempts
+       FROM attempts WHERE date(created_at) = date('now')`
+  ).get() as any);
+
+  // streak: longest run of consecutive days ending today
+  const days = d.prepare(
+    `SELECT DISTINCT date(created_at) AS day
+       FROM attempts
+      ORDER BY day DESC
+      LIMIT 365`
+  ).all() as { day: string }[];
+
+  let streak = 0;
+  const today_date = new Date().toISOString().slice(0, 10);
+  for (let i = 0; i < days.length; i++) {
+    const expected = new Date(Date.now() - i * 86400000).toISOString().slice(0, 10);
+    if (days[i].day === expected) streak++;
+    else break;
+  }
+
+  return {
+    today_concepts: today.concepts ?? 0,
+    today_attempts: today.attempts ?? 0,
+    streak_days: streak,
+  };
 }
 
 export function stats() {

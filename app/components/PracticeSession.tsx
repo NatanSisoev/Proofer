@@ -36,7 +36,7 @@ export default function PracticeSession({ initialNodeId }: { initialNodeId?: str
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const generate = useCallback(async (nodeId?: string) => {
+  const generate = useCallback(async (nodeId?: string, signal?: AbortSignal) => {
     setBusy(true);
     setError(null);
     setGrade(null);
@@ -45,30 +45,34 @@ export default function PracticeSession({ initialNodeId }: { initialNodeId?: str
     try {
       let id = nodeId;
       if (!id) {
-        const r = await fetch("/api/practice/next").then((r) => r.json());
+        const r = await fetch("/api/practice/next", { signal }).then((r) => r.json());
         id = r.node?.id;
       }
       if (!id) {
-        setError("Nothing on your frontier to practice — mark some foundations known first.");
+        if (!signal?.aborted) setError("Nothing on your frontier to practice — mark some foundations known first.");
         return;
       }
       const res = await fetch("/api/practice/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ nodeId: id }),
+        signal,
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "generation failed");
-      setProblem(data);
+      if (!signal?.aborted) setProblem(data);
     } catch (e: any) {
-      setError(e.message || "Something went wrong");
+      if (e.name === "AbortError") return;
+      if (!signal?.aborted) setError(e.message || "Something went wrong");
     } finally {
-      setBusy(false);
+      if (!signal?.aborted) setBusy(false);
     }
   }, []);
 
   useEffect(() => {
-    generate(initialNodeId);
+    const ctrl = new AbortController();
+    generate(initialNodeId, ctrl.signal);
+    return () => ctrl.abort();
   }, [generate, initialNodeId]);
 
   async function submit() {
@@ -90,6 +94,18 @@ export default function PracticeSession({ initialNodeId }: { initialNodeId?: str
       setBusy(false);
     }
   }
+
+  // Ctrl+Enter to submit
+  useEffect(() => {
+    function handler(e: KeyboardEvent) {
+      if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        if (!grade && !busy && answer.trim() && problem) submit();
+      }
+    }
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  });
 
   return (
     <div className="practice">
@@ -127,9 +143,10 @@ export default function PracticeSession({ initialNodeId }: { initialNodeId?: str
               <button className="btn-primary" onClick={submit} disabled={busy || !answer.trim()}>
                 {busy ? "Grading…" : "Submit answer"}
               </button>
-              <button className="btn-ghost" onClick={() => generate(problem.node.id)} disabled={busy}>
+              <button className="btn-ghost" onClick={() => generate(problem.node.id, undefined)} disabled={busy}>
                 Skip / new problem
               </button>
+              <span className="muted small" style={{ marginLeft: "auto", alignSelf: "center" }}>Ctrl+Enter</span>
             </div>
           )}
 
@@ -174,15 +191,15 @@ export default function PracticeSession({ initialNodeId }: { initialNodeId?: str
               </div>
 
               <div className="practice-actions">
-                <button className="btn-primary" onClick={() => generate(problem.node.id)} disabled={busy}>
+                <button className="btn-primary" onClick={() => generate(problem.node.id, undefined)} disabled={busy}>
                   Another on this concept
                 </button>
                 {grade.blamed_prerequisite ? (
-                  <button className="btn-ghost" onClick={() => generate(grade.blamed_prerequisite)} disabled={busy}>
+                  <button className="btn-ghost" onClick={() => generate(grade.blamed_prerequisite, undefined)} disabled={busy}>
                     Drill the prerequisite →
                   </button>
                 ) : (
-                  <button className="btn-ghost" onClick={() => generate()} disabled={busy}>
+                  <button className="btn-ghost" onClick={() => generate(undefined, undefined)} disabled={busy}>
                     Next concept →
                   </button>
                 )}

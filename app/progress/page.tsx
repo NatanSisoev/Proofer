@@ -1,0 +1,201 @@
+import Link from "next/link";
+import { masteryHistogram, recentAttemptsGlobal, weakSpots, stats, todayStats } from "@/lib/queries";
+
+export const dynamic = "force-dynamic";
+
+const VERDICT_COLOR: Record<string, string> = {
+  correct: "#57d9a3",
+  partial: "#f2c94c",
+  incorrect: "#ff6b6b",
+};
+const VERDICT_LABEL: Record<string, string> = {
+  correct: "✓",
+  partial: "~",
+  incorrect: "✗",
+};
+
+function timeAgo(iso: string) {
+  const diff = Date.now() - new Date(iso).getTime();
+  const m = Math.floor(diff / 60000);
+  const h = Math.floor(m / 60);
+  const d = Math.floor(h / 24);
+  if (d > 0) return `${d}d ago`;
+  if (h > 0) return `${h}h ago`;
+  if (m > 0) return `${m}m ago`;
+  return "just now";
+}
+
+const DAILY_GOAL = 5;
+
+export default function ProgressPage() {
+  const s = stats();
+  const hist = masteryHistogram();
+  const recent = recentAttemptsGlobal(40);
+  const weak = weakSpots(12);
+  const today = todayStats();
+
+  const masteredPct = s.real > 0 ? Math.round((s.known / s.real) * 100) : 0;
+  const maxBucket = Math.max(...hist.map((h) => h.count), 1);
+
+  return (
+    <div className="wrap">
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 24 }}>
+        <div>
+          <h1 style={{ margin: 0, fontSize: 24, letterSpacing: "-0.02em" }}>Progress</h1>
+          <p className="muted small" style={{ marginTop: 4 }}>Your mastery across {s.real} concepts</p>
+        </div>
+        <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+          <Link href="/session" className="pill" style={{ color: "var(--accent)", borderColor: "var(--accent-soft)" }}>
+            Start session →
+          </Link>
+          <Link href="/" className="muted small">← home</Link>
+        </div>
+      </div>
+
+      {/* Summary stats */}
+      <div className="stat-row" style={{ marginBottom: 20 }}>
+        <div className="stat">
+          <div className="n">{s.known}</div>
+          <div className="l">mastered</div>
+        </div>
+        <div className="stat">
+          <div className="n">{masteredPct}%</div>
+          <div className="l">of concepts</div>
+        </div>
+        <div className="stat">
+          <div className="n">{s.practiced}</div>
+          <div className="l">attempts</div>
+        </div>
+        <div className="stat">
+          <div className="n">{s.real - s.known}</div>
+          <div className="l">remaining</div>
+        </div>
+        {today.streak_days > 0 && (
+          <div className="stat" style={{ borderColor: "#4a3a1a" }}>
+            <div className="n" style={{ color: "var(--amber)" }}>🔥 {today.streak_days}</div>
+            <div className="l">day streak</div>
+          </div>
+        )}
+        <div className="stat">
+          <div className="n" style={{ color: today.today_concepts >= DAILY_GOAL ? "var(--green)" : undefined }}>
+            {today.today_concepts}/{DAILY_GOAL}
+          </div>
+          <div className="l">today's goal</div>
+        </div>
+      </div>
+
+      <div className="grid" style={{ gap: 20 }}>
+        {/* Left column */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+          {/* Histogram */}
+          <div className="panel">
+            <h2>Mastery distribution</h2>
+            <div style={{ display: "flex", gap: 4, height: 80, alignItems: "flex-end", marginBottom: 4 }}>
+              {hist.map((h) => {
+                const pct = h.count / maxBucket;
+                const label = h.bucket === 10 ? "100%" : `${h.bucket * 10}%`;
+                const isGood = h.bucket >= 8;
+                return (
+                  <div key={h.bucket} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
+                    <div
+                      style={{
+                        width: "100%",
+                        height: `${Math.max(4, pct * 72)}px`,
+                        background: isGood ? "var(--green)" : h.bucket >= 4 ? "var(--amber)" : "var(--muted)",
+                        borderRadius: "3px 3px 0 0",
+                        opacity: 0.85,
+                      }}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+            <div style={{ display: "flex", gap: 4 }}>
+              {hist.map((h) => (
+                <div key={h.bucket} style={{ flex: 1, textAlign: "center", fontSize: 10, color: "var(--muted)" }}>
+                  {h.bucket * 10}
+                </div>
+              ))}
+            </div>
+            <p className="small muted" style={{ marginTop: 8 }}>
+              {hist.filter((h) => h.bucket >= 8).reduce((s, h) => s + h.count, 0)} concepts at 80%+ mastery ·{" "}
+              {hist.filter((h) => h.bucket < 2).reduce((s, h) => s + h.count, 0)} never practiced
+            </p>
+          </div>
+
+          {/* Recent activity */}
+          <div className="panel">
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+              <h2 style={{ margin: 0 }}>Recent attempts</h2>
+              {recent.length > 0 && (
+                <span className="muted small">{recent.length} shown</span>
+              )}
+            </div>
+            {recent.length === 0 && <p className="muted">No attempts yet — start practicing!</p>}
+            <div style={{ display: "flex", flexDirection: "column", gap: 1 }}>
+              {recent.map((a) => (
+                <div key={a.id} className="attempt-row">
+                  <span
+                    className="verdict-dot"
+                    style={{ color: VERDICT_COLOR[a.verdict] || "var(--muted)" }}
+                  >
+                    {VERDICT_LABEL[a.verdict] || "?"}
+                  </span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <Link
+                      href={`/node/${encodeURIComponent(a.node_id)}`}
+                      style={{ fontWeight: 500, fontSize: 13.5 }}
+                    >
+                      {(a as any).title || a.node_id}
+                    </Link>
+                    {a.gap && (
+                      <p className="muted small" style={{ margin: "1px 0 0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {a.gap}
+                      </p>
+                    )}
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 2, flexShrink: 0 }}>
+                    <span className="small muted">{timeAgo(a.created_at)}</span>
+                    <Link href={`/learn?node=${encodeURIComponent(a.node_id)}`} className="pill" style={{ color: "var(--accent)", borderColor: "var(--accent-soft)" }}>
+                      retry →
+                    </Link>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Right column */}
+        <div>
+          <div className="panel">
+            <h2>Weak spots</h2>
+            <p className="muted small" style={{ marginTop: -4, marginBottom: 12 }}>
+              Concepts you've practiced but haven't mastered yet.
+            </p>
+            {weak.length === 0 && <p className="muted">Nothing here yet — keep practicing!</p>}
+            {weak.map((n) => (
+              <div key={n.id} className="frontier-item">
+                <div style={{ minWidth: 0 }}>
+                  {n.type && <span className={`type-badge t-${n.type}`} style={{ marginRight: 6 }}>{n.type}</span>}
+                  <Link href={`/node/${encodeURIComponent(n.id)}`} style={{ fontSize: 13.5 }}>
+                    {n.title}
+                  </Link>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+                  <div className="bar" style={{ width: 60 }}>
+                    <span style={{ width: `${Math.round(n.mastery_p * 100)}%` }} />
+                  </div>
+                  <span className="small muted">{Math.round(n.mastery_p * 100)}%</span>
+                  <Link href={`/learn?node=${encodeURIComponent(n.id)}`} className="pill" style={{ color: "var(--accent)", borderColor: "var(--accent-soft)" }}>
+                    drill →
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

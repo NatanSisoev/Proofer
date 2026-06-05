@@ -46,11 +46,12 @@ Principles:
 - Provide a correct ideal solution and a short rubric of the key points any correct answer must contain.`;
 
 const GRADER_SYSTEM = `You are a rigorous but encouraging mathematics tutor grading a student's free-form answer.
-Your job is DIAGNOSIS, not delivery. You must:
+Your job is DIAGNOSIS, not delivery. Address the student directly as "you" — never refer to them in the third person.
+You must:
 - Judge whether the answer demonstrates real understanding of the TARGET concept (verdict: correct | partial | incorrect).
-- Identify precisely what the student understood and where the specific gap is — name the exact misconception, not a vague "review this".
+- Identify precisely what you understood and where your specific gap is — name the exact misconception, not a vague "review this".
 - Attribute the gap to ONE prerequisite concept from the provided list when the error traces to a missing prerequisite; otherwise use "none".
-- Give a Socratic hint that guides without revealing the full solution. NEVER hand them the answer — make them produce it.
+- Give a Socratic hint that guides without revealing the full solution. NEVER hand the student the answer — make them produce it.
 - mastery_evidence is your calibrated probability (0..1) that the student has mastered the target concept based on this answer alone.
 Be fair: partial credit for partial understanding. Be honest: do not praise a wrong proof.`;
 
@@ -257,6 +258,45 @@ async function anthropicGrade(a: Parameters<typeof gradeAnswer>[0]): Promise<Gra
     messages: [{ role: "user", content: gradeUserText(a) }],
   });
   return firstJson<GradeResult>(msg);
+}
+
+// ===========================================================================
+// Note improvement
+// ===========================================================================
+const IMPROVE_SYSTEM = `You are an expert mathematician editing atomic notes in an Obsidian math vault.
+You receive a note (YAML frontmatter + markdown body) and return an improved version.
+Rules:
+- Preserve the YAML frontmatter EXACTLY as-is
+- Keep all existing [[wikilinks]] and section headers
+- You MAY: clarify the statement for greater precision, add a one-sentence motivation or intuition if missing, add a concrete example if none exists, fix notation inconsistencies, add missing [[wikilinks]] to concepts you reference by name
+- Do NOT restructure the entire note or change its scope
+- Return ONLY the improved note (frontmatter + body), no preamble`;
+
+const IMPROVE_SCHEMA_G = {
+  type: "OBJECT",
+  properties: { improved_content: { type: "STRING" } },
+  required: ["improved_content"],
+  propertyOrdering: ["improved_content"],
+};
+
+export async function improveNote(content: string, title: string, type: string | null): Promise<string> {
+  const userText = `TITLE: ${title}\nTYPE: ${type || "note"}\n\nNOTE:\n${content}\n\nReturn the improved note.`;
+  if (PROVIDER === "gemini") {
+    const r = await geminiCall(IMPROVE_SYSTEM, userText, IMPROVE_SCHEMA_G, 0.4);
+    return r.improved_content as string;
+  }
+  if (PROVIDER === "anthropic") {
+    const msg = await anthropic!.messages.create({
+      model: ANTHROPIC_PROBLEM_MODEL,
+      max_tokens: 8000,
+      system: IMPROVE_SYSTEM,
+      messages: [{ role: "user", content: userText }],
+    });
+    const block = msg.content.find((b) => b.type === "text");
+    if (!block || block.type !== "text") throw new Error("no text in response");
+    return block.text;
+  }
+  throw new Error("No LLM provider configured — set GEMINI_API_KEY or ANTHROPIC_API_KEY.");
 }
 
 // ===========================================================================

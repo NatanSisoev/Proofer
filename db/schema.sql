@@ -50,9 +50,19 @@ CREATE TABLE IF NOT EXISTS mastery (
   node_id    TEXT PRIMARY KEY,
   p          REAL NOT NULL DEFAULT 0.15,  -- P(you have mastered this)
   attempts   INTEGER NOT NULL DEFAULT 0,
-  last_seen  TEXT,                         -- ISO date of last practice
-  half_life  REAL NOT NULL DEFAULT 1.0     -- FSRS-style retention horizon (days)
+  last_seen  TEXT,                         -- ISO datetime of last practice
+  half_life  REAL NOT NULL DEFAULT 7.0     -- retention half-life in days (doubles on success)
 );
+
+-- Mastery timeline: one row per update, enabling sparklines and velocity calculations.
+CREATE TABLE IF NOT EXISTS mastery_history (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  node_id     TEXT NOT NULL,
+  p           REAL NOT NULL,
+  recorded_at TEXT NOT NULL  -- ISO datetime
+);
+
+CREATE INDEX IF NOT EXISTS idx_mh_node ON mastery_history(node_id, recorded_at);
 
 -- ATTEMPTS: every generated problem + your free-form answer + the grader's verdict
 -- and the prerequisite it blamed. This log IS the long-term dataset — the record of

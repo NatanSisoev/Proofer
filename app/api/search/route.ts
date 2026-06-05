@@ -1,17 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
-import { search } from "@/lib/queries";
+import { searchWithMastery } from "@/lib/queries";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
   const q = req.nextUrl.searchParams.get("q") || "";
   if (q.trim().length < 2) return NextResponse.json([]);
-  const hits = search(q.trim()).map((n) => ({
+  const hits = searchWithMastery(q.trim()).map((n) => ({
     id: n.id,
     title: n.title,
     type: n.type,
     area: n.area,
     overview: n.overview,
+    mastery_p: n.mastery_p,
   }));
   return NextResponse.json(hits);
 }

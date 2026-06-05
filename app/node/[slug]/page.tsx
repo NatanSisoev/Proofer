@@ -3,8 +3,14 @@ import { notFound } from "next/navigation";
 import Markdown from "@/app/components/Markdown";
 import EgoGraph from "@/app/components/EgoGraph";
 import KnownButton from "@/app/components/KnownButton";
+import NodeActions from "@/app/components/NodeActions";
+import LearningPath from "@/app/components/LearningPath";
+import GhostCreate from "@/app/components/GhostCreate";
+import MathText from "@/app/components/MathText";
+import MasterySparkline from "@/app/components/MasterySparkline";
 import { getNode, edgesOf, isKnown, readiness, prerequisites } from "@/lib/queries";
 import { getMasteryP } from "@/lib/mastery";
+import { HAS_KEY } from "@/lib/llm";
 import type { EdgeRow } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
@@ -37,7 +43,7 @@ function RelList({ rows, dir }: { rows: EdgeRow[]; dir: "out" | "in" }) {
           <li key={i}>
             <span className={`edge-type ${e.type}`}>{label}</span>
             <Link href={`/node/${encodeURIComponent(other)}`}>{other}</Link>
-            {e.context && <span className="edge-ctx">— {e.context.replace(/\*\*/g, "")}</span>}
+            {e.context && <MathText className="edge-ctx">{"— " + e.context.replace(/\*\*/g, "")}</MathText>}
           </li>
         );
       })}
@@ -77,10 +83,11 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
               <span className="type-badge t-ghost">gap</span>
               <h1 style={{ marginTop: 8 }}>{node.title}</h1>
             </div>
+            <GhostCreate nodeId={id} nodeTitle={node.title} nodeArea={node.area} />
           </div>
           <p className="muted">
-            This concept is referenced by other notes but doesn&apos;t exist yet — a gap in the graph.
-            {incoming.length > 0 && ` ${incoming.length} concept(s) point here.`}
+            This concept is referenced by other notes but doesn&apos;t have a note yet — a gap in your graph.
+            {incoming.length > 0 && ` ${incoming.length} concept(s) depend on it.`}
           </p>
           <div className="panel" style={{ marginTop: 20 }}>
             <h2>Referenced by</h2>
@@ -93,16 +100,31 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
             <div>
               {node.type && <span className={`type-badge t-${node.type}`}>{node.type}</span>}
               <h1 style={{ marginTop: 8 }}>{node.title}</h1>
-              {node.overview && <p className="muted" style={{ marginTop: -2, maxWidth: 640 }}>{node.overview}</p>}
+              {node.overview && (
+                <MathText className="muted" style={{ display: "block", marginTop: -2, maxWidth: 640, lineHeight: 1.5 }}>
+                  {node.overview}
+                </MathText>
+              )}
               <div className="mastery-chip" style={{ marginTop: 6 }}>
                 <span className="muted small">mastery</span>
                 <div className="bar"><span style={{ width: `${Math.round(mastery * 100)}%` }} /></div>
                 <span className="small">{Math.round(mastery * 100)}%</span>
+                <MasterySparkline nodeId={id} />
               </div>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "flex-end" }}>
               <Link href={`/learn?node=${encodeURIComponent(id)}`} className="cta">Practice this →</Link>
+              {node.area && (
+                <Link
+                  href={`/session?mode=area&area=${encodeURIComponent(node.area)}`}
+                  className="pill"
+                  style={{ color: "var(--accent)", borderColor: "var(--accent-soft)" }}
+                >
+                  Session: {node.area}
+                </Link>
+              )}
               <KnownButton slug={id} initial={known} />
+              <NodeActions nodeId={id} nodePath={node.path ?? null} hasLLM={HAS_KEY} />
             </div>
           </div>
 
@@ -129,6 +151,8 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
               )}
             </div>
           )}
+
+          <LearningPath nodeId={id} />
 
           <div className="grid" style={{ marginTop: 20 }}>
             <div>
