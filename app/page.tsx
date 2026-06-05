@@ -31,11 +31,17 @@ export default function Home() {
 
   return (
     <div className="wrap">
-      <header className="top">
-        <h1>Proofer</h1>
-        <span className="tag">a tutor that models your understanding of mathematics</span>
-        <span style={{ marginLeft: "auto" }}>
-          <Link href="/learn" className="cta">Practice →</Link>
+      <header className="top" style={{ borderBottom: "none", paddingBottom: 20 }}>
+        <div>
+          <h1 style={{ fontSize: 28, margin: 0, letterSpacing: "-0.03em" }}>
+            Proofer
+          </h1>
+          <p className="tag" style={{ marginTop: 4, fontSize: 14 }}>
+            AI tutor that models your understanding of mathematics
+          </p>
+        </div>
+        <span style={{ marginLeft: "auto", flexShrink: 0 }}>
+          <Link href="/session" className="cta">Start session →</Link>
         </span>
       </header>
 
@@ -85,7 +91,13 @@ export default function Home() {
         <div className="panel" style={{ marginBottom: 20, borderColor: "#4a3a1a" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
             <h2 style={{ margin: 0, color: "var(--amber)" }}>Due for review</h2>
-            <span className="muted small">mastery is decaying — review now to keep it</span>
+            <Link
+              href="/session?mode=due"
+              className="cta"
+              style={{ fontSize: 13, padding: "6px 14px", background: "#4a3a1a", color: "var(--amber)" }}
+            >
+              Review all {due.length} →
+            </Link>
           </div>
           {due.map((n) => (
             <div className="frontier-item" key={n.id}>

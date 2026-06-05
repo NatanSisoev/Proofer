@@ -120,10 +120,10 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
                   {node.overview}
                 </MathText>
               )}
-              <div className="mastery-chip" style={{ marginTop: 6 }}>
+              <div className="mastery-chip" style={{ marginTop: 10, padding: "8px 12px", background: "var(--bg-soft)", borderRadius: 10, border: "1px solid var(--border)" }}>
                 <span className="muted small">mastery</span>
-                <div className="bar"><span style={{ width: `${Math.round(mastery * 100)}%` }} /></div>
-                <span className="small">{Math.round(mastery * 100)}%</span>
+                <div className="bar" style={{ width: 120 }}><span style={{ width: `${Math.round(mastery * 100)}%` }} /></div>
+                <span style={{ fontWeight: 700, fontSize: 15, letterSpacing: "-0.02em" }}>{Math.round(mastery * 100)}%</span>
                 <MasterySparkline nodeId={id} />
               </div>
               {HAS_KEY && <WeaknessDiagnosis nodeId={id} attemptCount={attempts} />}

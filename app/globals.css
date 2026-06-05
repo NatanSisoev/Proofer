@@ -31,11 +31,11 @@ a:hover { text-decoration: underline; }
 .wrap { max-width: 1200px; margin: 0 auto; padding: 28px 24px 80px; }
 
 header.top {
-  display: flex; align-items: baseline; gap: 14px;
-  border-bottom: 1px solid var(--border); padding-bottom: 16px; margin-bottom: 24px;
+  display: flex; align-items: flex-start; gap: 14px;
+  border-bottom: 1px solid var(--border); padding-bottom: 20px; margin-bottom: 24px;
 }
-header.top h1 { font-size: 22px; margin: 0; letter-spacing: -0.01em; }
-header.top .tag { color: var(--muted); font-size: 13px; }
+header.top h1 { font-size: 24px; margin: 0; letter-spacing: -0.02em; font-weight: 700; }
+header.top .tag { color: var(--muted); font-size: 14px; }
 
 .grid { display: grid; grid-template-columns: 1fr 360px; gap: 24px; align-items: start; }
 @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
@@ -162,8 +162,8 @@ button.know.on { background: #173a2c; border-color: #2e6b50; color: var(--green)
 .cta:active { transform: translateY(0); }
 .cta.ghost { background: transparent; color: var(--text); border: 1px solid var(--border); }
 
-.mastery-chip { display: inline-flex; align-items: center; gap: 8px; }
-.mastery-chip .bar { width: 90px; }
+.mastery-chip { display: inline-flex; align-items: center; gap: 10px; }
+.mastery-chip .bar { width: 120px; }
 
 /* nav */
 .app-nav {
