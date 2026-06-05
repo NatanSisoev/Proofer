@@ -23,6 +23,7 @@ export async function POST(req: NextRequest) {
   let body: { nodeId?: string };
   try { body = await req.json(); } catch { return NextResponse.json({ error: "bad request" }, { status: 400 }); }
   const { nodeId } = body;
+  if (!nodeId) return NextResponse.json({ error: "nodeId required" }, { status: 400 });
   const node = getNode(nodeId) as NodeRow | undefined;
   if (!node || node.exists_ === 0) return NextResponse.json({ error: "unknown node" }, { status: 404 });
 

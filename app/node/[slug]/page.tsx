@@ -6,10 +6,11 @@ import KnownButton from "@/app/components/KnownButton";
 import NodeActions from "@/app/components/NodeActions";
 import LearningPath from "@/app/components/LearningPath";
 import WeaknessDiagnosis from "@/app/components/WeaknessDiagnosis";
+import BookmarkButton from "@/app/components/BookmarkButton";
 import GhostCreate from "@/app/components/GhostCreate";
 import MathText from "@/app/components/MathText";
 import MasterySparkline from "@/app/components/MasterySparkline";
-import { getNode, edgesOf, isKnown, readiness, prerequisites, attemptCount } from "@/lib/queries";
+import { getNode, edgesOf, isKnown, readiness, prerequisites, attemptCount, isBookmarked } from "@/lib/queries";
 import { getMasteryP } from "@/lib/mastery";
 import { HAS_KEY } from "@/lib/llm";
 import type { EdgeRow } from "@/lib/db";
@@ -64,6 +65,7 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
   const ready = readiness(id);
   const { depth } = prerequisites(id);
   const attempts = attemptCount(id);
+  const bookmarked = isBookmarked(id);
 
   // group outgoing by semantic priority
   const order = ["depends_on", "generalizes", "equivalent_to", "instance_of", "contradicts", "related"];
@@ -127,7 +129,10 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
               {HAS_KEY && <WeaknessDiagnosis nodeId={id} attemptCount={attempts} />}
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "flex-end" }}>
-              <Link href={`/learn?node=${encodeURIComponent(id)}`} className="cta">Practice this →</Link>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <Link href={`/learn?node=${encodeURIComponent(id)}`} className="cta">Practice this →</Link>
+                <BookmarkButton nodeId={id} initial={bookmarked} />
+              </div>
               {node.area && (
                 <Link
                   href={`/session?mode=area&area=${encodeURIComponent(node.area)}`}

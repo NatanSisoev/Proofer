@@ -1,7 +1,7 @@
 import Link from "next/link";
 import SearchBox from "./components/SearchBox";
 import QuickKnown from "./components/QuickKnown";
-import { frontier, stats, dueForReview, todayStats, recentlyPracticed } from "@/lib/queries";
+import { frontier, stats, dueForReview, todayStats, recentlyPracticed, bookmarkedNodes } from "@/lib/queries";
 
 export const dynamic = "force-dynamic";
 
@@ -27,6 +27,7 @@ export default function Home() {
   const due = dueForReview(8);
   const today = todayStats();
   const recent = recentlyPracticed(6);
+  const bookmarks = bookmarkedNodes();
 
   return (
     <div className="wrap">
@@ -178,6 +179,28 @@ export default function Home() {
         </div>{/* end left column */}
 
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          {bookmarks.length > 0 && (
+            <div className="panel">
+              <h2>★ Bookmarked</h2>
+              {bookmarks.map((n) => (
+                <div className="frontier-item" key={n.id}>
+                  <div style={{ minWidth: 0 }}>
+                    {n.type && <span className={`type-badge t-${n.type}`} style={{ marginRight: 6 }}>{n.type}</span>}
+                    <Link href={`/node/${encodeURIComponent(n.id)}`} style={{ color: "var(--text)" }}>{n.title}</Link>
+                  </div>
+                  <div style={{ display: "flex", gap: 6, alignItems: "center", flexShrink: 0 }}>
+                    <div className="bar" style={{ width: 50 }}>
+                      <span style={{ width: `${Math.round(n.mastery_p * 100)}%` }} />
+                    </div>
+                    <Link href={`/learn?node=${encodeURIComponent(n.id)}`} className="pill" style={{ color: "var(--accent)", borderColor: "var(--accent-soft)" }}>
+                      practice →
+                    </Link>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
           <div className="panel">
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
               <h2 style={{ margin: 0 }}>Areas</h2>

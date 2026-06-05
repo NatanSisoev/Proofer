@@ -122,6 +122,51 @@ export async function gradeAnswer(args: {
   return r;
 }
 
+export async function explainConcept(
+  node: import("./db").NodeRow,
+  prereqs: string[]
+): Promise<string> {
+  if (PROVIDER === "none") return "";
+  const prompt = [
+    `Explain the concept "${node.title}" to a student who already knows: ${prereqs.join(", ") || "the basics"}.`,
+    node.type ? `This is a ${node.type}.` : "",
+    node.area ? `Area: ${node.area}.` : "",
+    node.overview ? `Overview: ${node.overview}` : "",
+    node.content ? `\nFull definition/statement:\n${node.content.slice(0, 3000)}` : "",
+    `\nWrite a clear, intuitive explanation in 3–5 paragraphs. Use concrete examples and analogies. Use LaTeX ($...$) for any mathematics. Address the student as "you". Focus on WHY this matters, not just what it says.`,
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  if (PROVIDER === "gemini") {
+    const resp = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_KEY}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { temperature: 0.7 },
+        }),
+      }
+    );
+    if (!resp.ok) throw new Error(await resp.text());
+    const data = await resp.json();
+    return data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ?? "";
+  }
+
+  if (PROVIDER === "anthropic" && anthropic) {
+    const msg = await anthropic.messages.create({
+      model: ANTHROPIC_GRADE_MODEL,
+      max_tokens: 1200,
+      messages: [{ role: "user", content: prompt }],
+    });
+    return (msg.content[0] as any)?.text?.trim() ?? "";
+  }
+
+  return "";
+}
+
 export async function diagnoseWeakness(
   nodeTitle: string,
   gaps: string[],

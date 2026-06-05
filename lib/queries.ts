@@ -584,6 +584,25 @@ export function todayStats(): { today_concepts: number; today_attempts: number; 
   };
 }
 
+/** Daily attempt counts for the last 84 days (12 weeks), for the activity heatmap. */
+export function activityCalendar(): { date: string; count: number }[] {
+  const rows = db()
+    .prepare(
+      `SELECT date(created_at) AS day, COUNT(*) AS count
+         FROM attempts
+        WHERE created_at >= date('now', '-84 days')
+        GROUP BY day`
+    )
+    .all() as { day: string; count: number }[];
+
+  const map = new Map(rows.map((r) => [r.day, r.count]));
+  return Array.from({ length: 84 }, (_, i) => {
+    const d = new Date(Date.now() - (83 - i) * 86400000);
+    const key = d.toISOString().slice(0, 10);
+    return { date: key, count: map.get(key) ?? 0 };
+  });
+}
+
 /** Concepts mastered in the last 7 and 30 days (for velocity display). */
 export function masteryVelocity(): { last7: number; last30: number } {
   const d = db();
@@ -593,6 +612,34 @@ export function masteryVelocity(): { last7: number; last30: number } {
         WHERE p >= 0.8 AND recorded_at >= date('now', '-${days} days')`
     ).get() as any).n as number;
   return { last7: count(7), last30: count(30) };
+}
+
+export function isBookmarked(nodeId: string): boolean {
+  return !!db().prepare("SELECT 1 FROM bookmarks WHERE node_id = ?").get(nodeId);
+}
+
+export function toggleBookmark(nodeId: string): boolean {
+  const exists = isBookmarked(nodeId);
+  if (exists) {
+    db().prepare("DELETE FROM bookmarks WHERE node_id = ?").run(nodeId);
+    return false;
+  } else {
+    db().prepare("INSERT OR REPLACE INTO bookmarks(node_id) VALUES(?)").run(nodeId);
+    return true;
+  }
+}
+
+export function bookmarkedNodes(): BrowseNode[] {
+  return db()
+    .prepare(
+      `SELECT n.*, COALESCE(m.p, 0) AS mastery_p
+         FROM bookmarks b
+         JOIN nodes n ON n.id = b.node_id
+         LEFT JOIN mastery m ON m.node_id = n.id
+        WHERE n.exists_ = 1
+        ORDER BY b.created_at DESC`
+    )
+    .all() as BrowseNode[];
 }
 
 export function stats() {

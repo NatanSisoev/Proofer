@@ -83,6 +83,12 @@ CREATE TABLE IF NOT EXISTS attempts (
 
 CREATE INDEX IF NOT EXISTS idx_attempts_node ON attempts(node_id);
 
+-- User-bookmarked concepts (starred for focused study).
+CREATE TABLE IF NOT EXISTS bookmarks (
+  node_id    TEXT PRIMARY KEY,
+  created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
+);
+
 -- Generated problems live here so the ideal solution / rubric stay server-side
 -- (the student grades against a problemId, never sees the answer key).
 CREATE TABLE IF NOT EXISTS problems (

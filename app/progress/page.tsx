@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { masteryHistogram, recentAttemptsGlobal, weakSpots, stats, todayStats, reviewForecast, masteryVelocity } from "@/lib/queries";
+import { masteryHistogram, recentAttemptsGlobal, weakSpots, stats, todayStats, reviewForecast, masteryVelocity, activityCalendar } from "@/lib/queries";
+import ActivityCalendar from "@/app/components/ActivityCalendar";
 
 export const dynamic = "force-dynamic";
 
@@ -35,6 +36,7 @@ export default function ProgressPage() {
   const today = todayStats();
   const forecast = reviewForecast();
   const velocity = masteryVelocity();
+  const calendar = activityCalendar();
 
   const masteredPct = s.real > 0 ? Math.round((s.known / s.real) * 100) : 0;
   const maxBucket = Math.max(...hist.map((h) => h.count), 1);
@@ -90,6 +92,12 @@ export default function ProgressPage() {
             <div className="l">mastered this week</div>
           </div>
         )}
+      </div>
+
+      {/* Activity calendar — full width */}
+      <div className="panel" style={{ marginBottom: 20, overflowX: "auto" }}>
+        <h2>Activity — last 12 weeks</h2>
+        <ActivityCalendar data={calendar} />
       </div>
 
       <div className="grid" style={{ gap: 20 }}>
@@ -156,9 +164,14 @@ export default function ProgressPage() {
                     >
                       {(a as any).title || a.node_id}
                     </Link>
-                    {a.gap && (
+                    {a.gap && a.gap !== "none" && a.gap !== "(gave up — showed answer)" && (
                       <p className="muted small" style={{ margin: "1px 0 0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                         {a.gap}
+                      </p>
+                    )}
+                    {a.gap === "(gave up — showed answer)" && (
+                      <p className="muted small" style={{ margin: "1px 0 0", fontStyle: "italic" }}>
+                        viewed answer
                       </p>
                     )}
                   </div>

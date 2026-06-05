@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Markdown from "./Markdown";
 
 type Props = {
   nodeId: string;
@@ -13,15 +14,35 @@ type ImproveState = "idle" | "loading" | "preview" | "applying" | "done" | "erro
 export default function NodeActions({ nodeId, nodePath, hasLLM }: Props) {
   const [improveState, setImproveState] = useState<ImproveState>("idle");
   const [preview, setPreview] = useState<string>("");
-  const [error, setError] = useState<string>("");
+  const [improveError, setImproveError] = useState<string>("");
+
+  const [explanation, setExplanation] = useState<string | null>(null);
+  const [explainLoading, setExplainLoading] = useState(false);
+  const [explainError, setExplainError] = useState<string>("");
 
   const obsidianHref = nodePath
     ? `obsidian://open?path=${encodeURIComponent(nodePath)}`
     : null;
 
+  async function handleExplain() {
+    if (explanation) { setExplanation(null); return; } // toggle off
+    setExplainLoading(true);
+    setExplainError("");
+    try {
+      const res = await fetch(`/api/node/${encodeURIComponent(nodeId)}/explain`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to explain");
+      setExplanation(data.explanation);
+    } catch (e: any) {
+      setExplainError(e.message);
+    } finally {
+      setExplainLoading(false);
+    }
+  }
+
   async function handleImprove() {
     setImproveState("loading");
-    setError("");
+    setImproveError("");
     try {
       const res = await fetch(`/api/node/${encodeURIComponent(nodeId)}/improve`, {
         method: "POST",
@@ -33,7 +54,7 @@ export default function NodeActions({ nodeId, nodePath, hasLLM }: Props) {
       setPreview(data.improved);
       setImproveState("preview");
     } catch (e: any) {
-      setError(e.message);
+      setImproveError(e.message);
       setImproveState("error");
     }
   }
@@ -52,7 +73,7 @@ export default function NodeActions({ nodeId, nodePath, hasLLM }: Props) {
       }
       setImproveState("done");
     } catch (e: any) {
-      setError(e.message);
+      setImproveError(e.message);
       setImproveState("error");
     }
   }
@@ -65,6 +86,16 @@ export default function NodeActions({ nodeId, nodePath, hasLLM }: Props) {
             Open in Obsidian ↗
           </a>
         )}
+        {hasLLM && (
+          <button
+            onClick={handleExplain}
+            className="btn-ghost"
+            style={{ fontSize: 13 }}
+            disabled={explainLoading}
+          >
+            {explainLoading ? "Thinking…" : explanation ? "Hide explanation" : "Explain this ✦"}
+          </button>
+        )}
         {hasLLM && nodePath && (
           <button
             onClick={handleImprove}
@@ -72,17 +103,26 @@ export default function NodeActions({ nodeId, nodePath, hasLLM }: Props) {
             style={{ fontSize: 13 }}
             disabled={improveState === "loading" || improveState === "applying"}
           >
-            {improveState === "loading" ? "Thinking…" : "Improve with AI"}
+            {improveState === "loading" ? "Thinking…" : "Improve note"}
           </button>
         )}
       </div>
 
+      {explainError && <p style={{ color: "var(--red)", fontSize: 13, margin: 0 }}>{explainError}</p>}
+
+      {explanation && (
+        <div className="panel" style={{ borderColor: "#1a2a4a", background: "#08101f", marginTop: 4 }}>
+          <h2 style={{ color: "var(--accent)", marginBottom: 10 }}>✦ AI explanation</h2>
+          <div className="markdown"><Markdown>{explanation}</Markdown></div>
+        </div>
+      )}
+
       {improveState === "error" && (
-        <p style={{ color: "var(--red)", fontSize: 13, margin: 0 }}>{error}</p>
+        <p style={{ color: "var(--red)", fontSize: 13, margin: 0 }}>{improveError}</p>
       )}
 
       {improveState === "done" && (
-        <p style={{ color: "var(--green)", fontSize: 13, margin: 0 }}>✓ Note updated in Obsidian. Re-sync vault to refresh the graph.</p>
+        <p style={{ color: "var(--green)", fontSize: 13, margin: 0 }}>✓ Note updated in Obsidian. Re-sync vault to refresh.</p>
       )}
 
       {improveState === "preview" && preview && (
