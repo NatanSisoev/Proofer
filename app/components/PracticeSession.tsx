@@ -46,6 +46,8 @@ export default function PracticeSession({ initialNodeId }: { initialNodeId?: str
   const [followUp, setFollowUp] = useState("");
   const [followUpBusy, setFollowUpBusy] = useState(false);
   const [showReminder, setShowReminder] = useState(false);
+  const [explanation, setExplanation] = useState<string | null>(null);
+  const [explanationBusy, setExplanationBusy] = useState(false);
 
   const generate = useCallback(async (nodeId?: string, signal?: AbortSignal) => {
     setBusy(true);
@@ -59,6 +61,8 @@ export default function PracticeSession({ initialNodeId }: { initialNodeId?: str
     setFollowUp("");
     setFollowUpBusy(false);
     setShowReminder(false);
+    setExplanation(null);
+    setExplanationBusy(false);
     try {
       let id = nodeId;
       if (!id) {
@@ -129,6 +133,17 @@ export default function PracticeSession({ initialNodeId }: { initialNodeId?: str
     } finally {
       setBusy(false);
     }
+  }
+
+  async function explain() {
+    if (!problem || explanationBusy) return;
+    setExplanationBusy(true);
+    try {
+      const res = await fetch(`/api/node/${encodeURIComponent(problem.node.id)}/explain`);
+      const data = await res.json();
+      if (res.ok) setExplanation(data.explanation || "");
+    } catch { /* ignore */ }
+    finally { setExplanationBusy(false); }
   }
 
   async function submitFollowUp() {
@@ -251,6 +266,21 @@ export default function PracticeSession({ initialNodeId }: { initialNodeId?: str
             </div>
           )}
 
+          {/* AI explanation panel */}
+          {explanation && !grade && (
+            <div className="panel" style={{ borderColor: "#2a3050", background: "#0d1020", marginTop: 0 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                <h4 style={{ margin: 0, color: "#6ea8fe", fontSize: 12, textTransform: "uppercase", letterSpacing: "0.1em" }}>
+                  AI Explanation
+                </h4>
+                <button className="btn-ghost" onClick={() => setExplanation(null)} style={{ fontSize: 12, padding: "2px 8px" }}>
+                  ✕
+                </button>
+              </div>
+              <div className="markdown"><Markdown>{explanation}</Markdown></div>
+            </div>
+          )}
+
           {!grade && !revealed && (
             <div className="practice-actions">
               <button className="btn-primary" onClick={submit} disabled={busy || !answer.trim()}>
@@ -263,6 +293,11 @@ export default function PracticeSession({ initialNodeId }: { initialNodeId?: str
               <button className="btn-ghost" onClick={() => generate(problem.node.id, undefined)} disabled={busy}>
                 Skip / new problem
               </button>
+              {!explanation && problem.mode !== "demo" && (
+                <button className="btn-ghost" onClick={explain} disabled={busy || explanationBusy} style={{ fontSize: 13 }}>
+                  {explanationBusy ? "Explaining…" : "Explain first →"}
+                </button>
+              )}
               <button className="btn-ghost" onClick={reveal} disabled={busy} style={{ color: "var(--muted)", fontSize: 13 }}>
                 I don't know
               </button>
