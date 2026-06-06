@@ -199,6 +199,26 @@ export function nodeAttempts(nodeId: string, limit = 10): { verdict: string; cre
     .all(nodeId, limit) as { verdict: string; created_at: string; kind: string }[];
 }
 
+/**
+ * Recent attempts with problem text, for the node detail page.
+ * The attempts table stores the problem text directly — no join needed.
+ * Does NOT expose the ideal_solution (stays server-side).
+ */
+export function nodeAttemptDetails(
+  nodeId: string,
+  limit = 8
+): { id: number; problem: string; kind: string | null; verdict: string; gap: string | null; created_at: string }[] {
+  return db()
+    .prepare(
+      `SELECT id, problem, kind, verdict, gap, created_at
+         FROM attempts
+        WHERE node_id = ? AND problem IS NOT NULL AND problem != ''
+        ORDER BY id DESC
+        LIMIT ?`
+    )
+    .all(nodeId, limit) as any[];
+}
+
 /** Time series of mastery for one concept, for sparklines. */
 export function masteryHistory(nodeId: string, limit = 30): { p: number; recorded_at: string }[] {
   return db()

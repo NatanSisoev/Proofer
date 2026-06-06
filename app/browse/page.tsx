@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { browseAreas, nodesInArea, nodeTypes } from "@/lib/queries";
+import { browseAreas, nodesInArea, nodeTypes, areaMastery } from "@/lib/queries";
 import type { BrowseNode } from "@/lib/queries";
 import BrowseFilters from "@/app/components/BrowseFilters";
 
@@ -27,12 +27,50 @@ export default async function BrowsePage({
     const validSort = (sort === "mastery_desc" || sort === "alpha") ? sort : "mastery_asc";
     const nodes = nodesInArea(area, { type, sort: validSort as any });
     const types = nodeTypes();
+    const areaStats = areaMastery().find((a) => a.area === area);
+    const masteredCount = areaStats?.mastered ?? 0;
+    const totalCount = areaStats?.total ?? nodes.length;
+    const avgMastery = areaStats?.avg_p ?? 0;
 
     return (
       <div className="wrap">
         <div className="breadcrumb">
           <Link href="/browse">← Topics</Link> · <strong>{area}</strong>
-          <span className="muted"> ({nodes.length} concepts)</span>
+        </div>
+
+        {/* Area header: mastery summary + actions */}
+        <div style={{
+          display: "flex", justifyContent: "space-between", alignItems: "flex-start",
+          flexWrap: "wrap", gap: 16, marginBottom: 20,
+        }}>
+          <div>
+            <h1 style={{ margin: "0 0 6px", fontSize: 24, letterSpacing: "-0.02em" }}>{area}</h1>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <div className="bar" style={{ width: 100 }}>
+                  <span style={{ width: `${Math.round(avgMastery * 100)}%` }} />
+                </div>
+                <span style={{ fontWeight: 700, fontSize: 15 }}>{Math.round(avgMastery * 100)}%</span>
+                <span className="muted small">avg mastery</span>
+              </div>
+              <span className="pill" style={{
+                color: masteredCount === totalCount ? "var(--green)" : "var(--muted)",
+                borderColor: masteredCount === totalCount ? "#1a5a2a" : undefined,
+              }}>
+                {masteredCount}/{totalCount} mastered
+              </span>
+              {areaStats?.practiced !== undefined && areaStats.practiced > 0 && (
+                <span className="muted small">{areaStats.practiced} practiced</span>
+              )}
+            </div>
+          </div>
+          <Link
+            href={`/session?mode=area&area=${encodeURIComponent(area)}`}
+            className="cta"
+            style={{ flexShrink: 0 }}
+          >
+            Practice {area} →
+          </Link>
         </div>
 
         <BrowseFilters area={area} activeType={type} activeSort={sort || "mastery_asc"} types={types} />

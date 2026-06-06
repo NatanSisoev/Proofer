@@ -11,7 +11,7 @@ import GhostCreate from "@/app/components/GhostCreate";
 import MathText from "@/app/components/MathText";
 import MasterySparkline from "@/app/components/MasterySparkline";
 import PersonalNotes from "@/app/components/PersonalNotes";
-import { getNode, edgesOf, isKnown, readiness, prerequisites, attemptCount, isBookmarked, nodeAttempts } from "@/lib/queries";
+import { getNode, edgesOf, isKnown, readiness, prerequisites, attemptCount, isBookmarked, nodeAttempts, nodeAttemptDetails } from "@/lib/queries";
 import { getMasteryP } from "@/lib/mastery";
 import { HAS_KEY } from "@/lib/llm";
 import type { EdgeRow } from "@/lib/db";
@@ -68,6 +68,7 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
   const attempts = attemptCount(id);
   const bookmarked = isBookmarked(id);
   const history = nodeAttempts(id, 10);
+  const attemptDetails = nodeAttemptDetails(id, 6);
 
   // group outgoing by semantic priority
   const order = ["depends_on", "generalizes", "equivalent_to", "instance_of", "contradicts", "related"];
@@ -214,6 +215,57 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
                 </>
               )}
               <PersonalNotes nodeId={id} />
+
+              {/* Past practice problems */}
+              {attemptDetails.length > 0 && (
+                <details style={{ marginTop: 20 }}>
+                  <summary style={{
+                    cursor: "pointer", fontSize: 13, fontWeight: 600,
+                    color: "var(--muted)", userSelect: "none", listStyle: "none",
+                    display: "flex", alignItems: "center", gap: 6,
+                  }}>
+                    <span>🗂 Past practice</span>
+                    <span style={{ fontWeight: 400 }}>({attemptDetails.length} attempt{attemptDetails.length !== 1 ? "s" : ""})</span>
+                  </summary>
+                  <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 10 }}>
+                    {attemptDetails.map((a) => {
+                      const verdictColor = a.verdict === "correct" ? "var(--green)" : a.verdict === "partial" ? "var(--amber)" : "var(--red)";
+                      const verdictLabel = a.verdict === "correct" ? "✓" : a.verdict === "partial" ? "~" : "✗";
+                      return (
+                        <div
+                          key={a.id}
+                          style={{
+                            padding: "10px 12px", borderRadius: 8,
+                            border: "1px solid var(--border)", background: "var(--bg-soft)",
+                            fontSize: 13,
+                          }}
+                        >
+                          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4, gap: 8 }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                              <span style={{ fontWeight: 700, color: verdictColor, fontSize: 14 }}>{verdictLabel}</span>
+                              {a.kind && <span className="pill" style={{ fontSize: 10 }}>{a.kind}</span>}
+                            </div>
+                            <span className="muted small" style={{ fontSize: 11, flexShrink: 0 }}>
+                              {new Date(a.created_at).toLocaleDateString()}
+                            </span>
+                          </div>
+                          <p style={{ margin: "0 0 4px", color: "var(--text)", lineHeight: 1.5 }}>
+                            {a.problem.length > 200 ? a.problem.slice(0, 200) + "…" : a.problem}
+                          </p>
+                          {a.gap && a.gap !== "none" && a.gap !== "(gave up — showed answer)" && (
+                            <p className="muted small" style={{ margin: 0, fontStyle: "italic" }}>
+                              Gap: {a.gap.length > 120 ? a.gap.slice(0, 120) + "…" : a.gap}
+                            </p>
+                          )}
+                        </div>
+                      );
+                    })}
+                    <Link href={`/learn?node=${encodeURIComponent(id)}`} className="btn-ghost" style={{ fontSize: 13, alignSelf: "flex-start" }}>
+                      Practice again →
+                    </Link>
+                  </div>
+                </details>
+              )}
             </div>
             <div>
               <div className="panel" style={{ marginBottom: 16 }}>
