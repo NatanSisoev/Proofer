@@ -7,6 +7,7 @@ import KeyboardShortcuts from "./components/KeyboardShortcuts";
 import GlobalSearch from "./components/GlobalSearch";
 import SearchTrigger from "./components/SearchTrigger";
 import ShortcutsTrigger from "./components/ShortcutsTrigger";
+import DailyGoalIndicator from "./components/DailyGoalIndicator";
 import NavLinks from "./components/NavLinks";
 
 export const metadata: Metadata = {
@@ -25,6 +26,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <NavLinks />
             </div>
             <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+              <DailyGoalIndicator />
               <SearchTrigger />
               <Link href="/settings" className="nav-link" title="Settings">⚙</Link>
               <SyncButton />
