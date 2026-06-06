@@ -305,6 +305,10 @@ export default function PracticeSession({ initialNodeId }: { initialNodeId?: str
                     >
                       {followUpBusy ? "Checking…" : "Submit follow-up"}
                     </button>
+                    <VoiceInput
+                      onTranscript={(t) => setFollowUp((prev) => prev ? prev + " " + t : t)}
+                      disabled={followUpBusy}
+                    />
                     <span className="muted small" style={{ alignSelf: "center" }}>Ctrl+Enter</span>
                   </div>
                 </div>

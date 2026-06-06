@@ -155,6 +155,10 @@ button.know.on { background: #173a2c; border-color: #2e6b50; color: var(--green)
   60% { transform: scale(1.04); }
   100% { transform: scale(1); opacity: 1; }
 }
+@keyframes micPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(240, 96, 96, 0.45); }
+  50%       { box-shadow: 0 0 0 7px rgba(240, 96, 96, 0); }
+}
 .mastery-move { display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: var(--bg-soft); border-radius: 10px; }
 .mastery-move .bar { flex: 1; max-width: 260px; }
 .fb-block h4 { margin: 0 0 8px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; }

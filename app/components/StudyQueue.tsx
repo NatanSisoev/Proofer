@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import Markdown from "./Markdown";
+import VoiceInput from "./VoiceInput";
 
 type QueueNode = { id: string; title: string; type: string | null; area: string | null };
 
@@ -352,6 +353,10 @@ export default function StudyQueue({ queue }: { queue: QueueNode[] }) {
               <button className="btn-primary" onClick={submit} disabled={busy || !answer.trim()}>
                 {busy ? "Grading…" : "Submit"}
               </button>
+              <VoiceInput
+                onTranscript={(t) => setAnswer((prev) => prev ? prev + " " + t : t)}
+                disabled={busy}
+              />
               <button className="btn-ghost" onClick={advance} disabled={busy}>
                 Skip →
               </button>
@@ -429,6 +434,10 @@ export default function StudyQueue({ queue }: { queue: QueueNode[] }) {
                     >
                       {followUpBusy ? "Checking…" : "Submit follow-up"}
                     </button>
+                    <VoiceInput
+                      onTranscript={(t) => setFollowUp((prev) => prev ? prev + " " + t : t)}
+                      disabled={followUpBusy}
+                    />
                     <span className="muted small" style={{ alignSelf: "center" }}>Ctrl+Enter</span>
                   </div>
                 </div>
