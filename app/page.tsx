@@ -262,6 +262,13 @@ export default function Home() {
                   <div className="muted small">Gaps, missing prereqs, isolated nodes</div>
                 </div>
               </Link>
+              <Link href="/flashcard" style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", borderBottom: "1px solid var(--border)", color: "var(--text)" }}>
+                <span style={{ fontSize: 18 }}>🃏</span>
+                <div>
+                  <div style={{ fontWeight: 500 }}>Flashcards</div>
+                  <div className="muted small">Quick flip-cards, instant recall check</div>
+                </div>
+              </Link>
               <Link href="/learn" style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", color: "var(--text)" }}>
                 <span style={{ fontSize: 18 }}>✏️</span>
                 <div>
