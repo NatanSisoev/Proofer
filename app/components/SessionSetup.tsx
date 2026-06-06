@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import StudyQueue from "./StudyQueue";
 
 type QueueNode = { id: string; title: string; type: string | null; area: string | null; mastery_p?: number };
 
-type Mode = "smart" | "due" | "weak" | "area" | "bookmarks";
+type Mode = "smart" | "due" | "weak" | "area" | "bookmarks" | "custom";
 
 const MODES: { key: Mode; label: string; desc: string }[] = [
   { key: "smart", label: "Smart", desc: "Due reviews first, then your frontier, then weak spots" },
@@ -14,6 +14,7 @@ const MODES: { key: Mode; label: string; desc: string }[] = [
   { key: "weak", label: "Weak spots", desc: "Practiced but still below mastery threshold" },
   { key: "bookmarks", label: "★ Bookmarked", desc: "Drill your starred concepts" },
   { key: "area", label: "By topic", desc: "Focus on one area" },
+  { key: "custom",    label: "Custom",        desc: "Hand-pick the concepts to practice" },
 ];
 
 type ModeCounts = { due: number; weak: number; frontier: number; bookmarks: number };
@@ -45,12 +46,34 @@ export default function SessionSetup({
   const [preview, setPreview] = useState<QueueNode[]>([]);
   const [previewLoading, setPreviewLoading] = useState(false);
   const [counts, setCounts] = useState<ModeCounts | null>(null);
+  // Custom mode
+  const [customSearch, setCustomSearch] = useState("");
+  const [customResults, setCustomResults] = useState<QueueNode[]>([]);
+  const [customPicked, setCustomPicked] = useState<QueueNode[]>([]);
+  const customDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     fetch("/api/session/stats").then((r) => r.json()).then(setCounts).catch(() => {});
   }, []);
 
+  // Custom mode: live concept search
+  useEffect(() => {
+    if (mode !== "custom") return;
+    if (!customSearch.trim() || customSearch.length < 2) { setCustomResults([]); return; }
+    if (customDebounce.current) clearTimeout(customDebounce.current);
+    customDebounce.current = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/search?q=${encodeURIComponent(customSearch)}&limit=8`);
+        const data: QueueNode[] = await res.json();
+        const pickedIds = new Set(customPicked.map(p => p.id));
+        setCustomResults(data.filter(d => !pickedIds.has(d.id)));
+      } catch { setCustomResults([]); }
+    }, 120);
+    return () => { if (customDebounce.current) clearTimeout(customDebounce.current); };
+  }, [customSearch, mode, customPicked]);
+
   const loadPreview = useCallback(async () => {
+    if (mode === "custom") { setPreview(customPicked); return; }
     setPreviewLoading(true);
     try {
       const params = new URLSearchParams({ mode, limit: String(count) });
@@ -63,15 +86,21 @@ export default function SessionSetup({
     } finally {
       setPreviewLoading(false);
     }
-  }, [mode, area, count]);
+  }, [mode, area, count, customPicked]);
 
   useEffect(() => {
     loadPreview();
   }, [loadPreview]);
 
   async function start() {
-    setLoading(true);
     setError(null);
+    // Custom mode: use hand-picked list directly
+    if (mode === "custom") {
+      if (!customPicked.length) { setError("Add at least one concept to your custom list."); return; }
+      setQueue(customPicked);
+      return;
+    }
+    setLoading(true);
     try {
       const params = new URLSearchParams({ mode, limit: String(count) });
       if (mode === "area" && area) params.set("area", area);
@@ -170,8 +199,83 @@ export default function SessionSetup({
               </select>
             </div>
           )}
+
+          {mode === "custom" && (
+            <div style={{ marginTop: 14 }}>
+              <label className="muted small" style={{ display: "block", marginBottom: 6 }}>
+                Add concepts ({customPicked.length} selected)
+              </label>
+              <div style={{ position: "relative", marginBottom: 8 }}>
+                <input
+                  type="text"
+                  value={customSearch}
+                  onChange={e => setCustomSearch(e.target.value)}
+                  placeholder="Search concepts to add…"
+                  className="search-box"
+                  style={{ fontSize: 13, padding: "7px 12px" }}
+                />
+                {customResults.length > 0 && (
+                  <div style={{
+                    position: "absolute", top: "100%", left: 0, right: 0, zIndex: 50,
+                    background: "var(--panel)", border: "1px solid var(--border)",
+                    borderRadius: 8, marginTop: 4, maxHeight: 200, overflowY: "auto",
+                  }}>
+                    {customResults.map(r => (
+                      <button
+                        key={r.id}
+                        onClick={() => {
+                          setCustomPicked(p => [...p, r]);
+                          setCustomResults(prev => prev.filter(x => x.id !== r.id));
+                          setCustomSearch("");
+                        }}
+                        style={{
+                          display: "flex", alignItems: "center", gap: 8, width: "100%",
+                          padding: "7px 12px", background: "none", border: "none",
+                          cursor: "pointer", color: "var(--text)", textAlign: "left",
+                          borderBottom: "1px solid var(--border)", fontSize: 13,
+                        }}
+                        onMouseOver={e => (e.currentTarget.style.background = "var(--bg-soft)")}
+                        onMouseOut={e => (e.currentTarget.style.background = "none")}
+                      >
+                        {r.type && <span className={`type-badge t-${r.type}`} style={{ flexShrink: 0 }}>{r.type}</span>}
+                        <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.title}</span>
+                        {r.area && <span className="muted small" style={{ fontSize: 11 }}>{r.area}</span>}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+              {customPicked.length > 0 && (
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                  {customPicked.map(c => (
+                    <div
+                      key={c.id}
+                      style={{
+                        display: "flex", alignItems: "center", gap: 5,
+                        padding: "3px 8px 3px 10px", borderRadius: 20,
+                        background: "var(--accent-soft)", border: "1px solid var(--accent)",
+                        fontSize: 12,
+                      }}
+                    >
+                      <span style={{ color: "var(--text)" }}>{c.title}</span>
+                      <button
+                        onClick={() => setCustomPicked(p => p.filter(x => x.id !== c.id))}
+                        style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted)", padding: "0 2px", fontSize: 13, lineHeight: 1 }}
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {customPicked.length === 0 && (
+                <p className="muted small" style={{ marginTop: 4 }}>Search above and click to add concepts.</p>
+              )}
+            </div>
+          )}
         </div>
 
+        {mode !== "custom" && (
         <div className="panel" style={{ marginBottom: 16 }}>
           <h2>Session length</h2>
           <div style={{ display: "flex", gap: 8 }}>
@@ -190,6 +294,7 @@ export default function SessionSetup({
             {count} concept{count !== 1 ? "s" : ""} · ~{count * 3}–{count * 5} min
           </p>
         </div>
+        )}
 
         <div className="panel" style={{ marginBottom: 16 }}>
           <h2>Problem type</h2>
@@ -231,21 +336,26 @@ export default function SessionSetup({
         <button
           className="btn-primary"
           onClick={start}
-          disabled={loading || preview.length === 0}
+          disabled={loading || (mode === "custom" ? customPicked.length === 0 : preview.length === 0)}
           style={{ padding: "10px 28px", fontSize: 15, width: "100%" }}
         >
-          {loading ? "Building queue…" : `Start session →`}
+          {loading ? "Building queue…" : mode === "custom"
+            ? `Start with ${customPicked.length} concept${customPicked.length !== 1 ? "s" : ""} →`
+            : "Start session →"}
         </button>
       </div>
 
       {/* Right: queue preview */}
       <div className="panel">
         <h2>
-          Queue preview
-          {previewLoading && <span className="muted small" style={{ marginLeft: 8, fontWeight: 400 }}>loading…</span>}
+          {mode === "custom" ? "Your custom queue" : "Queue preview"}
+          {previewLoading && mode !== "custom" && <span className="muted small" style={{ marginLeft: 8, fontWeight: 400 }}>loading…</span>}
         </h2>
-        {!previewLoading && preview.length === 0 && (
+        {!previewLoading && preview.length === 0 && mode !== "custom" && (
           <p className="muted">No concepts found for this mode.</p>
+        )}
+        {mode === "custom" && customPicked.length === 0 && (
+          <p className="muted small">Use the search on the left to pick concepts.</p>
         )}
         {preview.map((n, i) => (
           <div key={n.id} style={{
