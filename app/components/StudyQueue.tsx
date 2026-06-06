@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import Markdown from "./Markdown";
 import VoiceInput from "./VoiceInput";
@@ -64,7 +64,21 @@ export default function StudyQueue({ queue }: { queue: QueueNode[] }) {
   const [results, setResults] = useState<SessionResult[]>([]);
   const [done, setDone] = useState(false);
   const [showReminder, setShowReminder] = useState(false);
+  // Prefetch cache: map nodeId → fetched Problem data
+  const prefetchCache = useRef<Map<string, Promise<any>>>(new Map());
   const currentNode = queue[index];
+
+  /** Fire-and-forget: start generating a problem for nodeId, storing the
+   *  promise in prefetchCache so generate() can await it instead of re-fetching. */
+  const prefetch = useCallback((nodeId: string) => {
+    if (prefetchCache.current.has(nodeId)) return;
+    const p = fetch("/api/practice/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ nodeId }),
+    }).then((r) => r.json()).catch(() => null);
+    prefetchCache.current.set(nodeId, p);
+  }, []);
 
   const generate = useCallback(async (nodeId: string, signal?: AbortSignal) => {
     setBusy(true);
@@ -77,14 +91,16 @@ export default function StudyQueue({ queue }: { queue: QueueNode[] }) {
     setFollowUpBusy(false);
     setShowReminder(false);
     try {
-      const res = await fetch("/api/practice/generate", {
+      // Use prefetch cache if available, otherwise fetch fresh.
+      const cached = prefetchCache.current.get(nodeId);
+      prefetchCache.current.delete(nodeId); // consume it
+      const data = await (cached ?? fetch("/api/practice/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ nodeId }),
         signal,
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "generation failed");
+      }).then((r) => r.json()));
+      if (!data || data.error) throw new Error(data?.error || "generation failed");
       if (!signal?.aborted) setProblem(data);
     } catch (e: any) {
       if (e.name === "AbortError") return;
@@ -100,6 +116,13 @@ export default function StudyQueue({ queue }: { queue: QueueNode[] }) {
     generate(currentNode.id, ctrl.signal);
     return () => ctrl.abort();
   }, [index, generate, currentNode, done]);
+
+  // Prefetch next problem while the user is answering the current one.
+  useEffect(() => {
+    if (!problem || done) return;
+    const nextNode = queue[index + 1];
+    if (nextNode) prefetch(nextNode.id);
+  }, [problem, index, queue, done, prefetch]);
 
   // Ctrl+Enter to submit
   useEffect(() => {
