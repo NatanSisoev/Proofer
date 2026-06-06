@@ -11,6 +11,7 @@ type Props = {
   style?: React.CSSProperties;
   className?: string;
   onKeyDown?: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void;
+  autoFocus?: boolean;
 };
 
 /** Detect if the answer contains any LaTeX so we can show a preview. */
@@ -31,6 +32,7 @@ export default function AnswerBox({
   style,
   className,
   onKeyDown,
+  autoFocus,
 }: Props) {
   const ref = useRef<HTMLTextAreaElement>(null);
 
@@ -59,6 +61,7 @@ export default function AnswerBox({
         disabled={disabled}
         style={{ overflow: "hidden", ...style }}
         onKeyDown={onKeyDown}
+        autoFocus={autoFocus}
       />
       {wordCount > 0 && (
         <div style={{ textAlign: "right", marginTop: 3 }}>

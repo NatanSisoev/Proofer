@@ -234,13 +234,27 @@ export default function StudyQueue({ queue }: { queue: QueueNode[] }) {
     const correct = results.filter((r) => r.verdict === "correct").length;
     const partial = results.filter((r) => r.verdict === "partial").length;
     const incorrect = results.filter((r) => r.verdict === "incorrect").length;
+    const masteredCount = results.filter((r) => r.justMastered).length;
+    const totalMasteryGain = results.reduce((sum, r) => sum + (r.masteryAfter - r.masteryBefore), 0);
+    const accuracy = results.length > 0 ? Math.round((correct / results.length) * 100) : 0;
+    const isPerfect = correct === results.length && results.length > 0;
 
     return (
       <div className="session-summary">
-        <h2 style={{ margin: "0 0 6px", fontSize: 22 }}>Session complete</h2>
-        <p className="muted" style={{ margin: "0 0 24px" }}>
-          {queue.length} concept{queue.length !== 1 ? "s" : ""} practiced
-        </p>
+        <div style={{ marginBottom: 6 }}>
+          {isPerfect && (
+            <div style={{ fontSize: 28, marginBottom: 8 }}>🎉</div>
+          )}
+          <h2 style={{ margin: "0 0 2px", fontSize: 22 }}>
+            {isPerfect ? "Perfect session!" : "Session complete"}
+          </h2>
+          <p className="muted" style={{ margin: "0 0 20px", fontSize: 13 }}>
+            {queue.length} concept{queue.length !== 1 ? "s" : ""} ·{" "}
+            {accuracy}% accuracy
+            {totalMasteryGain > 0.01 && ` · +${Math.round(totalMasteryGain * 100)}pp avg mastery`}
+            {masteredCount > 0 && ` · ${masteredCount} newly mastered`}
+          </p>
+        </div>
 
         <div className="session-score">
           <div className="score-chip" style={{ borderColor: "#173a2c", color: "#57d9a3" }}>
@@ -255,6 +269,12 @@ export default function StudyQueue({ queue }: { queue: QueueNode[] }) {
             <span className="score-n">{incorrect}</span>
             <span className="score-l">needs work</span>
           </div>
+          {masteredCount > 0 && (
+            <div className="score-chip" style={{ borderColor: "#2a5a3a", color: "var(--green)" }}>
+              <span className="score-n">{masteredCount}</span>
+              <span className="score-l">mastered</span>
+            </div>
+          )}
         </div>
 
         {results.some((r) => r.justMastered) && (
@@ -415,6 +435,7 @@ export default function StudyQueue({ queue }: { queue: QueueNode[] }) {
             onChange={setAnswer}
             disabled={!!grade || busy}
             placeholder="Write your answer — proof, definition, counterexample. Type $...$ for math."
+            autoFocus
           />
 
           {revealed && (

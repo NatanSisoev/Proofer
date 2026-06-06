@@ -249,6 +249,7 @@ export default function PracticeSession({ initialNodeId }: { initialNodeId?: str
             onChange={setAnswer}
             disabled={!!grade || busy}
             placeholder="Write your answer — a proof, a definition, a counterexample. Type $...$ for math."
+            autoFocus
           />
 
           {revealed && (
