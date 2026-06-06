@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import StudyQueue from "./StudyQueue";
 
-type QueueNode = { id: string; title: string; type: string | null; area: string | null };
+type QueueNode = { id: string; title: string; type: string | null; area: string | null; mastery_p?: number };
 
 type Mode = "smart" | "due" | "weak" | "area";
 
@@ -220,6 +220,14 @@ export default function SessionSetup({
               {n.title}
             </Link>
             {n.area && <span className="muted small" style={{ flexShrink: 0 }}>{n.area}</span>}
+            <div style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}>
+              <div className="bar" style={{ width: 36, height: 5 }}>
+                <span style={{ width: `${Math.round((n.mastery_p ?? 0) * 100)}%` }} />
+              </div>
+              <span className="muted small" style={{ fontSize: 11, width: 28, textAlign: "right" }}>
+                {Math.round((n.mastery_p ?? 0) * 100)}%
+              </span>
+            </div>
           </div>
         ))}
         {preview.length > 0 && (

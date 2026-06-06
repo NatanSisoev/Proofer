@@ -4,7 +4,7 @@ import { P_INIT } from "@/lib/mastery";
 
 export const dynamic = "force-dynamic";
 
-type QueueNode = { id: string; title: string; type: string | null; area: string | null };
+type QueueNode = { id: string; title: string; type: string | null; area: string | null; mastery_p?: number };
 
 export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl;
@@ -135,6 +135,16 @@ export async function GET(req: NextRequest) {
     }
 
     rows = combined;
+  }
+
+  // Attach mastery data in one batch query
+  if (rows.length > 0) {
+    const placeholders = rows.map(() => "?").join(",");
+    const masteryMap = new Map(
+      (db().prepare(`SELECT node_id, p FROM mastery WHERE node_id IN (${placeholders})`).all(...rows.map(r => r.id)) as { node_id: string; p: number }[])
+        .map(r => [r.node_id, r.p])
+    );
+    rows = rows.map(r => ({ ...r, mastery_p: masteryMap.get(r.id) ?? 0 }));
   }
 
   return NextResponse.json({ queue: rows });
