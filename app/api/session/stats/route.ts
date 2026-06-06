@@ -30,5 +30,11 @@ export async function GET() {
       )
   `).get() as any).n as number;
 
-  return NextResponse.json({ due, weak, frontier });
+  const bookmarks = (db().prepare(`
+    SELECT COUNT(*) AS n FROM bookmarks b
+    JOIN nodes n ON n.id = b.node_id
+    WHERE n.exists_ = 1
+  `).get() as any).n as number;
+
+  return NextResponse.json({ due, weak, frontier, bookmarks });
 }

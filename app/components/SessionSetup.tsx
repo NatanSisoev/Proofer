@@ -6,16 +6,17 @@ import StudyQueue from "./StudyQueue";
 
 type QueueNode = { id: string; title: string; type: string | null; area: string | null; mastery_p?: number };
 
-type Mode = "smart" | "due" | "weak" | "area";
+type Mode = "smart" | "due" | "weak" | "area" | "bookmarks";
 
 const MODES: { key: Mode; label: string; desc: string }[] = [
   { key: "smart", label: "Smart", desc: "Due reviews first, then your frontier, then weak spots" },
   { key: "due", label: "Due for review", desc: "Concepts whose mastery is decaying — review them now" },
   { key: "weak", label: "Weak spots", desc: "Practiced but still below mastery threshold" },
+  { key: "bookmarks", label: "★ Bookmarked", desc: "Drill your starred concepts" },
   { key: "area", label: "By topic", desc: "Focus on one area" },
 ];
 
-type ModeCounts = { due: number; weak: number; frontier: number };
+type ModeCounts = { due: number; weak: number; frontier: number; bookmarks: number };
 type ProblemKind = "any" | "compute" | "prove" | "counterexample" | "explain";
 const KIND_OPTIONS: { key: ProblemKind; label: string; desc: string }[] = [
   { key: "any",           label: "Any",          desc: "Mix of all problem types" },
@@ -105,6 +106,7 @@ export default function SessionSetup({
                 ? m.key === "due" ? counts.due
                   : m.key === "weak" ? counts.weak
                   : m.key === "smart" ? counts.frontier + counts.due
+                  : m.key === "bookmarks" ? counts.bookmarks
                   : null
                 : null;
               const isEmpty = modeCount === 0;

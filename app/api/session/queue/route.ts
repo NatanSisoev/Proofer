@@ -39,6 +39,17 @@ export async function GET(req: NextRequest) {
       ORDER BY m.p ASC
       LIMIT ?
     `).all(MASTERY_THRESHOLD, P_INIT * 0.9, limit) as QueueNode[];
+  } else if (mode === "bookmarks") {
+    // bookmarked concepts that aren't fully mastered yet
+    rows = db().prepare(`
+      SELECT n.id, n.title, n.type, n.area
+      FROM nodes n
+      JOIN bookmarks b ON b.node_id = n.id
+      LEFT JOIN mastery m ON m.node_id = n.id
+      WHERE n.exists_ = 1
+      ORDER BY COALESCE(m.p, 0) ASC
+      LIMIT ?
+    `).all(limit) as QueueNode[];
   } else if (mode === "area" && area) {
     // frontier concepts in a specific area
     rows = db().prepare(`
