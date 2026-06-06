@@ -66,6 +66,9 @@ export default function StudyQueue({ queue }: { queue: QueueNode[] }) {
   const [showReminder, setShowReminder] = useState(false);
   const [hint, setHint] = useState<string | null>(null);
   const [hintBusy, setHintBusy] = useState(false);
+  const [sessionElapsed, setSessionElapsed] = useState(0);
+  const [sessionStart] = useState(() => Date.now());
+  const [copied, setCopied] = useState(false);
   // Prefetch cache: map nodeId → fetched Problem data
   const prefetchCache = useRef<Map<string, Promise<any>>>(new Map());
   const currentNode = queue[index];
@@ -94,6 +97,7 @@ export default function StudyQueue({ queue }: { queue: QueueNode[] }) {
     setShowReminder(false);
     setHint(null);
     setHintBusy(false);
+    setCopied(false);
     try {
       // Use prefetch cache if available, otherwise fetch fresh.
       const cached = prefetchCache.current.get(nodeId);
@@ -127,6 +131,13 @@ export default function StudyQueue({ queue }: { queue: QueueNode[] }) {
     const nextNode = queue[index + 1];
     if (nextNode) prefetch(nextNode.id);
   }, [problem, index, queue, done, prefetch]);
+
+  // Session elapsed timer
+  useEffect(() => {
+    if (done) return;
+    const id = setInterval(() => setSessionElapsed(Math.floor((Date.now() - sessionStart) / 1000)), 1000);
+    return () => clearInterval(id);
+  }, [done, sessionStart]);
 
   // Ctrl+Enter to submit
   useEffect(() => {
@@ -269,6 +280,7 @@ export default function StudyQueue({ queue }: { queue: QueueNode[] }) {
           </h2>
           <p className="muted" style={{ margin: "0 0 20px", fontSize: 13 }}>
             {queue.length} concept{queue.length !== 1 ? "s" : ""} ·{" "}
+            {Math.floor(sessionElapsed / 60)}m {sessionElapsed % 60}s ·{" "}
             {accuracy}% accuracy
             {totalMasteryGain > 0.01 && ` · +${Math.round(totalMasteryGain * 100)}pp avg mastery`}
             {masteredCount > 0 && ` · ${masteredCount} newly mastered`}
@@ -362,7 +374,12 @@ export default function StudyQueue({ queue }: { queue: QueueNode[] }) {
         <div className="session-progress-bar" style={{ width: `${(index / queue.length) * 100}%` }} />
       </div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-        <span className="muted small">Concept {index + 1} of {queue.length}</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <span className="muted small">Concept {index + 1} of {queue.length}</span>
+          <span className="muted small" style={{ fontVariantNumeric: "tabular-nums" }}>
+            {Math.floor(sessionElapsed / 60)}:{String(sessionElapsed % 60).padStart(2, "0")}
+          </span>
+        </div>
         <div style={{ display: "flex", gap: 6 }}>
           {results.map((r, i) => (
             <span
@@ -417,8 +434,26 @@ export default function StudyQueue({ queue }: { queue: QueueNode[] }) {
             <span className="pill">{problem.kind}</span>
           </div>
 
-          <div className="panel">
+          <div className="panel" style={{ position: "relative" }}>
             <Markdown>{problem.problem}</Markdown>
+            <button
+              type="button"
+              onClick={() => {
+                navigator.clipboard.writeText(problem.problem).then(() => {
+                  setCopied(true);
+                  setTimeout(() => setCopied(false), 1500);
+                });
+              }}
+              title="Copy problem to clipboard"
+              style={{
+                position: "absolute", top: 10, right: 10,
+                background: "none", border: "none", cursor: "pointer",
+                fontSize: 12, color: "var(--muted)", padding: "3px 7px",
+                borderRadius: 5, border: "1px solid var(--border)",
+              }}
+            >
+              {copied ? "✓" : "⎘"}
+            </button>
           </div>
 
           {/* Concept reminder toggle */}

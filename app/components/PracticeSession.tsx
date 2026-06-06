@@ -50,6 +50,7 @@ export default function PracticeSession({ initialNodeId }: { initialNodeId?: str
   const [explanationBusy, setExplanationBusy] = useState(false);
   const [hint, setHint] = useState<string | null>(null);
   const [hintBusy, setHintBusy] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const generate = useCallback(async (nodeId?: string, signal?: AbortSignal) => {
     setBusy(true);
@@ -232,8 +233,16 @@ export default function PracticeSession({ initialNodeId }: { initialNodeId?: str
             </div>
           </div>
 
-          <div className="panel">
+          <div className="panel" style={{ position: "relative" }}>
             <Markdown>{problem.problem}</Markdown>
+            <button
+              type="button"
+              onClick={() => navigator.clipboard.writeText(problem.problem).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1500); })}
+              title="Copy problem"
+              style={{ position: "absolute", top: 10, right: 10, background: "none", border: "1px solid var(--border)", cursor: "pointer", fontSize: 12, color: "var(--muted)", padding: "3px 7px", borderRadius: 5 }}
+            >
+              {copied ? "✓" : "⎘"}
+            </button>
           </div>
 
           {/* Concept reminder toggle — shows the overview without spoiling */}
