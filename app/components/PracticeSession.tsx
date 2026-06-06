@@ -45,6 +45,7 @@ export default function PracticeSession({ initialNodeId }: { initialNodeId?: str
   const [timerStart, setTimerStart] = useState<number | null>(null);
   const [followUp, setFollowUp] = useState("");
   const [followUpBusy, setFollowUpBusy] = useState(false);
+  const [showReminder, setShowReminder] = useState(false);
 
   const generate = useCallback(async (nodeId?: string, signal?: AbortSignal) => {
     setBusy(true);
@@ -57,6 +58,7 @@ export default function PracticeSession({ initialNodeId }: { initialNodeId?: str
     setTimerStart(null);
     setFollowUp("");
     setFollowUpBusy(false);
+    setShowReminder(false);
     try {
       let id = nodeId;
       if (!id) {
@@ -198,6 +200,34 @@ export default function PracticeSession({ initialNodeId }: { initialNodeId?: str
           <div className="panel">
             <Markdown>{problem.problem}</Markdown>
           </div>
+
+          {/* Concept reminder toggle — shows the overview without spoiling */}
+          {problem.node && !grade && !revealed && (
+            <div>
+              <button
+                type="button"
+                className="btn-ghost"
+                onClick={() => setShowReminder((s) => !s)}
+                style={{ fontSize: 12, color: "var(--muted)", marginBottom: showReminder ? 4 : 0 }}
+              >
+                {showReminder ? "Hide reminder ↑" : "Concept reminder ↓"}
+              </button>
+              {showReminder && (
+                <div className="panel" style={{ fontSize: 13.5, borderColor: "#2a3050", background: "#0d1020", marginBottom: 4 }}>
+                  <div style={{ display: "flex", gap: 8, alignItems: "baseline", marginBottom: 6 }}>
+                    {problem.node.type && <span className={`type-badge t-${problem.node.type}`}>{problem.node.type}</span>}
+                    <Link href={`/node/${encodeURIComponent(problem.node.id)}`} style={{ fontWeight: 600, fontSize: 14 }}>
+                      {problem.node.title}
+                    </Link>
+                    {problem.node.area && <span className="muted small">{problem.node.area}</span>}
+                  </div>
+                  <p className="muted small" style={{ margin: 0, fontStyle: "italic" }}>
+                    See the full note for details · this is just the overview.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
 
           <AnswerBox
             value={answer}

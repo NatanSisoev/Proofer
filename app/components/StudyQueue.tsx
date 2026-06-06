@@ -63,6 +63,7 @@ export default function StudyQueue({ queue }: { queue: QueueNode[] }) {
   const [followUpBusy, setFollowUpBusy] = useState(false);
   const [results, setResults] = useState<SessionResult[]>([]);
   const [done, setDone] = useState(false);
+  const [showReminder, setShowReminder] = useState(false);
   const currentNode = queue[index];
 
   const generate = useCallback(async (nodeId: string, signal?: AbortSignal) => {
@@ -74,6 +75,7 @@ export default function StudyQueue({ queue }: { queue: QueueNode[] }) {
     setRevealed(null);
     setFollowUp("");
     setFollowUpBusy(false);
+    setShowReminder(false);
     try {
       const res = await fetch("/api/practice/generate", {
         method: "POST",
@@ -356,6 +358,34 @@ export default function StudyQueue({ queue }: { queue: QueueNode[] }) {
           <div className="panel">
             <Markdown>{problem.problem}</Markdown>
           </div>
+
+          {/* Concept reminder toggle */}
+          {!grade && !revealed && (
+            <div>
+              <button
+                type="button"
+                className="btn-ghost"
+                onClick={() => setShowReminder((s) => !s)}
+                style={{ fontSize: 12, color: "var(--muted)", marginBottom: showReminder ? 4 : 0 }}
+              >
+                {showReminder ? "Hide reminder ↑" : "Concept reminder ↓"}
+              </button>
+              {showReminder && (
+                <div className="panel" style={{ fontSize: 13.5, borderColor: "#2a3050", background: "#0d1020", marginBottom: 4 }}>
+                  <div style={{ display: "flex", gap: 8, alignItems: "baseline", marginBottom: 4 }}>
+                    {problem.node.type && <span className={`type-badge t-${problem.node.type}`}>{problem.node.type}</span>}
+                    <Link href={`/node/${encodeURIComponent(problem.node.id)}`} target="_blank" style={{ fontWeight: 600, fontSize: 14 }}>
+                      {problem.node.title}
+                    </Link>
+                    {problem.node.area && <span className="muted small">{problem.node.area}</span>}
+                  </div>
+                  <p className="muted small" style={{ margin: 0, fontStyle: "italic" }}>
+                    Click to open the full note in a new tab.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
 
           <AnswerBox
             value={answer}
