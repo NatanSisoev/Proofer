@@ -16,6 +16,14 @@ const MODES: { key: Mode; label: string; desc: string }[] = [
 ];
 
 type ModeCounts = { due: number; weak: number; frontier: number };
+type ProblemKind = "any" | "compute" | "prove" | "counterexample" | "explain";
+const KIND_OPTIONS: { key: ProblemKind; label: string; desc: string }[] = [
+  { key: "any",           label: "Any",          desc: "Mix of all problem types" },
+  { key: "prove",         label: "Prove",         desc: "Formal proofs and derivations" },
+  { key: "compute",       label: "Compute",       desc: "Calculations and worked examples" },
+  { key: "explain",       label: "Explain",       desc: "State definitions and intuitions" },
+  { key: "counterexample",label: "Counter",        desc: "Find a counterexample" },
+];
 
 export default function SessionSetup({
   areas,
@@ -29,6 +37,7 @@ export default function SessionSetup({
   const [mode, setMode] = useState<Mode>(initialMode);
   const [area, setArea] = useState<string>(initialArea || areas[0] || "");
   const [count, setCount] = useState(5);
+  const [preferKind, setPreferKind] = useState<ProblemKind>("any");
   const [loading, setLoading] = useState(false);
   const [queue, setQueue] = useState<QueueNode[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -81,7 +90,7 @@ export default function SessionSetup({
   }
 
   if (queue) {
-    return <StudyQueue queue={queue} />;
+    return <StudyQueue queue={queue} preferKind={preferKind === "any" ? undefined : preferKind} />;
   }
 
   return (
@@ -178,6 +187,37 @@ export default function SessionSetup({
           <p className="muted small" style={{ marginTop: 8, marginBottom: 0 }}>
             {count} concept{count !== 1 ? "s" : ""} · ~{count * 3}–{count * 5} min
           </p>
+        </div>
+
+        <div className="panel" style={{ marginBottom: 16 }}>
+          <h2>Problem type</h2>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            {KIND_OPTIONS.map((k) => (
+              <label
+                key={k.key}
+                style={{
+                  display: "flex", alignItems: "center", gap: 10, padding: "7px 10px",
+                  borderRadius: 8,
+                  border: `1px solid ${preferKind === k.key ? "var(--accent)" : "var(--border)"}`,
+                  background: preferKind === k.key ? "var(--accent-soft)" : "transparent",
+                  cursor: "pointer",
+                }}
+              >
+                <input
+                  type="radio"
+                  name="kind"
+                  value={k.key}
+                  checked={preferKind === k.key}
+                  onChange={() => setPreferKind(k.key)}
+                  style={{ accentColor: "var(--accent)" }}
+                />
+                <div>
+                  <span style={{ fontWeight: 600, fontSize: 13 }}>{k.label}</span>
+                  <span className="muted small" style={{ marginLeft: 8 }}>{k.desc}</span>
+                </div>
+              </label>
+            ))}
+          </div>
         </div>
 
         {error && (

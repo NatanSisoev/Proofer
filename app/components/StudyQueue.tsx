@@ -52,7 +52,7 @@ const VERDICT_ICON: Record<string, string> = {
   incorrect: "✗",
 };
 
-export default function StudyQueue({ queue }: { queue: QueueNode[] }) {
+export default function StudyQueue({ queue, preferKind }: { queue: QueueNode[]; preferKind?: string }) {
   const [index, setIndex] = useState(0);
   const [problem, setProblem] = useState<Problem | null>(null);
   const [answer, setAnswer] = useState("");
@@ -81,10 +81,10 @@ export default function StudyQueue({ queue }: { queue: QueueNode[] }) {
     const p = fetch("/api/practice/generate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ nodeId }),
+      body: JSON.stringify({ nodeId, ...(preferKind ? { kind: preferKind } : {}) }),
     }).then((r) => r.json()).catch(() => null);
     prefetchCache.current.set(nodeId, p);
-  }, []);
+  }, [preferKind]);
 
   const generate = useCallback(async (nodeId: string, signal?: AbortSignal) => {
     setBusy(true);
@@ -106,7 +106,7 @@ export default function StudyQueue({ queue }: { queue: QueueNode[] }) {
       const data = await (cached ?? fetch("/api/practice/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nodeId }),
+        body: JSON.stringify({ nodeId, ...(preferKind ? { kind: preferKind } : {}) }),
         signal,
       }).then((r) => r.json()));
       if (!data || data.error) throw new Error(data?.error || "generation failed");

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db, type NodeRow } from "@/lib/db";
 import { getNode } from "@/lib/queries";
 import { getMasteryP } from "@/lib/mastery";
-import { generateProblem, friendlyLLMError, HAS_KEY } from "@/lib/llm";
+import { generateProblem, friendlyLLMError, HAS_KEY, type ProblemKind } from "@/lib/llm";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 120;
@@ -19,10 +19,13 @@ function directPrereqs(id: string): string[] {
   ).map((r) => r.dst);
 }
 
+const VALID_KINDS = new Set(["compute", "prove", "counterexample", "explain"]);
+
 export async function POST(req: NextRequest) {
-  let body: { nodeId?: string };
+  let body: { nodeId?: string; kind?: string };
   try { body = await req.json(); } catch { return NextResponse.json({ error: "bad request" }, { status: 400 }); }
   const { nodeId } = body;
+  const preferKind = (body.kind && VALID_KINDS.has(body.kind) ? body.kind : undefined) as ProblemKind | undefined;
   if (!nodeId) return NextResponse.json({ error: "nodeId required" }, { status: 400 });
   const node = getNode(nodeId) as NodeRow | undefined;
   if (!node || node.exists_ === 0) return NextResponse.json({ error: "unknown node" }, { status: 404 });
@@ -45,7 +48,7 @@ export async function POST(req: NextRequest) {
 
   let gen;
   try {
-    gen = await generateProblem(node, prereqs, recentGaps);
+    gen = await generateProblem(node, prereqs, recentGaps, preferKind);
   } catch (e) {
     const { status, message } = friendlyLLMError(e);
     return NextResponse.json({ error: message }, { status });

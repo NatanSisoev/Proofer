@@ -55,7 +55,12 @@ You must:
 - mastery_evidence is your calibrated probability (0..1) that the student has mastered the target concept based on this answer alone.
 Be fair: partial credit for partial understanding. Be honest: do not praise a wrong proof.`;
 
-function problemUserText(node: NodeRow, prereqs: string[], recentGaps: string[] = []): string {
+export type ProblemKind = "compute" | "prove" | "counterexample" | "explain";
+
+function problemUserText(node: NodeRow, prereqs: string[], recentGaps: string[] = [], preferKind?: ProblemKind): string {
+  const kindHint = preferKind
+    ? `\nIMPORTANT: Write a "${preferKind}" type problem specifically. The kind field in your JSON MUST be "${preferKind}".`
+    : "";
   return [
     `TARGET CONCEPT: ${node.title}`,
     node.type ? `Type: ${node.type}` : "",
@@ -66,6 +71,7 @@ function problemUserText(node: NodeRow, prereqs: string[], recentGaps: string[] 
     recentGaps.length
       ? `\nThis student has struggled before. Recent gaps in their understanding:\n${recentGaps.map((g, i) => `${i + 1}. ${g}`).join("\n")}\nWrite a problem that DIRECTLY ADDRESSES one of these specific gaps — do not repeat the aspect they already got right.`
       : `\nWrite one problem that tests genuine understanding of "${node.title}".`,
+    kindHint,
     `\nRespond as JSON.`,
   ]
     .filter(Boolean)
@@ -99,9 +105,9 @@ function gradeUserText(a: {
 // ===========================================================================
 // Dispatch
 // ===========================================================================
-export async function generateProblem(node: NodeRow, prereqs: string[], recentGaps: string[] = []): Promise<GeneratedProblem> {
-  if (PROVIDER === "gemini") return geminiGenerate(node, prereqs, recentGaps);
-  if (PROVIDER === "anthropic") return anthropicGenerate(node, prereqs, recentGaps);
+export async function generateProblem(node: NodeRow, prereqs: string[], recentGaps: string[] = [], preferKind?: ProblemKind): Promise<GeneratedProblem> {
+  if (PROVIDER === "gemini") return geminiGenerate(node, prereqs, recentGaps, preferKind);
+  if (PROVIDER === "anthropic") return anthropicGenerate(node, prereqs, recentGaps, preferKind);
   return stubProblem(node);
 }
 
@@ -337,8 +343,8 @@ async function geminiCall(system: string, userText: string, schema: unknown, tem
   return JSON.parse(text);
 }
 
-async function geminiGenerate(node: NodeRow, prereqs: string[], recentGaps: string[] = []): Promise<GeneratedProblem> {
-  return geminiCall(AUTHOR_SYSTEM, problemUserText(node, prereqs, recentGaps), G_PROBLEM_SCHEMA, 0.8);
+async function geminiGenerate(node: NodeRow, prereqs: string[], recentGaps: string[] = [], preferKind?: ProblemKind): Promise<GeneratedProblem> {
+  return geminiCall(AUTHOR_SYSTEM, problemUserText(node, prereqs, recentGaps, preferKind), G_PROBLEM_SCHEMA, 0.8);
 }
 
 async function geminiGrade(a: Parameters<typeof gradeAnswer>[0]): Promise<GradeResult> {
@@ -383,14 +389,14 @@ function firstJson<T>(msg: Anthropic.Message): T {
   return JSON.parse(block.text) as T;
 }
 
-async function anthropicGenerate(node: NodeRow, prereqs: string[], recentGaps: string[] = []): Promise<GeneratedProblem> {
+async function anthropicGenerate(node: NodeRow, prereqs: string[], recentGaps: string[] = [], preferKind?: ProblemKind): Promise<GeneratedProblem> {
   const msg = await anthropic!.messages.create({
     model: ANTHROPIC_PROBLEM_MODEL,
     max_tokens: 16000,
     thinking: { type: "adaptive" },
     output_config: { effort: "medium", format: { type: "json_schema", schema: A_PROBLEM_SCHEMA } },
     system: [{ type: "text", text: AUTHOR_SYSTEM, cache_control: { type: "ephemeral" } }],
-    messages: [{ role: "user", content: problemUserText(node, prereqs, recentGaps) }],
+    messages: [{ role: "user", content: problemUserText(node, prereqs, recentGaps, preferKind) }],
   });
   return firstJson<GeneratedProblem>(msg);
 }
