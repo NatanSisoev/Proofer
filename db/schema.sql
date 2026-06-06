@@ -91,6 +91,15 @@ CREATE TABLE IF NOT EXISTS bookmarks (
 
 -- Generated problems live here so the ideal solution / rubric stay server-side
 -- (the student grades against a problemId, never sees the answer key).
+-- User-configurable settings: key-value store.
+-- Keys: daily_goal (integer), voice_lang (text)
+CREATE TABLE IF NOT EXISTS settings (
+  key   TEXT PRIMARY KEY,
+  value TEXT NOT NULL
+);
+
+-- Generated problems live here so the ideal solution / rubric stay server-side
+-- (the student grades against a problemId, never sees the answer key).
 CREATE TABLE IF NOT EXISTS problems (
   id             INTEGER PRIMARY KEY AUTOINCREMENT,
   node_id        TEXT NOT NULL,

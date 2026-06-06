@@ -4,6 +4,7 @@ import "katex/dist/katex.min.css";
 import "./globals.css";
 import SyncButton from "./components/SyncButton";
 import KeyboardShortcuts from "./components/KeyboardShortcuts";
+import ShortcutsTrigger from "./components/ShortcutsTrigger";
 
 export const metadata: Metadata = {
   title: "Proofer — a map of mathematics",
@@ -26,8 +27,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <Link href="/quality" className="nav-link">Quality</Link>
             </div>
             <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+              <Link href="/settings" className="nav-link" title="Settings">⚙</Link>
               <SyncButton />
-              <span className="muted small" style={{ cursor: "default", userSelect: "none" }} title="Press ? for keyboard shortcuts">?</span>
+              <ShortcutsTrigger />
             </div>
           </div>
         </nav>

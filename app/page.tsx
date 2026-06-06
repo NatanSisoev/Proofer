@@ -2,7 +2,7 @@ import Link from "next/link";
 import SearchBox from "./components/SearchBox";
 import QuickKnown from "./components/QuickKnown";
 import { frontier, stats, dueForReview, todayStats, recentlyPracticed, bookmarkedNodes } from "@/lib/queries";
-import { DAILY_GOAL } from "@/lib/constants";
+import { getDailyGoal } from "@/lib/settings";
 
 export const dynamic = "force-dynamic";
 
@@ -21,6 +21,7 @@ function DueBar({ decayed, original }: { decayed: number; original: number }) {
 }
 
 export default function Home() {
+  const DAILY_GOAL = getDailyGoal();
   const s = stats();
   const front = frontier(20);
   const due = dueForReview(8);

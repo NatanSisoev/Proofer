@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { masteryHistogram, recentAttemptsGlobal, weakSpots, stats, todayStats, reviewForecast, masteryVelocity, activityCalendar } from "@/lib/queries";
 import ActivityCalendar from "@/app/components/ActivityCalendar";
-import { DAILY_GOAL } from "@/lib/constants";
+import { getDailyGoal } from "@/lib/settings";
 
 export const dynamic = "force-dynamic";
 
@@ -28,6 +28,7 @@ function timeAgo(iso: string) {
 }
 
 export default function ProgressPage() {
+  const DAILY_GOAL = getDailyGoal();
   const s = stats();
   const hist = masteryHistogram();
   const recent = recentAttemptsGlobal(40);

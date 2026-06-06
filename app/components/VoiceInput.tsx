@@ -5,6 +5,7 @@ import { useState, useRef, useEffect } from "react";
 type Props = {
   onTranscript: (text: string) => void;
   disabled?: boolean;
+  lang?: string;
 };
 
 type SpeechRecognitionEvent = {
@@ -31,7 +32,7 @@ interface SpeechRecognitionInstance extends EventTarget {
   onstart: (() => void) | null;
 }
 
-export default function VoiceInput({ onTranscript, disabled }: Props) {
+export default function VoiceInput({ onTranscript, disabled, lang = "en-US" }: Props) {
   const [listening, setListening] = useState(false);
   const [interim, setInterim] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -47,7 +48,7 @@ export default function VoiceInput({ onTranscript, disabled }: Props) {
     const rec = new SR();
     rec.continuous = true;
     rec.interimResults = true;
-    rec.lang = "en-US";
+    rec.lang = lang;
 
     rec.onstart = () => { setListening(true); setError(null); };
 
