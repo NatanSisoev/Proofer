@@ -34,6 +34,8 @@ export default function GlobalGraph({ initialArea }: { initialArea?: string }) {
   const [area, setArea] = useState(initialArea || "");
   const [areas, setAreas] = useState<Area[]>([]);
   const [nodeCount, setNodeCount] = useState(0);
+  const [hideMastered, setHideMastered] = useState(false);
+  const [minMastery, setMinMastery] = useState(0); // 0-100, show nodes below this
   const [tooltip, setTooltip] = useState<{ title: string; mastery: number; type: string | null; x: number; y: number } | null>(null);
 
   const load = useCallback(async (filterArea: string) => {
@@ -148,7 +150,23 @@ export default function GlobalGraph({ initialArea }: { initialArea?: string }) {
 
     cyRef.current = cy;
     setLoading(false);
-  }, [router]);
+  }, [router]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Apply mastery filter whenever it changes (without full reload)
+  useEffect(() => {
+    const cy = cyRef.current;
+    if (!cy) return;
+    cy.nodes().forEach((n) => {
+      const m = n.data("mastery") as number;
+      const shouldHide = (hideMastered && m >= 0.8) || m * 100 < minMastery;
+      n.style("display", shouldHide ? "none" : "element");
+    });
+    cy.edges().forEach((e) => {
+      const srcHidden = e.source().style("display") === "none";
+      const dstHidden = e.target().style("display") === "none";
+      e.style("display", srcHidden || dstHidden ? "none" : "element");
+    });
+  }, [hideMastered, minMastery]);
 
   useEffect(() => {
     load(area);
@@ -172,6 +190,31 @@ export default function GlobalGraph({ initialArea }: { initialArea?: string }) {
             </option>
           ))}
         </select>
+
+        <label style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, color: "var(--muted)", cursor: "pointer" }}>
+          <input
+            type="checkbox"
+            checked={hideMastered}
+            onChange={(e) => setHideMastered(e.target.checked)}
+            style={{ accentColor: "var(--accent)" }}
+          />
+          Hide mastered
+        </label>
+
+        <label style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, color: "var(--muted)" }}>
+          Min mastery:
+          <input
+            type="range"
+            min={0}
+            max={80}
+            step={10}
+            value={minMastery}
+            onChange={(e) => setMinMastery(Number(e.target.value))}
+            style={{ width: 80, accentColor: "var(--accent)" }}
+          />
+          <span style={{ width: 32 }}>{minMastery}%</span>
+        </label>
+
         {!loading && <span className="muted small">{nodeCount} nodes · click to navigate · scroll to zoom</span>}
         {loading && <span className="muted small">Laying out graph…</span>}
       </div>
