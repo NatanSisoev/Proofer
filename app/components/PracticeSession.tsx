@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import Markdown from "./Markdown";
 import VoiceInput from "./VoiceInput";
+import AnswerBox from "./AnswerBox";
 
 type Problem = {
   problemId: number;
@@ -22,6 +23,7 @@ type Grade = {
   socratic_hint: string;
   masteryBefore: number;
   masteryAfter: number;
+  halfLife?: number;
 };
 
 const VERDICT_STYLE: Record<string, { bg: string; label: string }> = {
@@ -195,12 +197,11 @@ export default function PracticeSession({ initialNodeId }: { initialNodeId?: str
             <Markdown>{problem.problem}</Markdown>
           </div>
 
-          <textarea
-            className="answer-box"
-            placeholder="Write your answer — a proof, a definition, a counterexample, your reasoning. Don't look it up; produce it."
+          <AnswerBox
             value={answer}
-            onChange={(e) => setAnswer(e.target.value)}
+            onChange={setAnswer}
             disabled={!!grade || busy}
+            placeholder="Write your answer — a proof, a definition, a counterexample. Type $...$ for math."
           />
 
           {revealed && (
@@ -249,6 +250,11 @@ export default function PracticeSession({ initialNodeId }: { initialNodeId?: str
                 <span className="small">
                   {Math.round(grade.masteryBefore * 100)}% → <strong>{Math.round(grade.masteryAfter * 100)}%</strong>
                 </span>
+                {grade.halfLife && (
+                  <span className="muted small" style={{ marginLeft: "auto", whiteSpace: "nowrap" }}>
+                    ⏱ review in ~{grade.halfLife}d
+                  </span>
+                )}
               </div>
 
               {grade.understood?.length > 0 && (
@@ -283,12 +289,11 @@ export default function PracticeSession({ initialNodeId }: { initialNodeId?: str
                   <p className="muted small" style={{ margin: "0 0 8px" }}>
                     Address the gap directly — no need to start over:
                   </p>
-                  <textarea
-                    className="answer-box"
-                    placeholder="Show the missing step, fix the misconception, or complete the calculation…"
+                  <AnswerBox
                     value={followUp}
-                    onChange={(e) => setFollowUp(e.target.value)}
+                    onChange={setFollowUp}
                     disabled={followUpBusy}
+                    placeholder="Show the missing step, fix the misconception, or complete the calculation…"
                     style={{ minHeight: 100 }}
                     onKeyDown={(e) => {
                       if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {

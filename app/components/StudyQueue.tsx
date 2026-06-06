@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import Markdown from "./Markdown";
 import VoiceInput from "./VoiceInput";
+import AnswerBox from "./AnswerBox";
 
 type QueueNode = { id: string; title: string; type: string | null; area: string | null };
 
@@ -25,6 +26,7 @@ type Grade = {
   socratic_hint: string;
   masteryBefore: number;
   masteryAfter: number;
+  halfLife?: number;
 };
 
 type SessionResult = {
@@ -58,8 +60,6 @@ export default function StudyQueue({ queue }: { queue: QueueNode[] }) {
   const [followUpBusy, setFollowUpBusy] = useState(false);
   const [results, setResults] = useState<SessionResult[]>([]);
   const [done, setDone] = useState(false);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-
   const currentNode = queue[index];
 
   const generate = useCallback(async (nodeId: string, signal?: AbortSignal) => {
@@ -329,13 +329,11 @@ export default function StudyQueue({ queue }: { queue: QueueNode[] }) {
             <Markdown>{problem.problem}</Markdown>
           </div>
 
-          <textarea
-            ref={textareaRef}
-            className="answer-box"
-            placeholder="Write your answer — proof, definition, counterexample, reasoning. Don't look it up."
+          <AnswerBox
             value={answer}
-            onChange={(e) => setAnswer(e.target.value)}
+            onChange={setAnswer}
             disabled={!!grade || busy}
+            placeholder="Write your answer — proof, definition, counterexample. Type $...$ for math."
           />
 
           {revealed && (
@@ -379,6 +377,11 @@ export default function StudyQueue({ queue }: { queue: QueueNode[] }) {
                 <span className="small">
                   {Math.round(grade.masteryBefore * 100)}% → <strong>{Math.round(grade.masteryAfter * 100)}%</strong>
                 </span>
+                {grade.halfLife && (
+                  <span className="muted small" style={{ marginLeft: "auto", whiteSpace: "nowrap" }}>
+                    ⏱ review in ~{grade.halfLife}d
+                  </span>
+                )}
               </div>
 
               {grade.understood?.length > 0 && (
@@ -412,12 +415,11 @@ export default function StudyQueue({ queue }: { queue: QueueNode[] }) {
                   <p className="muted small" style={{ margin: "0 0 8px" }}>
                     Address the gap — no need to start over:
                   </p>
-                  <textarea
-                    className="answer-box"
-                    placeholder="Show the missing step, fix the misconception…"
+                  <AnswerBox
                     value={followUp}
-                    onChange={(e) => setFollowUp(e.target.value)}
+                    onChange={setFollowUp}
                     disabled={followUpBusy}
+                    placeholder="Show the missing step, fix the misconception…"
                     style={{ minHeight: 90 }}
                     onKeyDown={(e) => {
                       if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {

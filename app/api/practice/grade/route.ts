@@ -49,10 +49,14 @@ export async function POST(req: NextRequest) {
     mode: HAS_KEY ? "ai" : "demo",
   });
 
+  // Return half_life so the UI can show "next review in ~N days"
+  const masteryRow = db().prepare("SELECT half_life FROM mastery WHERE node_id = ?").get(node.id) as { half_life: number } | undefined;
+
   return NextResponse.json({
     ...grade,
     blamed_prerequisite: blamed || "",
     masteryBefore,
     masteryAfter: getMasteryP(node.id),
+    halfLife: Math.round(masteryRow?.half_life ?? 7),
   });
 }
