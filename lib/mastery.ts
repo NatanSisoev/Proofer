@@ -1,4 +1,4 @@
-import { db, MASTERY_THRESHOLD, type NodeRow } from "./db";
+import { db, MASTERY_THRESHOLD, MASTERED_SUBQUERY, type NodeRow } from "./db";
 
 // Bayesian Knowledge Tracing parameters (classic four).
 export const P_INIT = 0.15; // prior mastery of an unseen concept
@@ -130,7 +130,7 @@ export function nextToPractice(): NodeRow | undefined {
             SELECT 1 FROM edges e
              WHERE e.src = n.id AND e.type='depends_on' AND e.dst <> n.id
                AND e.dst IN (SELECT id FROM nodes WHERE exists_=1)
-               AND e.dst NOT IN (${'SELECT node_id FROM mastery WHERE p >= ' + MASTERY_THRESHOLD})
+               AND e.dst NOT IN (${MASTERED_SUBQUERY})
           )
         ORDER BY COALESCE(m.p, ${P_INIT}) ASC,
                  (SELECT COUNT(*) FROM edges e2 WHERE e2.dst=n.id AND e2.type='depends_on') DESC

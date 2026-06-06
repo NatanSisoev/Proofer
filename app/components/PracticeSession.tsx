@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import Markdown from "./Markdown";
+import VoiceInput from "./VoiceInput";
 
 type Problem = {
   problemId: number;
@@ -222,6 +223,10 @@ export default function PracticeSession({ initialNodeId }: { initialNodeId?: str
               <button className="btn-primary" onClick={submit} disabled={busy || !answer.trim()}>
                 {busy ? "Grading…" : "Submit answer"}
               </button>
+              <VoiceInput
+                onTranscript={(t) => setAnswer((prev) => prev ? prev + " " + t : t)}
+                disabled={busy}
+              />
               <button className="btn-ghost" onClick={() => generate(problem.node.id, undefined)} disabled={busy}>
                 Skip / new problem
               </button>

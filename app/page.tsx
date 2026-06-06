@@ -2,6 +2,7 @@ import Link from "next/link";
 import SearchBox from "./components/SearchBox";
 import QuickKnown from "./components/QuickKnown";
 import { frontier, stats, dueForReview, todayStats, recentlyPracticed, bookmarkedNodes } from "@/lib/queries";
+import { DAILY_GOAL } from "@/lib/constants";
 
 export const dynamic = "force-dynamic";
 
@@ -18,8 +19,6 @@ function DueBar({ decayed, original }: { decayed: number; original: number }) {
     </div>
   );
 }
-
-const DAILY_GOAL = 5; // concepts per day
 
 export default function Home() {
   const s = stats();
@@ -246,6 +245,20 @@ export default function Home() {
                 <div>
                   <div style={{ fontWeight: 500 }}>Progress</div>
                   <div className="muted small">Mastery histogram & recent activity</div>
+                </div>
+              </Link>
+              <Link href="/browse" style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", borderBottom: "1px solid var(--border)", color: "var(--text)" }}>
+                <span style={{ fontSize: 18 }}>📚</span>
+                <div>
+                  <div style={{ fontWeight: 500 }}>Browse</div>
+                  <div className="muted small">All concepts by area and type</div>
+                </div>
+              </Link>
+              <Link href="/quality" style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", borderBottom: "1px solid var(--border)", color: "var(--text)" }}>
+                <span style={{ fontSize: 18 }}>🔍</span>
+                <div>
+                  <div style={{ fontWeight: 500 }}>Note quality</div>
+                  <div className="muted small">Gaps, missing prereqs, isolated nodes</div>
                 </div>
               </Link>
               <Link href="/learn" style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", color: "var(--text)" }}>
