@@ -5,6 +5,7 @@ import Link from "next/link";
 import Markdown from "./Markdown";
 import VoiceInput from "./VoiceInput";
 import AnswerBox from "./AnswerBox";
+import Confetti from "./Confetti";
 
 type QueueNode = { id: string; title: string; type: string | null; area: string | null };
 
@@ -271,9 +272,10 @@ export default function StudyQueue({ queue }: { queue: QueueNode[] }) {
 
     return (
       <div className="session-summary">
+        {isPerfect && <Confetti count={90} />}
         <div style={{ marginBottom: 6 }}>
           {isPerfect && (
-            <div style={{ fontSize: 28, marginBottom: 8 }}>🎉</div>
+            <div style={{ fontSize: 32, marginBottom: 8, animation: "none" }}>🎉</div>
           )}
           <h2 style={{ margin: "0 0 2px", fontSize: 22 }}>
             {isPerfect ? "Perfect session!" : "Session complete"}

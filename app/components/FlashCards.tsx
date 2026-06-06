@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import MathText from "./MathText";
+import Confetti from "./Confetti";
 
 type Card = {
   id: string;
@@ -42,6 +43,7 @@ export default function FlashCards({ initialCards }: { initialCards: Card[] }) {
   const [unknown, setUnknown] = useState(0);
   const [done, setDone] = useState(false);
   const [seenIds, setSeenIds] = useState<string[]>([]);
+  const [missedCards, setMissedCards] = useState<Card[]>([]);
 
   const current = cards[index];
   const total = cards.length;
@@ -60,6 +62,7 @@ export default function FlashCards({ initialCards }: { initialCards: Card[] }) {
       markKnown(current.id);
     } else {
       setUnknown((u) => u + 1);
+      setMissedCards((prev) => [...prev, current]);
     }
     setSeenIds((prev) => [...prev, current.id]);
     setFlipped(false);
@@ -104,6 +107,7 @@ export default function FlashCards({ initialCards }: { initialCards: Card[] }) {
     const pct = total2 > 0 ? Math.round((known / total2) * 100) : 0;
     return (
       <div className="wrap" style={{ maxWidth: 520, margin: "0 auto" }}>
+        {pct === 100 && <Confetti count={60} />}
         <div className="panel" style={{ textAlign: "center", padding: "36px 28px" }}>
           <div style={{ fontSize: 36, marginBottom: 12 }}>
             {pct === 100 ? "🎉" : pct >= 70 ? "🙌" : "📚"}
@@ -118,22 +122,21 @@ export default function FlashCards({ initialCards }: { initialCards: Card[] }) {
             <span style={{ width: `${pct}%`, background: pct >= 80 ? "var(--green)" : pct >= 50 ? "var(--amber)" : "var(--red)" }} />
           </div>
           <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
-            {unknown > 0 && (
+            {missedCards.length > 0 && (
               <button
                 className="btn-primary"
                 onClick={() => {
-                  const missed = cards.filter((c) => !seenIds.slice(0, known).includes(c.id));
-                  setCards(shuffle(cards.filter((_, i) => i >= index - unknown)));
+                  setCards(shuffle([...missedCards]));
                   setIndex(0);
                   setFlipped(false);
                   setKnown(0);
                   setUnknown(0);
                   setDone(false);
                   setSeenIds([]);
-                  void missed; // just restart with same deck for now
+                  setMissedCards([]);
                 }}
               >
-                Go again →
+                Retry {missedCards.length} missed →
               </button>
             )}
             <Link href="/session" className="btn-primary" style={{ textDecoration: "none" }}>
@@ -238,8 +241,8 @@ export default function FlashCards({ initialCards }: { initialCards: Card[] }) {
               {current.type && <span className={`type-badge t-${current.type}`}>{current.type}</span>}
               <span style={{ fontWeight: 600, fontSize: 15 }}><MathText>{current.title}</MathText></span>
             </div>
-            <div style={{ flex: 1, fontSize: 14, lineHeight: 1.7, color: "var(--text)", whiteSpace: "pre-line" }}>
-              {back || <span className="muted">No definition yet.</span>}
+            <div style={{ flex: 1, fontSize: 14, lineHeight: 1.7, color: "var(--text)" }}>
+              {back ? <MathText>{back}</MathText> : <span className="muted">No definition yet.</span>}
             </div>
             <div style={{ marginTop: 12 }}>
               <Link
