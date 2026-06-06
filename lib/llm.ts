@@ -167,6 +167,58 @@ export async function explainConcept(
   return "";
 }
 
+const HINT_SCHEMA_G = {
+  type: "OBJECT",
+  properties: { hint: { type: "STRING" } },
+  required: ["hint"],
+  propertyOrdering: ["hint"],
+};
+
+/**
+ * Generate a Socratic pre-submission hint for a specific problem.
+ * Returns 1–2 sentences nudging the student in the right direction
+ * WITHOUT revealing the answer. Much lighter than a full explanation.
+ */
+export async function generateHint(args: {
+  problem: string;
+  nodeTitle: string;
+  nodeType: string | null;
+  idealSolution: string;
+}): Promise<string> {
+  if (PROVIDER === "none") return "No AI provider configured — set GEMINI_API_KEY for hints.";
+  const prompt = [
+    `A student is about to solve this problem:`,
+    `\nCONCEPT: ${args.nodeTitle}${args.nodeType ? ` (${args.nodeType})` : ""}`,
+    `\nPROBLEM:\n${args.problem}`,
+    `\nIDEAL SOLUTION (for reference, do NOT reveal):\n${args.idealSolution.slice(0, 800)}`,
+    `\nWrite ONE Socratic hint — 1–2 sentences. Ask a guiding question or point to the key idea WITHOUT giving the answer or solution steps. Make it specific to this problem.`,
+    `\nRespond as JSON with a single "hint" field.`,
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  if (PROVIDER === "gemini") {
+    const result = await geminiCall(
+      "You are a Socratic math tutor. Give hints that guide, never answers that reveal.",
+      prompt,
+      HINT_SCHEMA_G,
+      0.6
+    );
+    return result.hint as string;
+  }
+
+  if (PROVIDER === "anthropic" && anthropic) {
+    const msg = await anthropic.messages.create({
+      model: ANTHROPIC_GRADE_MODEL,
+      max_tokens: 200,
+      messages: [{ role: "user", content: prompt }],
+    });
+    return (msg.content[0] as any)?.text?.trim() ?? "";
+  }
+
+  return "";
+}
+
 export async function diagnoseWeakness(
   nodeTitle: string,
   gaps: string[],

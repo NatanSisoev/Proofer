@@ -48,6 +48,8 @@ export default function PracticeSession({ initialNodeId }: { initialNodeId?: str
   const [showReminder, setShowReminder] = useState(false);
   const [explanation, setExplanation] = useState<string | null>(null);
   const [explanationBusy, setExplanationBusy] = useState(false);
+  const [hint, setHint] = useState<string | null>(null);
+  const [hintBusy, setHintBusy] = useState(false);
 
   const generate = useCallback(async (nodeId?: string, signal?: AbortSignal) => {
     setBusy(true);
@@ -63,6 +65,8 @@ export default function PracticeSession({ initialNodeId }: { initialNodeId?: str
     setShowReminder(false);
     setExplanation(null);
     setExplanationBusy(false);
+    setHint(null);
+    setHintBusy(false);
     try {
       let id = nodeId;
       if (!id) {
@@ -133,6 +137,22 @@ export default function PracticeSession({ initialNodeId }: { initialNodeId?: str
     } finally {
       setBusy(false);
     }
+  }
+
+  async function getHint() {
+    if (!problem || hintBusy) return;
+    setHintBusy(true);
+    try {
+      const res = await fetch("/api/practice/hint", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ problemId: problem.problemId }),
+      });
+      const data = await res.json();
+      if (res.ok) setHint(data.hint || "");
+      else setHint("Could not get a hint right now.");
+    } catch { setHint("Could not get a hint right now."); }
+    finally { setHintBusy(false); }
   }
 
   async function explain() {
@@ -244,6 +264,21 @@ export default function PracticeSession({ initialNodeId }: { initialNodeId?: str
             </div>
           )}
 
+          {/* Hint panel */}
+          {hint && !grade && (
+            <div className="panel" style={{ borderColor: "#3a3020", background: "#1a1400", marginBottom: 4 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: "var(--amber)", textTransform: "uppercase", letterSpacing: "0.1em" }}>
+                  💡 Hint
+                </span>
+                <button className="btn-ghost" onClick={() => setHint(null)} style={{ fontSize: 11, padding: "2px 6px", color: "var(--muted)" }}>
+                  ✕
+                </button>
+              </div>
+              <div className="markdown" style={{ fontSize: 14 }}><Markdown>{hint}</Markdown></div>
+            </div>
+          )}
+
           <AnswerBox
             value={answer}
             onChange={setAnswer}
@@ -294,6 +329,16 @@ export default function PracticeSession({ initialNodeId }: { initialNodeId?: str
               <button className="btn-ghost" onClick={() => generate(problem.node.id, undefined)} disabled={busy}>
                 Skip / new problem
               </button>
+              {problem.mode !== "demo" && !hint && (
+                <button
+                  className="btn-ghost"
+                  onClick={getHint}
+                  disabled={busy || hintBusy}
+                  style={{ fontSize: 13, color: "var(--amber)" }}
+                >
+                  {hintBusy ? "…" : "💡 Hint"}
+                </button>
+              )}
               {!explanation && problem.mode !== "demo" && (
                 <button className="btn-ghost" onClick={explain} disabled={busy || explanationBusy} style={{ fontSize: 13 }}>
                   {explanationBusy ? "Explaining…" : "Explain first →"}

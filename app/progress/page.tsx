@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { masteryHistogram, recentAttemptsGlobal, weakSpots, stats, todayStats, reviewForecast, masteryVelocity, activityCalendar } from "@/lib/queries";
+import { masteryHistogram, recentAttemptsGlobal, weakSpots, stats, todayStats, reviewForecast, masteryVelocity, activityCalendar, areaMastery } from "@/lib/queries";
 import ActivityCalendar from "@/app/components/ActivityCalendar";
 import { getDailyGoal } from "@/lib/settings";
 
@@ -37,6 +37,7 @@ export default function ProgressPage() {
   const forecast = reviewForecast();
   const velocity = masteryVelocity();
   const calendar = activityCalendar();
+  const areas = areaMastery();
 
   const masteredPct = s.real > 0 ? Math.round((s.known / s.real) * 100) : 0;
   const maxBucket = Math.max(...hist.map((h) => h.count), 1);
@@ -189,6 +190,39 @@ export default function ProgressPage() {
 
         {/* Right column */}
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          {/* Per-area mastery breakdown */}
+          {areas.length > 0 && (
+            <div className="panel">
+              <h2>Mastery by area</h2>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                {areas.map((a) => {
+                  const pct = Math.round(a.avg_p * 100);
+                  const masteredPct = a.total > 0 ? Math.round((a.mastered / a.total) * 100) : 0;
+                  const color = pct >= 80 ? "var(--green)" : pct >= 40 ? "var(--amber)" : "var(--muted)";
+                  return (
+                    <div key={a.area} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                      <Link
+                        href={`/browse?area=${encodeURIComponent(a.area)}`}
+                        style={{ fontSize: 13, color: "var(--text)", minWidth: 0, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+                      >
+                        {a.area}
+                      </Link>
+                      <div className="bar" style={{ width: 70, flexShrink: 0 }}>
+                        <span style={{ width: `${pct}%`, background: color }} />
+                      </div>
+                      <span className="muted small" style={{ width: 34, textAlign: "right", flexShrink: 0 }}>
+                        {pct}%
+                      </span>
+                      <span className="muted small" style={{ fontSize: 10, flexShrink: 0, color: masteredPct === 100 ? "var(--green)" : undefined }}>
+                        {a.mastered}/{a.total}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {/* 7-day review forecast */}
           <div className="panel">
             <h2>Review forecast — next 7 days</h2>

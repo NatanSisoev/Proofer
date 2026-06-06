@@ -64,6 +64,8 @@ export default function StudyQueue({ queue }: { queue: QueueNode[] }) {
   const [results, setResults] = useState<SessionResult[]>([]);
   const [done, setDone] = useState(false);
   const [showReminder, setShowReminder] = useState(false);
+  const [hint, setHint] = useState<string | null>(null);
+  const [hintBusy, setHintBusy] = useState(false);
   // Prefetch cache: map nodeId → fetched Problem data
   const prefetchCache = useRef<Map<string, Promise<any>>>(new Map());
   const currentNode = queue[index];
@@ -90,6 +92,8 @@ export default function StudyQueue({ queue }: { queue: QueueNode[] }) {
     setFollowUp("");
     setFollowUpBusy(false);
     setShowReminder(false);
+    setHint(null);
+    setHintBusy(false);
     try {
       // Use prefetch cache if available, otherwise fetch fresh.
       const cached = prefetchCache.current.get(nodeId);
@@ -136,6 +140,21 @@ export default function StudyQueue({ queue }: { queue: QueueNode[] }) {
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   });
+
+  async function getHint() {
+    if (!problem || hintBusy) return;
+    setHintBusy(true);
+    try {
+      const res = await fetch("/api/practice/hint", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ problemId: problem.problemId }),
+      });
+      const data = await res.json();
+      setHint(res.ok ? (data.hint || "") : "Could not get a hint right now.");
+    } catch { setHint("Could not get a hint right now."); }
+    finally { setHintBusy(false); }
+  }
 
   async function reveal() {
     if (!problem) return;
@@ -430,6 +449,21 @@ export default function StudyQueue({ queue }: { queue: QueueNode[] }) {
             </div>
           )}
 
+          {/* Hint panel */}
+          {hint && !grade && (
+            <div className="panel" style={{ borderColor: "#3a3020", background: "#1a1400", marginBottom: 4 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: "var(--amber)", textTransform: "uppercase", letterSpacing: "0.1em" }}>
+                  💡 Hint
+                </span>
+                <button className="btn-ghost" onClick={() => setHint(null)} style={{ fontSize: 11, padding: "2px 6px", color: "var(--muted)" }}>
+                  ✕
+                </button>
+              </div>
+              <div className="markdown" style={{ fontSize: 14 }}><Markdown>{hint}</Markdown></div>
+            </div>
+          )}
+
           <AnswerBox
             value={answer}
             onChange={setAnswer}
@@ -457,6 +491,16 @@ export default function StudyQueue({ queue }: { queue: QueueNode[] }) {
                 onTranscript={(t) => setAnswer((prev) => prev ? prev + " " + t : t)}
                 disabled={busy}
               />
+              {problem.mode !== "demo" && !hint && (
+                <button
+                  className="btn-ghost"
+                  onClick={getHint}
+                  disabled={busy || hintBusy}
+                  style={{ fontSize: 13, color: "var(--amber)" }}
+                >
+                  {hintBusy ? "…" : "💡 Hint"}
+                </button>
+              )}
               <button className="btn-ghost" onClick={advance} disabled={busy}>
                 Skip →
               </button>

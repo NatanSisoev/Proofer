@@ -692,3 +692,25 @@ export function stats() {
     areas: d.prepare("SELECT area, COUNT(*) c FROM nodes WHERE exists_=1 AND area IS NOT NULL GROUP BY area ORDER BY c DESC").all() as { area: string; c: number }[],
   };
 }
+
+/**
+ * Per-area mastery breakdown: total concepts, mastered count, and average mastery p.
+ * Used on the progress page to show subject-by-subject health.
+ */
+export function areaMastery(): { area: string; total: number; mastered: number; avg_p: number; practiced: number }[] {
+  return db()
+    .prepare(
+      `SELECT
+         n.area,
+         COUNT(*) AS total,
+         COUNT(CASE WHEN COALESCE(m.p, 0) >= 0.8 THEN 1 END) AS mastered,
+         AVG(COALESCE(m.p, 0)) AS avg_p,
+         COUNT(CASE WHEN COALESCE(m.attempts, 0) > 0 THEN 1 END) AS practiced
+       FROM nodes n
+       LEFT JOIN mastery m ON m.node_id = n.id
+       WHERE n.exists_ = 1 AND n.area IS NOT NULL
+       GROUP BY n.area
+       ORDER BY avg_p DESC, total DESC`
+    )
+    .all() as { area: string; total: number; mastered: number; avg_p: number; practiced: number }[];
+}
