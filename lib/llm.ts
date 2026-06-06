@@ -414,6 +414,63 @@ async function anthropicGrade(a: Parameters<typeof gradeAnswer>[0]): Promise<Gra
 }
 
 // ===========================================================================
+// Compare two concepts
+// ===========================================================================
+export async function compareConcepts(
+  nodeA: NodeRow,
+  nodeB: NodeRow
+): Promise<string> {
+  if (PROVIDER === "none") return "";
+  const prompt = [
+    `Compare and contrast these two mathematical concepts:\n`,
+    `CONCEPT A: ${nodeA.title}`,
+    nodeA.type    ? `  Type: ${nodeA.type}` : "",
+    nodeA.area    ? `  Area: ${nodeA.area}` : "",
+    nodeA.overview ? `  Overview: ${nodeA.overview}` : "",
+    nodeA.content  ? `  Note (excerpt):\n${nodeA.content.slice(0, 2000)}` : "",
+    `\nCONCEPT B: ${nodeB.title}`,
+    nodeB.type    ? `  Type: ${nodeB.type}` : "",
+    nodeB.area    ? `  Area: ${nodeB.area}` : "",
+    nodeB.overview ? `  Overview: ${nodeB.overview}` : "",
+    nodeB.content  ? `  Note (excerpt):\n${nodeB.content.slice(0, 2000)}` : "",
+    `\nWrite a structured comparison in markdown with these sections:`,
+    `## Similarities`,
+    `## Key Differences`,
+    `## When to Use Each`,
+    `## Example that Distinguishes Them`,
+    `Be concise and precise. Use LaTeX ($...$) for all mathematics. Address the student as "you".`,
+  ].filter(Boolean).join("\n");
+
+  if (PROVIDER === "gemini") {
+    const resp = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_KEY}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { temperature: 0.5, maxOutputTokens: 2000 },
+        }),
+      }
+    );
+    if (!resp.ok) throw new Error(await resp.text());
+    const data = await resp.json();
+    return data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ?? "";
+  }
+
+  if (PROVIDER === "anthropic" && anthropic) {
+    const msg = await anthropic.messages.create({
+      model: ANTHROPIC_GRADE_MODEL,
+      max_tokens: 2000,
+      messages: [{ role: "user", content: prompt }],
+    });
+    return (msg.content[0] as any)?.text?.trim() ?? "";
+  }
+
+  return "";
+}
+
+// ===========================================================================
 // Re-explain from a different angle
 // ===========================================================================
 export type ExplainAngle = "intuitive" | "formal" | "visual" | "historical" | "example";
@@ -510,6 +567,75 @@ export async function improveNote(content: string, title: string, type: string |
     return block.text;
   }
   throw new Error("No LLM provider configured — set GEMINI_API_KEY or ANTHROPIC_API_KEY.");
+}
+
+// ===========================================================================
+// Study plan generation
+// ===========================================================================
+export type StudyPlanInput = {
+  targetDate: string;           // ISO date like "2026-07-01"
+  focusArea?: string;           // optional area to prioritize
+  totalConcepts: number;
+  masteredConcepts: number;
+  weakAreas: { area: string; avg_p: number; count: number }[];
+  unmastered: { id: string; title: string; area: string | null; mastery_p: number }[];
+};
+
+/** Generate a markdown study plan for an upcoming exam/deadline. */
+export async function generateStudyPlan(input: StudyPlanInput): Promise<string> {
+  if (PROVIDER === "none") return "";
+
+  const today = new Date().toISOString().slice(0, 10);
+  const daysLeft = Math.ceil((new Date(input.targetDate).getTime() - new Date(today).getTime()) / 86400000);
+  const weeksLeft = Math.max(1, Math.round(daysLeft / 7));
+
+  const weakest = input.weakAreas.slice(0, 6).map(a => `${a.area} (${Math.round(a.avg_p * 100)}%)`).join(", ");
+  const frontier = input.unmastered.slice(0, 20).map(n => `- ${n.title} (${n.area ?? "?"}, ${Math.round(n.mastery_p * 100)}%)`).join("\n");
+
+  const prompt = [
+    `You are an expert mathematics tutor and study strategist.`,
+    `A student is preparing for an exam on ${input.targetDate} (${daysLeft} days / ~${weeksLeft} week(s) away).`,
+    `\nCurrent state:`,
+    `- Total concepts in graph: ${input.totalConcepts}`,
+    `- Already mastered: ${input.masteredConcepts} (${Math.round(input.masteredConcepts / input.totalConcepts * 100)}%)`,
+    input.focusArea ? `- Priority area: ${input.focusArea}` : "",
+    `- Weakest areas: ${weakest || "none yet"}`,
+    `\nTop unmastered concepts (by priority):`,
+    frontier || "(none — all mastered!)",
+    `\nWrite a concrete, actionable study plan in markdown.`,
+    `Structure it by week (Week 1, Week 2, ...) with a clear focus for each week.`,
+    `For each week, list: the key concepts to master, suggested session modes (review/weak spots/frontier), and daily practice targets.`,
+    `End with exam-week strategy and a motivational note.`,
+    `Be specific: name actual concepts and areas from the data. Use bullet points. Keep it under 600 words.`,
+  ].filter(Boolean).join("\n");
+
+  if (PROVIDER === "gemini") {
+    const resp = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_KEY}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { temperature: 0.6, maxOutputTokens: 2000 },
+        }),
+      }
+    );
+    if (!resp.ok) throw new Error(await resp.text());
+    const data = await resp.json();
+    return data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ?? "";
+  }
+
+  if (PROVIDER === "anthropic" && anthropic) {
+    const msg = await anthropic.messages.create({
+      model: ANTHROPIC_GRADE_MODEL,
+      max_tokens: 2000,
+      messages: [{ role: "user", content: prompt }],
+    });
+    return (msg.content[0] as any)?.text?.trim() ?? "";
+  }
+
+  return "";
 }
 
 // ===========================================================================

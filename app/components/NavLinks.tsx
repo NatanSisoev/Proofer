@@ -11,6 +11,7 @@ const LINKS = [
   { href: "/session", label: "Session" },
   { href: "/progress", label: "Progress" },
   { href: "/history", label: "History" },
+  { href: "/study-plan", label: "Plan" },
   { href: "/quality", label: "Quality" },
 ];
 

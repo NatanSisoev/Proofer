@@ -331,11 +331,18 @@ export default function Home() {
                   <div className="muted small">Quick flip-cards, instant recall check</div>
                 </div>
               </Link>
-              <Link href="/learn" style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", color: "var(--text)" }}>
+              <Link href="/learn" style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", borderBottom: "1px solid var(--border)", color: "var(--text)" }}>
                 <span style={{ fontSize: 18 }}>✏️</span>
                 <div>
                   <div style={{ fontWeight: 500 }}>Practice</div>
                   <div className="muted small">AI-generated problems, Socratic grading</div>
+                </div>
+              </Link>
+              <Link href="/study-plan" style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", color: "var(--text)" }}>
+                <span style={{ fontSize: 18 }}>📅</span>
+                <div>
+                  <div style={{ fontWeight: 500 }}>Study plan</div>
+                  <div className="muted small">AI study schedule for your next exam</div>
                 </div>
               </Link>
             </div>
