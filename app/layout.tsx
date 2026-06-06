@@ -4,6 +4,8 @@ import "katex/dist/katex.min.css";
 import "./globals.css";
 import SyncButton from "./components/SyncButton";
 import KeyboardShortcuts from "./components/KeyboardShortcuts";
+import GlobalSearch from "./components/GlobalSearch";
+import SearchTrigger from "./components/SearchTrigger";
 import ShortcutsTrigger from "./components/ShortcutsTrigger";
 import NavLinks from "./components/NavLinks";
 
@@ -23,6 +25,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <NavLinks />
             </div>
             <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+              <SearchTrigger />
               <Link href="/settings" className="nav-link" title="Settings">⚙</Link>
               <SyncButton />
               <ShortcutsTrigger />
@@ -31,6 +34,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </nav>
         <div className="nav-spacer" />
         {children}
+        <GlobalSearch />
         <KeyboardShortcuts />
       </body>
     </html>
