@@ -12,6 +12,7 @@ import MathText from "@/app/components/MathText";
 import MasterySparkline from "@/app/components/MasterySparkline";
 import PersonalNotes from "@/app/components/PersonalNotes";
 import ReExplain from "@/app/components/ReExplain";
+import CompareWith from "@/app/components/CompareWith";
 import { getNode, edgesOf, isKnown, readiness, prerequisites, attemptCount, isBookmarked, nodeAttempts, nodeAttemptDetails, nextReviewDays, similarConcepts } from "@/lib/queries";
 import { getMasteryP } from "@/lib/mastery";
 import { HAS_KEY } from "@/lib/llm";
@@ -235,6 +236,7 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
               )}
               <PersonalNotes nodeId={id} />
               {HAS_KEY && <ReExplain nodeId={id} />}
+              {HAS_KEY && <CompareWith nodeId={id} nodeTitle={node.title} />}
 
               {/* Past practice problems */}
               {attemptDetails.length > 0 && (
