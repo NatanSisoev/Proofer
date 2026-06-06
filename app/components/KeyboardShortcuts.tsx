@@ -11,6 +11,7 @@ const SHORTCUTS = [
   { key: "b",     desc: "Browse topics" },
   { key: "g",     desc: "Knowledge map" },
   { key: "r",     desc: "Progress" },
+  { key: "y",     desc: "History" },
   { key: "q",     desc: "Note quality" },
   { key: "h",     desc: "Home" },
   { key: "?",     desc: "Toggle this help" },
@@ -42,6 +43,7 @@ export default function KeyboardShortcuts() {
       if (e.key === "b") { router.push("/browse"); return; }
       if (e.key === "g") { router.push("/graph"); return; }
       if (e.key === "r") { router.push("/progress"); return; }
+      if (e.key === "y") { router.push("/history"); return; }
       if (e.key === "q") { router.push("/quality"); return; }
       if (e.key === "h") { router.push("/"); return; }
     }

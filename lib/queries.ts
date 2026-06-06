@@ -763,6 +763,56 @@ export function bookmarkedNodes(): BrowseNode[] {
     .all() as BrowseNode[];
 }
 
+/**
+ * Pick the "concept of the day" — rotates daily through interesting concepts.
+ * Prefers frontier concepts with content; falls back to any real concept.
+ * Uses day-of-year mod count for deterministic daily rotation.
+ */
+export function conceptOfDay(): (BrowseNode & { has_content: number }) | null {
+  const dayIdx = Math.floor(Date.now() / 86400000); // days since epoch
+
+  // Try frontier first (all prereqs known, has content)
+  const frontierWithContent = db()
+    .prepare(
+      `SELECT n.*, COALESCE(m.p, 0) AS mastery_p,
+              CASE WHEN LENGTH(COALESCE(n.content,'')) > 100 THEN 1 ELSE 0 END AS has_content
+         FROM nodes n
+         LEFT JOIN mastery m ON m.node_id = n.id
+        WHERE n.exists_ = 1
+          AND LENGTH(COALESCE(n.content,'')) > 100
+          AND n.id NOT IN (${MASTERED_SUBQUERY})
+          AND NOT EXISTS (
+            SELECT 1 FROM edges e
+             WHERE e.src = n.id AND e.type = 'depends_on'
+               AND e.dst <> n.id
+               AND e.dst NOT IN (${MASTERED_SUBQUERY})
+               AND e.dst IN (SELECT id FROM nodes WHERE exists_ = 1)
+          )
+        ORDER BY n.id`
+    )
+    .all() as (BrowseNode & { has_content: number })[];
+
+  if (frontierWithContent.length > 0) {
+    return frontierWithContent[dayIdx % frontierWithContent.length];
+  }
+
+  // Fallback: any concept with content, not yet mastered
+  const all = db()
+    .prepare(
+      `SELECT n.*, COALESCE(m.p, 0) AS mastery_p,
+              CASE WHEN LENGTH(COALESCE(n.content,'')) > 100 THEN 1 ELSE 0 END AS has_content
+         FROM nodes n
+         LEFT JOIN mastery m ON m.node_id = n.id
+        WHERE n.exists_ = 1 AND LENGTH(COALESCE(n.content,'')) > 100
+          AND n.id NOT IN (${MASTERED_SUBQUERY})
+        ORDER BY n.id`
+    )
+    .all() as (BrowseNode & { has_content: number })[];
+
+  if (all.length > 0) return all[dayIdx % all.length];
+  return null;
+}
+
 export function stats() {
   const d = db();
   const c = (sql: string) => (d.prepare(sql).get() as { c: number }).c;

@@ -2,7 +2,7 @@ import Link from "next/link";
 import SearchBox from "./components/SearchBox";
 import QuickKnown from "./components/QuickKnown";
 import SnoozeButton from "./components/SnoozeButton";
-import { frontier, stats, dueForReview, todayStats, recentlyPracticed, bookmarkedNodes } from "@/lib/queries";
+import { frontier, stats, dueForReview, todayStats, recentlyPracticed, bookmarkedNodes, conceptOfDay } from "@/lib/queries";
 import { getDailyGoal } from "@/lib/settings";
 
 export const dynamic = "force-dynamic";
@@ -29,6 +29,7 @@ export default function Home() {
   const today = todayStats();
   const recent = recentlyPracticed(6);
   const bookmarks = bookmarkedNodes();
+  const spotlight = conceptOfDay();
 
   return (
     <div className="wrap">
@@ -87,6 +88,61 @@ export default function Home() {
       <div style={{ marginBottom: 24 }}>
         <SearchBox />
       </div>
+
+      {/* Concept of the Day */}
+      {spotlight && (
+        <div className="panel" style={{ marginBottom: 20, borderColor: "var(--accent-soft)", position: "relative", overflow: "hidden" }}>
+          <div style={{
+            position: "absolute", top: 0, right: 0, width: 120, height: 120,
+            background: "radial-gradient(circle at 100% 0%, var(--accent-soft) 0%, transparent 70%)",
+            pointerEvents: "none",
+          }} />
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--accent)", marginBottom: 6 }}>
+                📖 Concept of the day
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 4 }}>
+                {spotlight.type && <span className={`type-badge t-${spotlight.type}`}>{spotlight.type}</span>}
+                {spotlight.area && <span className="muted small">{spotlight.area}</span>}
+              </div>
+              <Link
+                href={`/node/${encodeURIComponent(spotlight.id)}`}
+                style={{ fontSize: 18, fontWeight: 700, letterSpacing: "-0.02em", color: "var(--text)", textDecoration: "none" }}
+              >
+                {spotlight.title}
+              </Link>
+              {spotlight.overview && (
+                <p className="muted" style={{ margin: "6px 0 0", fontSize: 13, lineHeight: 1.55, maxWidth: 480 }}>
+                  {spotlight.overview.length > 200 ? spotlight.overview.slice(0, 200) + "…" : spotlight.overview}
+                </p>
+              )}
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 6, flexShrink: 0, marginLeft: 16 }}>
+              <Link
+                href={`/learn?node=${encodeURIComponent(spotlight.id)}`}
+                className="cta"
+                style={{ fontSize: 13, padding: "7px 16px" }}
+              >
+                Practice →
+              </Link>
+              <Link
+                href={`/node/${encodeURIComponent(spotlight.id)}`}
+                className="btn-ghost"
+                style={{ fontSize: 12, textAlign: "center" }}
+              >
+                Read
+              </Link>
+            </div>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 10 }}>
+            <div className="bar" style={{ width: 60, height: 4 }}>
+              <span style={{ width: `${Math.round(spotlight.mastery_p * 100)}%` }} />
+            </div>
+            <span className="muted small" style={{ fontSize: 11 }}>{Math.round(spotlight.mastery_p * 100)}% mastery</span>
+          </div>
+        </div>
+      )}
 
       {/* Due for review — shown prominently when non-empty */}
       {due.length > 0 && (
