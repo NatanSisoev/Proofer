@@ -91,6 +91,13 @@ CREATE TABLE IF NOT EXISTS bookmarks (
 
 -- Generated problems live here so the ideal solution / rubric stay server-side
 -- (the student grades against a problemId, never sees the answer key).
+-- Personal annotations on concepts: free-form notes the student adds to any node.
+CREATE TABLE IF NOT EXISTS node_notes (
+  node_id    TEXT PRIMARY KEY,
+  content    TEXT NOT NULL DEFAULT '',
+  updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
+);
+
 -- User-configurable settings: key-value store.
 -- Keys: daily_goal (integer), voice_lang (text)
 CREATE TABLE IF NOT EXISTS settings (

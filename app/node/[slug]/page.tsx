@@ -10,6 +10,7 @@ import BookmarkButton from "@/app/components/BookmarkButton";
 import GhostCreate from "@/app/components/GhostCreate";
 import MathText from "@/app/components/MathText";
 import MasterySparkline from "@/app/components/MasterySparkline";
+import PersonalNotes from "@/app/components/PersonalNotes";
 import { getNode, edgesOf, isKnown, readiness, prerequisites, attemptCount, isBookmarked, nodeAttempts } from "@/lib/queries";
 import { getMasteryP } from "@/lib/mastery";
 import { HAS_KEY } from "@/lib/llm";
@@ -212,6 +213,7 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
                   <Markdown>{node.content}</Markdown>
                 </>
               )}
+              <PersonalNotes nodeId={id} />
             </div>
             <div>
               <div className="panel" style={{ marginBottom: 16 }}>
