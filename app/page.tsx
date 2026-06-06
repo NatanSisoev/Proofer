@@ -1,5 +1,6 @@
 import Link from "next/link";
 import SearchBox from "./components/SearchBox";
+import RandomConceptButton from "./components/RandomConceptButton";
 import QuickKnown from "./components/QuickKnown";
 import SnoozeButton from "./components/SnoozeButton";
 import { frontier, stats, dueForReview, todayStats, recentlyPracticed, bookmarkedNodes, conceptOfDay } from "@/lib/queries";
@@ -85,8 +86,11 @@ export default function Home() {
         </div>
       </div>
 
-      <div style={{ marginBottom: 24 }}>
-        <SearchBox />
+      <div style={{ marginBottom: 24, display: "flex", gap: 10, alignItems: "flex-start", flexWrap: "wrap" }}>
+        <div style={{ flex: 1, minWidth: 220 }}>
+          <SearchBox />
+        </div>
+        <RandomConceptButton />
       </div>
 
       {/* Concept of the Day */}

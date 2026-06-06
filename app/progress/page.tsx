@@ -54,6 +54,9 @@ export default function ProgressPage() {
           <Link href="/session" className="pill" style={{ color: "var(--accent)", borderColor: "var(--accent-soft)" }}>
             Start session →
           </Link>
+          <a href="/api/export/mastery" download="proofer-mastery.csv" className="muted small" style={{ textDecoration: "none" }}>
+            ↓ Export CSV
+          </a>
           <Link href="/" className="muted small">← home</Link>
         </div>
       </div>
