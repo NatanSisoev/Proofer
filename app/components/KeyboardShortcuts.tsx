@@ -13,6 +13,7 @@ const SHORTCUTS = [
   { key: "r",     desc: "Progress" },
   { key: "x",     desc: "Explore random concept" },
   { key: "y",     desc: "History" },
+  { key: "n",     desc: "Study plan" },
   { key: "q",     desc: "Note quality" },
   { key: "h",     desc: "Home" },
   { key: "?",     desc: "Toggle this help" },
@@ -49,6 +50,7 @@ export default function KeyboardShortcuts() {
         return;
       }
       if (e.key === "y") { router.push("/history"); return; }
+      if (e.key === "n") { router.push("/study-plan"); return; }
       if (e.key === "q") { router.push("/quality"); return; }
       if (e.key === "h") { router.push("/"); return; }
     }

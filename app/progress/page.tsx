@@ -71,7 +71,10 @@ export default function ProgressPage() {
             Start session →
           </Link>
           <a href="/api/export/mastery" download="proofer-mastery.csv" className="muted small" style={{ textDecoration: "none" }}>
-            ↓ Export CSV
+            ↓ CSV
+          </a>
+          <a href="/api/export/anki?mastered=false" download="proofer-anki.txt" className="muted small" style={{ textDecoration: "none" }}>
+            ↓ Anki deck
           </a>
           <Link href="/" className="muted small">← home</Link>
         </div>
