@@ -193,9 +193,9 @@ export default function ProgressPage() {
           <div className="panel">
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
               <h2 style={{ margin: 0 }}>Recent attempts</h2>
-              {recent.length > 0 && (
-                <span className="muted small">{recent.length} shown</span>
-              )}
+              <Link href="/history" className="small" style={{ color: "var(--accent)" }}>
+                Full history →
+              </Link>
             </div>
             {recent.length === 0 && <p className="muted">No attempts yet — start practicing!</p>}
             <div style={{ display: "flex", flexDirection: "column", gap: 1 }}>

@@ -447,7 +447,7 @@ export default function StudyQueue({ queue }: { queue: QueueNode[] }) {
               title="Copy problem to clipboard"
               style={{
                 position: "absolute", top: 10, right: 10,
-                background: "none", border: "none", cursor: "pointer",
+                background: "none", cursor: "pointer",
                 fontSize: 12, color: "var(--muted)", padding: "3px 7px",
                 borderRadius: 5, border: "1px solid var(--border)",
               }}

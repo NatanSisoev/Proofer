@@ -433,6 +433,70 @@ export function recentlyPracticed(limit = 6): (BrowseNode & { last_verdict: stri
     .all(limit) as (BrowseNode & { last_verdict: string; last_at: string })[];
 }
 
+export type HistoryAttempt = {
+  id: number; node_id: string; kind: string | null; verdict: string;
+  problem: string | null; gap: string | null; created_at: string;
+  title: string | null; area: string | null; type: string | null;
+};
+
+export type HistoryFilters = {
+  verdict?: string;
+  area?: string;
+  kind?: string;
+  page?: number;
+  perPage?: number;
+};
+
+/**
+ * Paginated attempt history with optional filters.
+ * Returns rows + total count for pagination controls.
+ */
+export function attemptHistory(
+  opts: HistoryFilters = {}
+): { rows: HistoryAttempt[]; total: number } {
+  const { verdict, area, kind, page = 1, perPage = 25 } = opts;
+  const offset = (page - 1) * perPage;
+
+  const wheres: string[] = [];
+  const params: (string | number)[] = [];
+  if (verdict) { wheres.push("a.verdict = ?"); params.push(verdict); }
+  if (area)    { wheres.push("n.area = ?");    params.push(area); }
+  if (kind)    { wheres.push("a.kind = ?");    params.push(kind); }
+  const where = wheres.length > 0 ? `WHERE ${wheres.join(" AND ")}` : "";
+
+  const total = (db()
+    .prepare(
+      `SELECT COUNT(*) AS n
+         FROM attempts a
+         LEFT JOIN nodes n ON n.id = a.node_id
+        ${where}`
+    )
+    .get(...params) as { n: number }).n;
+
+  const rows = db()
+    .prepare(
+      `SELECT a.id, a.node_id, a.kind, a.verdict, a.problem, a.gap, a.created_at,
+              n.title, n.area, n.type
+         FROM attempts a
+         LEFT JOIN nodes n ON n.id = a.node_id
+        ${where}
+        ORDER BY a.id DESC
+        LIMIT ? OFFSET ?`
+    )
+    .all(...params, perPage, offset) as HistoryAttempt[];
+
+  return { rows, total };
+}
+
+/** Distinct problem kinds found in the attempts table (for filter UI). */
+export function attemptKinds(): string[] {
+  return (
+    db()
+      .prepare(`SELECT DISTINCT kind FROM attempts WHERE kind IS NOT NULL ORDER BY kind`)
+      .all() as { kind: string }[]
+  ).map((r) => r.kind);
+}
+
 /** Recent attempts across all concepts, with node title joined in. */
 export function recentAttemptsGlobal(limit = 30): AttemptRow[] {
   return db()

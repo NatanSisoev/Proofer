@@ -408,6 +408,66 @@ async function anthropicGrade(a: Parameters<typeof gradeAnswer>[0]): Promise<Gra
 }
 
 // ===========================================================================
+// Re-explain from a different angle
+// ===========================================================================
+export type ExplainAngle = "intuitive" | "formal" | "visual" | "historical" | "example";
+
+const ANGLE_DESC: Record<ExplainAngle, string> = {
+  intuitive: "Use plain language, everyday analogies, and real-world intuition. Avoid formalism where possible. Imagine explaining to a smart non-mathematician.",
+  formal:    "Start from first principles, state definitions with precision, avoid hand-waving. Use rigorous mathematical language and LaTeX throughout.",
+  visual:    "Lead with a diagram description or geometric intuition. Describe what you would draw, what curves/sets/shapes to picture. Use spatial reasoning.",
+  historical: "Frame the explanation through history: who introduced this concept, what problem motivated it, how the idea evolved. Humanise the mathematics.",
+  example:   "Teach through a concrete worked example first, then generalise. Start with a specific, illuminating case and extract the pattern.",
+};
+
+export async function reExplainConcept(
+  node: NodeRow,
+  prereqs: string[],
+  angle: ExplainAngle = "intuitive"
+): Promise<string> {
+  if (PROVIDER === "none") return "";
+  const angleGuide = ANGLE_DESC[angle];
+  const prompt = [
+    `Re-explain the mathematical concept "${node.title}" from a DIFFERENT ANGLE than a standard textbook.`,
+    node.type    ? `Type: ${node.type}` : "",
+    node.area    ? `Area: ${node.area}` : "",
+    node.overview ? `Standard overview: ${node.overview}` : "",
+    node.content  ? `\nFull note (reference, do NOT merely paraphrase it):\n${node.content.slice(0, 3000)}` : "",
+    prereqs.length ? `\nThe student already knows: ${prereqs.join(", ")}` : "",
+    `\nANGLE: ${angle.toUpperCase()}\n${angleGuide}`,
+    `\nWrite 2–4 focused paragraphs. Use LaTeX ($...$) for mathematics. Address the student as "you". Do NOT just restate the definition — add genuine insight from this angle.`,
+  ].filter(Boolean).join("\n");
+
+  if (PROVIDER === "gemini") {
+    const resp = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_KEY}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { temperature: 0.75, maxOutputTokens: 1500 },
+        }),
+      }
+    );
+    if (!resp.ok) throw new Error(await resp.text());
+    const data = await resp.json();
+    return data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ?? "";
+  }
+
+  if (PROVIDER === "anthropic" && anthropic) {
+    const msg = await anthropic.messages.create({
+      model: ANTHROPIC_GRADE_MODEL,
+      max_tokens: 1500,
+      messages: [{ role: "user", content: prompt }],
+    });
+    return (msg.content[0] as any)?.text?.trim() ?? "";
+  }
+
+  return "";
+}
+
+// ===========================================================================
 // Note improvement
 // ===========================================================================
 const IMPROVE_SYSTEM = `You are an expert mathematician editing atomic notes in an Obsidian math vault.

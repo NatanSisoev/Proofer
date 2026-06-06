@@ -10,6 +10,7 @@ const LINKS = [
   { href: "/learn", label: "Practice" },
   { href: "/session", label: "Session" },
   { href: "/progress", label: "Progress" },
+  { href: "/history", label: "History" },
   { href: "/quality", label: "Quality" },
 ];
 
