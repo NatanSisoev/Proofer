@@ -11,7 +11,7 @@ import GhostCreate from "@/app/components/GhostCreate";
 import MathText from "@/app/components/MathText";
 import MasterySparkline from "@/app/components/MasterySparkline";
 import PersonalNotes from "@/app/components/PersonalNotes";
-import { getNode, edgesOf, isKnown, readiness, prerequisites, attemptCount, isBookmarked, nodeAttempts, nodeAttemptDetails } from "@/lib/queries";
+import { getNode, edgesOf, isKnown, readiness, prerequisites, attemptCount, isBookmarked, nodeAttempts, nodeAttemptDetails, nextReviewDays } from "@/lib/queries";
 import { getMasteryP } from "@/lib/mastery";
 import { HAS_KEY } from "@/lib/llm";
 import type { EdgeRow } from "@/lib/db";
@@ -69,6 +69,7 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
   const bookmarked = isBookmarked(id);
   const history = nodeAttempts(id, 10);
   const attemptDetails = nodeAttemptDetails(id, 6);
+  const reviewDays = nextReviewDays(id);
 
   // group outgoing by semantic priority
   const order = ["depends_on", "generalizes", "equivalent_to", "instance_of", "contradicts", "related"];
@@ -135,6 +136,22 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
                 <div className="bar" style={{ width: 120 }}><span style={{ width: `${Math.round(mastery * 100)}%` }} /></div>
                 <span style={{ fontWeight: 700, fontSize: 15, letterSpacing: "-0.02em" }}>{Math.round(mastery * 100)}%</span>
                 <MasterySparkline nodeId={id} />
+                {reviewDays !== null && (
+                  <span
+                    className="pill"
+                    style={{
+                      fontSize: 10,
+                      color: reviewDays < 0 ? "var(--amber)" : reviewDays === 0 ? "var(--amber)" : "var(--muted)",
+                      borderColor: reviewDays <= 0 ? "#4a3a1a" : undefined,
+                    }}
+                  >
+                    {reviewDays < 0
+                      ? `⏰ review overdue ${Math.abs(reviewDays)}d`
+                      : reviewDays === 0
+                      ? "⏰ review today"
+                      : `⏱ review in ${reviewDays}d`}
+                  </span>
+                )}
                 {history.length > 0 && (
                   <div style={{ display: "flex", gap: 4, alignItems: "center", marginLeft: 4 }}>
                     {history.slice().reverse().map((a, i) => (

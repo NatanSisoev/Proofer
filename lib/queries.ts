@@ -714,6 +714,21 @@ export function stats() {
 }
 
 /**
+ * Returns the number of days until the next spaced-repetition review
+ * (positive = future, negative = overdue, null = never practiced).
+ */
+export function nextReviewDays(nodeId: string): number | null {
+  const row = db()
+    .prepare(`SELECT last_seen, half_life FROM mastery WHERE node_id = ?`)
+    .get(nodeId) as { last_seen: string | null; half_life: number } | undefined;
+  if (!row || !row.last_seen) return null;
+  const lastSeen = new Date(row.last_seen).getTime();
+  const halfLifeMs = row.half_life * 24 * 60 * 60 * 1000;
+  const dueAt = lastSeen + halfLifeMs;
+  return Math.round((dueAt - Date.now()) / (24 * 60 * 60 * 1000));
+}
+
+/**
  * Cumulative mastery milestones: for each day in the last 60 days,
  * how many concepts were first mastered on or before that day.
  * Used to render a "concepts mastered over time" chart.

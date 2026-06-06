@@ -1,6 +1,7 @@
 import Link from "next/link";
 import SearchBox from "./components/SearchBox";
 import QuickKnown from "./components/QuickKnown";
+import SnoozeButton from "./components/SnoozeButton";
 import { frontier, stats, dueForReview, todayStats, recentlyPracticed, bookmarkedNodes } from "@/lib/queries";
 import { getDailyGoal } from "@/lib/settings";
 
@@ -109,6 +110,7 @@ export default function Home() {
               </div>
               <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                 <DueBar decayed={(n as any).p_decayed} original={n.mastery_p} />
+                <SnoozeButton nodeId={n.id} />
                 <Link
                   href={`/learn?node=${encodeURIComponent(n.id)}`}
                   className="pill"
