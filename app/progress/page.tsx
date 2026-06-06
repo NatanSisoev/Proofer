@@ -242,29 +242,48 @@ export default function ProgressPage() {
           {/* Per-area mastery breakdown */}
           {areas.length > 0 && (
             <div className="panel">
-              <h2>Mastery by area</h2>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+                <h2 style={{ margin: 0 }}>Mastery by area</h2>
+                {areas.length > 0 && (
+                  <Link
+                    href={`/session?mode=area&area=${encodeURIComponent(areas[areas.length - 1].area)}`}
+                    className="pill"
+                    style={{ color: "var(--red)", borderColor: "#3a1c1c", fontSize: 11 }}
+                    title={`Weakest area: ${areas[areas.length - 1].area}`}
+                  >
+                    Drill weakest →
+                  </Link>
+                )}
+              </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 {areas.map((a) => {
                   const pct = Math.round(a.avg_p * 100);
                   const masteredPct = a.total > 0 ? Math.round((a.mastered / a.total) * 100) : 0;
                   const color = pct >= 80 ? "var(--green)" : pct >= 40 ? "var(--amber)" : "var(--muted)";
                   return (
-                    <div key={a.area} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <div key={a.area} style={{ display: "flex", alignItems: "center", gap: 8 }}>
                       <Link
                         href={`/browse?area=${encodeURIComponent(a.area)}`}
                         style={{ fontSize: 13, color: "var(--text)", minWidth: 0, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
                       >
                         {a.area}
                       </Link>
-                      <div className="bar" style={{ width: 70, flexShrink: 0 }}>
+                      <div className="bar" style={{ width: 60, flexShrink: 0 }}>
                         <span style={{ width: `${pct}%`, background: color }} />
                       </div>
-                      <span className="muted small" style={{ width: 34, textAlign: "right", flexShrink: 0 }}>
+                      <span className="muted small" style={{ width: 30, textAlign: "right", flexShrink: 0, fontSize: 11 }}>
                         {pct}%
                       </span>
-                      <span className="muted small" style={{ fontSize: 10, flexShrink: 0, color: masteredPct === 100 ? "var(--green)" : undefined }}>
+                      <span className="muted small" style={{ fontSize: 10, width: 32, textAlign: "right", flexShrink: 0, color: masteredPct === 100 ? "var(--green)" : undefined }}>
                         {a.mastered}/{a.total}
                       </span>
+                      <Link
+                        href={`/session?mode=area&area=${encodeURIComponent(a.area)}`}
+                        className="pill"
+                        style={{ fontSize: 10, color: "var(--accent)", borderColor: "var(--accent-soft)", flexShrink: 0 }}
+                      >
+                        drill
+                      </Link>
                     </div>
                   );
                 })}

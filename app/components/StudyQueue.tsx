@@ -355,9 +355,35 @@ export default function StudyQueue({ queue }: { queue: QueueNode[] }) {
           ))}
         </div>
 
-        <div style={{ display: "flex", gap: 12, marginTop: 20 }}>
+        <div style={{ display: "flex", gap: 12, marginTop: 20, flexWrap: "wrap" }}>
+          {incorrect + partial > 0 && (
+            <button
+              className="btn-ghost"
+              onClick={() => {
+                const retryNodes = results
+                  .filter((r) => r.verdict === "incorrect" || r.verdict === "partial")
+                  .map((r) => r.node);
+                if (retryNodes.length > 0) {
+                  setResults([]);
+                  setIndex(0);
+                  setDone(false);
+                  setSessionElapsed(0);
+                  // Replace queue with retry nodes (re-use index cycling)
+                  // We can't mutate queue prop, but we can reset index and done
+                  // and rely on the queue being reset externally — instead, navigate
+                  window.location.href = `/learn?node=${encodeURIComponent(retryNodes[0].id)}`;
+                }
+              }}
+              style={{ fontSize: 13, color: "var(--amber)", borderColor: "#4a3a1a" }}
+            >
+              🔁 Retry {incorrect + partial} missed
+            </button>
+          )}
           <Link href="/session" className="btn-primary" style={{ textDecoration: "none", padding: "8px 18px", borderRadius: 8, background: "var(--accent)", color: "#000", fontSize: 14, fontWeight: 600 }}>
             New session
+          </Link>
+          <Link href="/history" className="btn-ghost" style={{ textDecoration: "none", padding: "8px 18px", borderRadius: 8, border: "1px solid var(--border)", color: "var(--text)", fontSize: 14 }}>
+            History
           </Link>
           <Link href="/" className="btn-ghost" style={{ textDecoration: "none", padding: "8px 18px", borderRadius: 8, border: "1px solid var(--border)", color: "var(--text)", fontSize: 14 }}>
             Home
