@@ -714,6 +714,28 @@ export function stats() {
 }
 
 /**
+ * Concepts in the same area as nodeId, closest mastery level first.
+ * Useful for "explore similar" discovery on node pages.
+ */
+export function similarConcepts(
+  nodeId: string,
+  area: string,
+  masteryP: number,
+  limit = 6
+): BrowseNode[] {
+  return db()
+    .prepare(
+      `SELECT n.*, COALESCE(m.p, 0) AS mastery_p
+         FROM nodes n
+         LEFT JOIN mastery m ON m.node_id = n.id
+        WHERE n.area = ? AND n.id != ? AND n.exists_ = 1
+        ORDER BY ABS(COALESCE(m.p, 0) - ?) ASC, n.title ASC
+        LIMIT ?`
+    )
+    .all(area, nodeId, masteryP, limit) as BrowseNode[];
+}
+
+/**
  * Returns the number of days until the next spaced-repetition review
  * (positive = future, negative = overdue, null = never practiced).
  */

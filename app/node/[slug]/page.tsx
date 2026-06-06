@@ -11,7 +11,7 @@ import GhostCreate from "@/app/components/GhostCreate";
 import MathText from "@/app/components/MathText";
 import MasterySparkline from "@/app/components/MasterySparkline";
 import PersonalNotes from "@/app/components/PersonalNotes";
-import { getNode, edgesOf, isKnown, readiness, prerequisites, attemptCount, isBookmarked, nodeAttempts, nodeAttemptDetails, nextReviewDays } from "@/lib/queries";
+import { getNode, edgesOf, isKnown, readiness, prerequisites, attemptCount, isBookmarked, nodeAttempts, nodeAttemptDetails, nextReviewDays, similarConcepts } from "@/lib/queries";
 import { getMasteryP } from "@/lib/mastery";
 import { HAS_KEY } from "@/lib/llm";
 import type { EdgeRow } from "@/lib/db";
@@ -70,6 +70,7 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
   const history = nodeAttempts(id, 10);
   const attemptDetails = nodeAttemptDetails(id, 6);
   const reviewDays = nextReviewDays(id);
+  const similar = node.area ? similarConcepts(id, node.area, mastery, 6) : [];
 
   // group outgoing by semantic priority
   const order = ["depends_on", "generalizes", "equivalent_to", "instance_of", "contradicts", "related"];
@@ -297,6 +298,36 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
                 <h2>Incoming</h2>
                 <RelList rows={incoming} dir="in" />
               </div>
+              {similar.length > 0 && (
+                <div className="panel">
+                  <h2>Also in {node.area}</h2>
+                  {similar.map((s) => (
+                    <div key={s.id} className="frontier-item">
+                      <div style={{ minWidth: 0 }}>
+                        {s.type && <span className={`type-badge t-${s.type}`} style={{ marginRight: 6 }}>{s.type}</span>}
+                        <Link href={`/node/${encodeURIComponent(s.id)}`} style={{ fontSize: 13.5, color: "var(--text)" }}>
+                          {s.title}
+                        </Link>
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+                        <div className="bar" style={{ width: 40 }}>
+                          <span style={{ width: `${Math.round(s.mastery_p * 100)}%` }} />
+                        </div>
+                        <span className="muted small" style={{ fontSize: 11, width: 28, textAlign: "right" }}>
+                          {Math.round(s.mastery_p * 100)}%
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                  <Link
+                    href={`/browse?area=${encodeURIComponent(node.area!)}`}
+                    className="muted small"
+                    style={{ display: "block", marginTop: 8, fontSize: 11 }}
+                  >
+                    Browse all {node.area} →
+                  </Link>
+                </div>
+              )}
             </div>
           </div>
         </>

@@ -123,6 +123,22 @@ export default function SettingsPage() {
             </div>
           )}
 
+          {/* Export personal notes */}
+          <div className="panel">
+            <h2 style={{ marginTop: 0 }}>Export personal notes</h2>
+            <p className="muted small" style={{ marginTop: -4, marginBottom: 14 }}>
+              Download all your personal annotations on concept pages as a Markdown file.
+            </p>
+            <a
+              href="/api/notes/export"
+              download="proofer-notes.md"
+              className="btn-ghost"
+              style={{ display: "inline-block", textDecoration: "none", fontSize: 13 }}
+            >
+              ⬇ Download notes.md
+            </a>
+          </div>
+
           {/* Info: LLM provider */}
           <div className="panel">
             <h2 style={{ marginTop: 0 }}>LLM provider</h2>
