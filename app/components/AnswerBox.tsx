@@ -43,6 +43,7 @@ export default function AnswerBox({
   }, [value]);
 
   const showPreview = value.trim().length > 0 && hasMath(value);
+  const wordCount = value.trim() ? value.trim().split(/\s+/).length : 0;
 
   return (
     <div>
@@ -59,6 +60,12 @@ export default function AnswerBox({
         style={{ overflow: "hidden", ...style }}
         onKeyDown={onKeyDown}
       />
+      {wordCount > 0 && (
+        <div style={{ textAlign: "right", marginTop: 3 }}>
+          <span className="muted small">{wordCount} word{wordCount !== 1 ? "s" : ""}</span>
+        </div>
+      )}
+
       {showPreview && (
         <div
           style={{
