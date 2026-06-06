@@ -116,11 +116,22 @@ button.know {
 button.know:hover { border-color: var(--accent); }
 button.know.on { background: #173a2c; border-color: #2e6b50; color: var(--green); }
 
-.markdown { font-size: 14.5px; }
+.markdown { font-size: 14.5px; line-height: 1.65; }
 .markdown blockquote { border-left: 3px solid var(--border); margin: 10px 0; padding: 4px 14px; color: var(--text); background: var(--bg-soft); border-radius: 0 8px 8px 0; }
 .markdown h2 { font-size: 16px; border-bottom: 1px solid var(--border); padding-bottom: 5px; margin-top: 26px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
-.markdown code { background: var(--bg-soft); padding: 1px 5px; border-radius: 4px; font-size: 0.9em; }
-.markdown pre { display: none; } /* hide raw tikz code blocks in the slice */
+.markdown h3 { font-size: 14px; font-weight: 700; margin-top: 20px; color: var(--text); }
+.markdown code { background: var(--bg-soft); padding: 1px 5px; border-radius: 4px; font-size: 0.9em; font-family: ui-monospace, monospace; }
+.markdown pre { background: var(--bg-soft); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; overflow-x: auto; margin: 14px 0; }
+.markdown pre code { background: none; padding: 0; font-size: 13px; }
+/* Hide raw TikZ/LaTeX code blocks that start with \begin */
+.markdown pre:has(code[class*="tikz"]), .markdown pre:has(code[class*="latex"]) { display: none; }
+/* Tables */
+.markdown table { border-collapse: collapse; width: 100%; margin: 14px 0; font-size: 13.5px; }
+.markdown th { background: var(--bg-soft); padding: 8px 12px; text-align: left; border: 1px solid var(--border); font-weight: 600; color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; }
+.markdown td { padding: 7px 12px; border: 1px solid var(--border); }
+.markdown tr:hover td { background: var(--bg-soft); }
+.markdown ul, .markdown ol { padding-left: 24px; }
+.markdown li { margin-bottom: 4px; }
 
 .graph-shell { height: 460px; border: 1px solid var(--border); border-radius: 12px; background: var(--bg-soft); overflow: hidden; position: relative; }
 .graph-legend { position: absolute; bottom: 8px; left: 10px; font-size: 11px; color: var(--muted); display: flex; gap: 12px; }
