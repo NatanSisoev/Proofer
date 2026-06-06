@@ -23,9 +23,9 @@ export default function CompareWith({ nodeId, nodeTitle }: { nodeId: string; nod
     debounce.current = setTimeout(async () => {
       try {
         const res = await fetch(`/api/search?q=${encodeURIComponent(query)}&limit=8`);
-        const data = await res.json();
+        const data: SearchResult[] = await res.json();
         // Exclude self
-        setResults((data.results || []).filter((r: SearchResult) => r.id !== nodeId));
+        setResults(data.filter((r) => r.id !== nodeId));
       } catch { setResults([]); }
     }, 120);
     return () => { if (debounce.current) clearTimeout(debounce.current); };

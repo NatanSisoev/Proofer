@@ -38,6 +38,7 @@ type SessionResult = {
   masteryBefore: number;
   masteryAfter: number;
   justMastered?: boolean;
+  elapsedSec?: number;
 };
 
 const VERDICT_STYLE: Record<string, { bg: string; label: string; color: string }> = {
@@ -72,6 +73,7 @@ export default function StudyQueue({ queue, preferKind }: { queue: QueueNode[]; 
   const [copied, setCopied] = useState(false);
   // Prefetch cache: map nodeId → fetched Problem data
   const prefetchCache = useRef<Map<string, Promise<any>>>(new Map());
+  const questionStart = useRef<number>(Date.now());
   const currentNode = queue[index];
 
   /** Fire-and-forget: start generating a problem for nodeId, storing the
@@ -110,7 +112,7 @@ export default function StudyQueue({ queue, preferKind }: { queue: QueueNode[]; 
         signal,
       }).then((r) => r.json()));
       if (!data || data.error) throw new Error(data?.error || "generation failed");
-      if (!signal?.aborted) setProblem(data);
+      if (!signal?.aborted) { setProblem(data); questionStart.current = Date.now(); }
     } catch (e: any) {
       if (e.name === "AbortError") return;
       if (!signal?.aborted) setError(e.message || "Something went wrong");
@@ -180,9 +182,10 @@ export default function StudyQueue({ queue, preferKind }: { queue: QueueNode[]; 
       const data = await res.json();
       if (res.ok) {
         setRevealed(data.idealSolution);
+        const elapsedSec = Math.round((Date.now() - questionStart.current) / 1000);
         setResults((prev) => [
           ...prev,
-          { node: currentNode, verdict: "incorrect", masteryBefore: data.masteryBefore, masteryAfter: data.masteryAfter },
+          { node: currentNode, verdict: "incorrect", masteryBefore: data.masteryBefore, masteryAfter: data.masteryAfter, elapsedSec },
         ]);
       }
     } finally {
@@ -236,6 +239,7 @@ export default function StudyQueue({ queue, preferKind }: { queue: QueueNode[]; 
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "grading failed");
       setGrade(data);
+      const elapsedSec = Math.round((Date.now() - questionStart.current) / 1000);
       setResults((prev) => [
         ...prev,
         {
@@ -244,6 +248,7 @@ export default function StudyQueue({ queue, preferKind }: { queue: QueueNode[]; 
           masteryBefore: data.masteryBefore,
           masteryAfter: data.masteryAfter,
           justMastered: data.justMastered ?? false,
+          elapsedSec,
         },
       ]);
     } catch (e: any) {
@@ -269,6 +274,10 @@ export default function StudyQueue({ queue, preferKind }: { queue: QueueNode[]; 
     const totalMasteryGain = results.reduce((sum, r) => sum + (r.masteryAfter - r.masteryBefore), 0);
     const accuracy = results.length > 0 ? Math.round((correct / results.length) * 100) : 0;
     const isPerfect = correct === results.length && results.length > 0;
+    const timedResults = results.filter((r) => r.elapsedSec !== undefined);
+    const avgTimeSec = timedResults.length > 0
+      ? Math.round(timedResults.reduce((s, r) => s + (r.elapsedSec ?? 0), 0) / timedResults.length)
+      : null;
 
     return (
       <div className="session-summary">
@@ -284,6 +293,7 @@ export default function StudyQueue({ queue, preferKind }: { queue: QueueNode[]; 
             {queue.length} concept{queue.length !== 1 ? "s" : ""} ·{" "}
             {Math.floor(sessionElapsed / 60)}m {sessionElapsed % 60}s ·{" "}
             {accuracy}% accuracy
+            {avgTimeSec !== null && ` · ~${avgTimeSec}s/problem`}
             {totalMasteryGain > 0.01 && ` · +${Math.round(totalMasteryGain * 100)}pp avg mastery`}
             {masteredCount > 0 && ` · ${masteredCount} newly mastered`}
           </p>
@@ -348,7 +358,10 @@ export default function StudyQueue({ queue, preferKind }: { queue: QueueNode[]; 
               </Link>
               {r.node.area && <span className="muted small"> · {r.node.area}</span>}
               {r.justMastered && <span style={{ fontSize: 11, color: "var(--green)", fontWeight: 700 }}>🔓 mastered</span>}
-              <span className="muted small" style={{ marginLeft: "auto" }}>
+              <span className="muted small" style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8 }}>
+                {r.elapsedSec !== undefined && (
+                  <span style={{ fontSize: 10, opacity: 0.6 }}>{r.elapsedSec}s</span>
+                )}
                 {Math.round(r.masteryBefore * 100)}% → <strong>{Math.round(r.masteryAfter * 100)}%</strong>
               </span>
             </div>

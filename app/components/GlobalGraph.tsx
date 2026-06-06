@@ -36,6 +36,7 @@ export default function GlobalGraph({ initialArea }: { initialArea?: string }) {
   const [nodeCount, setNodeCount] = useState(0);
   const [hideMastered, setHideMastered] = useState(false);
   const [minMastery, setMinMastery] = useState(0); // 0-100, show nodes below this
+  const [searchQ, setSearchQ] = useState("");
   const [tooltip, setTooltip] = useState<{ title: string; mastery: number; type: string | null; x: number; y: number } | null>(null);
 
   const load = useCallback(async (filterArea: string) => {
@@ -152,21 +153,35 @@ export default function GlobalGraph({ initialArea }: { initialArea?: string }) {
     setLoading(false);
   }, [router]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Apply mastery filter whenever it changes (without full reload)
+  // Apply mastery + search filters whenever they change (without full reload)
   useEffect(() => {
     const cy = cyRef.current;
     if (!cy) return;
+    const q = searchQ.trim().toLowerCase();
     cy.nodes().forEach((n) => {
       const m = n.data("mastery") as number;
-      const shouldHide = (hideMastered && m >= 0.8) || m * 100 < minMastery;
+      const masteryHide = (hideMastered && m >= 0.8) || m * 100 < minMastery;
+      const matchesSearch = !q || n.id().toLowerCase().includes(q);
+      const shouldHide = masteryHide || (q !== "" && !matchesSearch);
       n.style("display", shouldHide ? "none" : "element");
+      // Highlight matching nodes
+      if (q && matchesSearch && !masteryHide) {
+        n.style({ "border-width": 2.5, "border-color": "#6ea8fe", "font-size": 9 });
+      } else {
+        n.style({ "border-width": 0, "border-color": "#4a6a9a", "font-size": 7 });
+      }
     });
     cy.edges().forEach((e) => {
       const srcHidden = e.source().style("display") === "none";
       const dstHidden = e.target().style("display") === "none";
       e.style("display", srcHidden || dstHidden ? "none" : "element");
     });
-  }, [hideMastered, minMastery]);
+    // Pan to first match if query is non-empty
+    if (q) {
+      const first = cy.nodes().filter((n) => n.id().toLowerCase().includes(q) && n.style("display") !== "none").first();
+      if (first.length) cy.animate({ center: { eles: first }, zoom: 2 } as any, { duration: 400 });
+    }
+  }, [hideMastered, minMastery, searchQ]);
 
   useEffect(() => {
     load(area);
@@ -177,6 +192,14 @@ export default function GlobalGraph({ initialArea }: { initialArea?: string }) {
     <div style={{ display: "flex", flexDirection: "column", gap: 12, height: "100%" }}>
       {/* Controls */}
       <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+        <input
+          type="text"
+          value={searchQ}
+          onChange={(e) => setSearchQ(e.target.value)}
+          placeholder="Highlight node…"
+          className="search-box"
+          style={{ fontSize: 12, padding: "5px 10px", maxWidth: 160 }}
+        />
         <select
           value={area}
           onChange={(e) => setArea(e.target.value)}
