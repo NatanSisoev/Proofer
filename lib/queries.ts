@@ -694,6 +694,37 @@ export function stats() {
 }
 
 /**
+ * Cumulative mastery milestones: for each day in the last 60 days,
+ * how many concepts were first mastered on or before that day.
+ * Used to render a "concepts mastered over time" chart.
+ */
+export function masteryMilestones(): { day: string; cumulative: number }[] {
+  // Find the date each concept first crossed the mastery threshold
+  const firstMastered = db()
+    .prepare(
+      `SELECT DATE(MIN(recorded_at)) AS day, COUNT(*) AS count
+         FROM (
+           SELECT node_id, MIN(recorded_at) AS recorded_at
+             FROM mastery_history
+            WHERE p >= 0.8
+            GROUP BY node_id
+         )
+        GROUP BY DATE(recorded_at)
+        ORDER BY day ASC`
+    )
+    .all() as { day: string; count: number }[];
+
+  if (firstMastered.length === 0) return [];
+
+  // Build cumulative sum
+  let cum = 0;
+  return firstMastered.map((r) => {
+    cum += r.count;
+    return { day: r.day, cumulative: cum };
+  });
+}
+
+/**
  * Per-area mastery breakdown: total concepts, mastered count, and average mastery p.
  * Used on the progress page to show subject-by-subject health.
  */

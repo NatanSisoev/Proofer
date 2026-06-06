@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { masteryHistogram, recentAttemptsGlobal, weakSpots, stats, todayStats, reviewForecast, masteryVelocity, activityCalendar, areaMastery } from "@/lib/queries";
+import { masteryHistogram, recentAttemptsGlobal, weakSpots, stats, todayStats, reviewForecast, masteryVelocity, activityCalendar, areaMastery, masteryMilestones } from "@/lib/queries";
 import ActivityCalendar from "@/app/components/ActivityCalendar";
 import { getDailyGoal } from "@/lib/settings";
 
@@ -38,6 +38,7 @@ export default function ProgressPage() {
   const velocity = masteryVelocity();
   const calendar = activityCalendar();
   const areas = areaMastery();
+  const milestones = masteryMilestones();
 
   const masteredPct = s.real > 0 ? Math.round((s.known / s.real) * 100) : 0;
   const maxBucket = Math.max(...hist.map((h) => h.count), 1);
@@ -104,6 +105,54 @@ export default function ProgressPage() {
       <div className="grid" style={{ gap: 20 }}>
         {/* Left column */}
         <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+          {/* Cumulative mastery chart */}
+          {milestones.length >= 2 && (
+            <div className="panel">
+              <h2>Concepts mastered over time</h2>
+              {(() => {
+                const maxVal = milestones[milestones.length - 1].cumulative;
+                const chartH = 72;
+                const pts = milestones.map((m, i) => ({
+                  x: i / (milestones.length - 1),
+                  y: 1 - m.cumulative / maxVal,
+                  day: m.day,
+                  val: m.cumulative,
+                }));
+                const toSvgX = (x: number) => x * 100;
+                const toSvgY = (y: number) => y * chartH;
+                const d = pts
+                  .map((p, i) => `${i === 0 ? "M" : "L"} ${toSvgX(p.x).toFixed(2)},${toSvgY(p.y).toFixed(2)}`)
+                  .join(" ");
+                const fill = d + ` L ${toSvgX(1)},${chartH} L ${toSvgX(0)},${chartH} Z`;
+                return (
+                  <div style={{ position: "relative" }}>
+                    <svg
+                      viewBox={`0 0 100 ${chartH}`}
+                      preserveAspectRatio="none"
+                      style={{ width: "100%", height: chartH, display: "block" }}
+                    >
+                      <defs>
+                        <linearGradient id="mastGrad" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="var(--accent)" stopOpacity="0.35" />
+                          <stop offset="100%" stopColor="var(--accent)" stopOpacity="0.03" />
+                        </linearGradient>
+                      </defs>
+                      <path d={fill} fill="url(#mastGrad)" />
+                      <path d={d} fill="none" stroke="var(--accent)" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
+                    </svg>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4 }}>
+                      <span className="muted small" style={{ fontSize: 10 }}>{milestones[0].day}</span>
+                      <span style={{ fontSize: 12, fontWeight: 600, color: "var(--accent)" }}>
+                        {maxVal} mastered
+                      </span>
+                      <span className="muted small" style={{ fontSize: 10 }}>{milestones[milestones.length - 1].day}</span>
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+          )}
+
           {/* Histogram */}
           <div className="panel">
             <h2>Mastery distribution</h2>

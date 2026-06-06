@@ -20,9 +20,53 @@ function hasMath(s: string): boolean {
 }
 
 /**
- * Auto-growing textarea with a live KaTeX preview panel that appears whenever
- * the user types LaTeX ($...$  or  $$...$$). Keeps the same external API as a
- * plain <textarea> so it's a drop-in replacement.
+ * LaTeX quick-insert snippets. Each entry has:
+ *   label   — the text shown on the button
+ *   insert  — text to insert (| marks cursor position)
+ */
+const LATEX_SNIPPETS = [
+  { label: "$·$",    insert: "$ | $" },
+  { label: "$$·$$",  insert: "$$\n|\n$$" },
+  { label: "frac",   insert: "\\frac{|}{}" },
+  { label: "√",      insert: "\\sqrt{|}" },
+  { label: "Σ",      insert: "\\sum_{|}^{}" },
+  { label: "∫",      insert: "\\int_{|}^{}" },
+  { label: "∞",      insert: "\\infty" },
+  { label: "∀",      insert: "\\forall " },
+  { label: "∃",      insert: "\\exists " },
+  { label: "∈",      insert: "\\in " },
+  { label: "⊆",      insert: "\\subseteq " },
+  { label: "→",      insert: "\\to " },
+  { label: "⇒",      insert: "\\Rightarrow " },
+  { label: "⟺",     insert: "\\Leftrightarrow " },
+  { label: "lim",    insert: "\\lim_{| \\to }" },
+];
+
+/**
+ * Insert a snippet into a textarea, placing the cursor where | appears.
+ * Returns the new string value; also updates the textarea selection.
+ */
+function insertSnippet(el: HTMLTextAreaElement, snippet: string): string {
+  const cursorPos = el.selectionStart ?? 0;
+  const before = el.value.slice(0, cursorPos);
+  const after = el.value.slice(el.selectionEnd ?? cursorPos);
+  const cursorInSnippet = snippet.indexOf("|");
+  const text = snippet.replace("|", "");
+  const newVal = before + text + after;
+  // Schedule cursor placement after React re-render
+  const newCursor = cursorPos + (cursorInSnippet >= 0 ? cursorInSnippet : text.length);
+  requestAnimationFrame(() => {
+    el.focus();
+    el.setSelectionRange(newCursor, newCursor);
+  });
+  return newVal;
+}
+
+/**
+ * Auto-growing textarea with:
+ *  - Live KaTeX preview panel (appears when value contains LaTeX)
+ *  - LaTeX quick-insert toolbar (always shown when not disabled)
+ * Drop-in replacement for <textarea>.
  */
 export default function AnswerBox({
   value,
@@ -63,6 +107,47 @@ export default function AnswerBox({
         onKeyDown={onKeyDown}
         autoFocus={autoFocus}
       />
+
+      {/* LaTeX quick-insert toolbar */}
+      {!disabled && (
+        <div
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            gap: 4,
+            marginTop: 5,
+            paddingBottom: 2,
+          }}
+          onMouseDown={(e) => e.preventDefault()} // keep textarea focused
+        >
+          {LATEX_SNIPPETS.map(({ label, insert }) => (
+            <button
+              key={label}
+              type="button"
+              tabIndex={-1}
+              onClick={() => {
+                if (!ref.current) return;
+                onChange(insertSnippet(ref.current, insert));
+              }}
+              style={{
+                padding: "2px 7px",
+                fontSize: 12,
+                fontFamily: "monospace",
+                background: "var(--bg-soft)",
+                border: "1px solid var(--border)",
+                borderRadius: 5,
+                color: "var(--muted)",
+                cursor: "pointer",
+                lineHeight: 1.6,
+                userSelect: "none",
+              }}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
+
       {wordCount > 0 && (
         <div style={{ textAlign: "right", marginTop: 3 }}>
           <span className="muted small">{wordCount} word{wordCount !== 1 ? "s" : ""}</span>
