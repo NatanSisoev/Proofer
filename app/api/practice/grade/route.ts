@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db, type NodeRow } from "@/lib/db";
-import { getNode } from "@/lib/queries";
+import { db, type NodeRow, MASTERY_THRESHOLD } from "@/lib/db";
+import { getNode, newlyUnlocked } from "@/lib/queries";
 import { applyAttempt, getMasteryP, recordAttempt } from "@/lib/mastery";
 import { gradeAnswer, friendlyLLMError, HAS_KEY } from "@/lib/llm";
 
@@ -34,6 +34,7 @@ export async function POST(req: NextRequest) {
   }
 
   const masteryBefore = getMasteryP(node.id);
+  const wasAlreadyMastered = masteryBefore >= MASTERY_THRESHOLD;
   const blamed = grade.blamed_prerequisite && prereqs.includes(grade.blamed_prerequisite) ? grade.blamed_prerequisite : null;
 
   applyAttempt(node.id, grade.mastery_evidence, blamed, prereqs);
@@ -49,14 +50,23 @@ export async function POST(req: NextRequest) {
     mode: HAS_KEY ? "ai" : "demo",
   });
 
+  const masteryAfter = getMasteryP(node.id);
+  const justMastered = !wasAlreadyMastered && masteryAfter >= MASTERY_THRESHOLD;
+
   // Return half_life so the UI can show "next review in ~N days"
   const masteryRow = db().prepare("SELECT half_life FROM mastery WHERE node_id = ?").get(node.id) as { half_life: number } | undefined;
+
+  // If this attempt just pushed the concept over the mastery threshold, surface
+  // which new concepts are now reachable on the learning frontier.
+  const unlocked = justMastered ? newlyUnlocked(node.id).map((n) => ({ id: n.id, title: n.title, type: n.type, area: n.area })) : [];
 
   return NextResponse.json({
     ...grade,
     blamed_prerequisite: blamed || "",
     masteryBefore,
-    masteryAfter: getMasteryP(node.id),
+    masteryAfter,
     halfLife: Math.round(masteryRow?.half_life ?? 7),
+    unlocked,
+    justMastered,
   });
 }

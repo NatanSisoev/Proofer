@@ -27,6 +27,8 @@ type Grade = {
   masteryBefore: number;
   masteryAfter: number;
   halfLife?: number;
+  justMastered?: boolean;
+  unlocked?: { id: string; title: string; type: string | null; area: string | null }[];
 };
 
 type SessionResult = {
@@ -34,6 +36,7 @@ type SessionResult = {
   verdict: "correct" | "partial" | "incorrect";
   masteryBefore: number;
   masteryAfter: number;
+  justMastered?: boolean;
 };
 
 const VERDICT_STYLE: Record<string, { bg: string; label: string; color: string }> = {
@@ -184,6 +187,7 @@ export default function StudyQueue({ queue }: { queue: QueueNode[] }) {
           verdict: data.verdict,
           masteryBefore: data.masteryBefore,
           masteryAfter: data.masteryAfter,
+          justMastered: data.justMastered ?? false,
         },
       ]);
     } catch (e: any) {
@@ -228,6 +232,29 @@ export default function StudyQueue({ queue }: { queue: QueueNode[] }) {
           </div>
         </div>
 
+        {results.some((r) => r.justMastered) && (
+          <div style={{ marginTop: 20, padding: "12px 14px", background: "#0a1f12", border: "1px solid #2a5a3a", borderRadius: 10 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: "var(--green)", marginBottom: 8 }}>
+              🔓 Newly mastered this session
+            </div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+              {results.filter((r) => r.justMastered).map((r, i) => (
+                <Link
+                  key={i}
+                  href={`/node/${encodeURIComponent(r.node.id)}`}
+                  style={{
+                    padding: "4px 10px", borderRadius: 7,
+                    border: "1px solid #2a5a3a", background: "#112a1a",
+                    color: "var(--green)", fontSize: 13, textDecoration: "none",
+                  }}
+                >
+                  {r.node.title}
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="panel" style={{ marginTop: 24 }}>
           <h2>Results</h2>
           {results.map((r, i) => (
@@ -242,6 +269,7 @@ export default function StudyQueue({ queue }: { queue: QueueNode[] }) {
                 {r.node.title}
               </Link>
               {r.node.area && <span className="muted small"> · {r.node.area}</span>}
+              {r.justMastered && <span style={{ fontSize: 11, color: "var(--green)", fontWeight: 700 }}>🔓 mastered</span>}
               <span className="muted small" style={{ marginLeft: "auto" }}>
                 {Math.round(r.masteryBefore * 100)}% → <strong>{Math.round(r.masteryAfter * 100)}%</strong>
               </span>
@@ -441,6 +469,36 @@ export default function StudyQueue({ queue }: { queue: QueueNode[] }) {
                       disabled={followUpBusy}
                     />
                     <span className="muted small" style={{ alignSelf: "center" }}>Ctrl+Enter</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Unlock celebration */}
+              {grade.justMastered && grade.unlocked && grade.unlocked.length > 0 && (
+                <div style={{
+                  marginTop: 4, padding: "12px 14px",
+                  background: "#0a1f12", border: "1px solid #2a5a3a", borderRadius: 10,
+                }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "var(--green)", marginBottom: 8 }}>
+                    🔓 Mastered! {grade.unlocked.length} new concept{grade.unlocked.length !== 1 ? "s" : ""} unlocked
+                  </div>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                    {grade.unlocked.map((n) => (
+                      <Link
+                        key={n.id}
+                        href={`/node/${encodeURIComponent(n.id)}`}
+                        target="_blank"
+                        style={{
+                          display: "inline-flex", alignItems: "center", gap: 5,
+                          padding: "4px 10px", borderRadius: 7,
+                          border: "1px solid #2a5a3a", background: "#112a1a",
+                          color: "var(--green)", fontSize: 13, textDecoration: "none",
+                        }}
+                      >
+                        {n.type && <span style={{ fontSize: 10, opacity: 0.7 }}>{n.type}</span>}
+                        {n.title}
+                      </Link>
+                    ))}
                   </div>
                 </div>
               )}

@@ -101,6 +101,33 @@ export function frontier(limit = 40): (NodeRow & { unlocks: number })[] {
 }
 
 /**
+ * Concepts that just became reachable on the frontier because `nodeId` was
+ * just mastered. Returns nodes that:
+ *   - depend directly on nodeId
+ *   - exist
+ *   - are not yet mastered
+ *   - have ALL their other prerequisites mastered
+ */
+export function newlyUnlocked(nodeId: string): NodeRow[] {
+  return db()
+    .prepare(
+      `SELECT n.* FROM nodes n
+        JOIN edges e ON e.src = n.id AND e.type = 'depends_on' AND e.dst = ?
+       WHERE n.exists_ = 1
+         AND n.id NOT IN (${MASTERED_SUBQUERY})
+         AND NOT EXISTS (
+           SELECT 1 FROM edges e2
+            WHERE e2.src = n.id AND e2.type = 'depends_on'
+              AND e2.dst <> n.id AND e2.dst <> ?
+              AND e2.dst IN (SELECT id FROM nodes WHERE exists_ = 1)
+              AND e2.dst NOT IN (${MASTERED_SUBQUERY})
+         )
+       LIMIT 8`
+    )
+    .all(nodeId, nodeId) as NodeRow[];
+}
+
+/**
  * Concepts due for spaced-repetition review: has been practiced, mastery has
  * decayed past half_life since last_seen. Sorted by most overdue first.
  */

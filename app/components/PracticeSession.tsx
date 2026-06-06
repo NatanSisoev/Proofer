@@ -24,6 +24,8 @@ type Grade = {
   masteryBefore: number;
   masteryAfter: number;
   halfLife?: number;
+  justMastered?: boolean;
+  unlocked?: { id: string; title: string; type: string | null; area: string | null }[];
 };
 
 const VERDICT_STYLE: Record<string, { bg: string; label: string }> = {
@@ -315,6 +317,35 @@ export default function PracticeSession({ initialNodeId }: { initialNodeId?: str
                       disabled={followUpBusy}
                     />
                     <span className="muted small" style={{ alignSelf: "center" }}>Ctrl+Enter</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Unlock celebration */}
+              {grade.justMastered && grade.unlocked && grade.unlocked.length > 0 && (
+                <div style={{
+                  marginTop: 4, padding: "12px 14px",
+                  background: "#0a1f12", border: "1px solid #2a5a3a", borderRadius: 10,
+                }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "var(--green)", marginBottom: 8 }}>
+                    🔓 Mastered! You just unlocked {grade.unlocked.length} new concept{grade.unlocked.length !== 1 ? "s" : ""}
+                  </div>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                    {grade.unlocked.map((n) => (
+                      <Link
+                        key={n.id}
+                        href={`/node/${encodeURIComponent(n.id)}`}
+                        style={{
+                          display: "inline-flex", alignItems: "center", gap: 5,
+                          padding: "4px 10px", borderRadius: 7,
+                          border: "1px solid #2a5a3a", background: "#112a1a",
+                          color: "var(--green)", fontSize: 13, textDecoration: "none",
+                        }}
+                      >
+                        {n.type && <span style={{ fontSize: 10, opacity: 0.7 }}>{n.type}</span>}
+                        {n.title}
+                      </Link>
+                    ))}
                   </div>
                 </div>
               )}
