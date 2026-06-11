@@ -5,7 +5,6 @@ import Link from "next/link";
 import Markdown from "./Markdown";
 import VoiceInput from "./VoiceInput";
 import AnswerBox from "./AnswerBox";
-import Confetti from "./Confetti";
 
 type QueueNode = { id: string; title: string; type: string | null; area: string | null };
 
@@ -42,9 +41,9 @@ type SessionResult = {
 };
 
 const VERDICT_STYLE: Record<string, { bg: string; label: string; color: string }> = {
-  correct: { bg: "#173a2c", label: "Correct", color: "#57d9a3" },
-  partial: { bg: "#3a341c", label: "Partially there", color: "#f2c94c" },
-  incorrect: { bg: "#3a1c1c", label: "Not yet", color: "#ff6b6b" },
+  correct: { bg: "#E8F2EC", label: "Correct", color: "var(--green)" },
+  partial: { bg: "#F5F0E0", label: "Partially there", color: "var(--amber)" },
+  incorrect: { bg: "#F5E8E8", label: "Not yet", color: "var(--red)" },
 };
 
 const VERDICT_ICON: Record<string, string> = {
@@ -281,11 +280,7 @@ export default function StudyQueue({ queue, preferKind }: { queue: QueueNode[]; 
 
     return (
       <div className="session-summary">
-        {isPerfect && <Confetti count={90} />}
         <div style={{ marginBottom: 6 }}>
-          {isPerfect && (
-            <div style={{ fontSize: 32, marginBottom: 8, animation: "none" }}>🎉</div>
-          )}
           <h2 style={{ margin: "0 0 2px", fontSize: 22 }}>
             {isPerfect ? "Perfect session!" : "Session complete"}
           </h2>
@@ -300,20 +295,20 @@ export default function StudyQueue({ queue, preferKind }: { queue: QueueNode[]; 
         </div>
 
         <div className="session-score">
-          <div className="score-chip" style={{ borderColor: "#173a2c", color: "#57d9a3" }}>
+          <div className="score-chip" style={{ borderColor: "var(--border)", color: "var(--green)" }}>
             <span className="score-n">{correct}</span>
             <span className="score-l">correct</span>
           </div>
-          <div className="score-chip" style={{ borderColor: "#3a341c", color: "#f2c94c" }}>
+          <div className="score-chip" style={{ borderColor: "var(--border)", color: "var(--amber)" }}>
             <span className="score-n">{partial}</span>
             <span className="score-l">partial</span>
           </div>
-          <div className="score-chip" style={{ borderColor: "#3a1c1c", color: "#ff6b6b" }}>
+          <div className="score-chip" style={{ borderColor: "var(--border)", color: "var(--red)" }}>
             <span className="score-n">{incorrect}</span>
             <span className="score-l">needs work</span>
           </div>
           {masteredCount > 0 && (
-            <div className="score-chip" style={{ borderColor: "#2a5a3a", color: "var(--green)" }}>
+            <div className="score-chip" style={{ borderColor: "var(--border)", color: "var(--green)" }}>
               <span className="score-n">{masteredCount}</span>
               <span className="score-l">mastered</span>
             </div>
@@ -321,9 +316,9 @@ export default function StudyQueue({ queue, preferKind }: { queue: QueueNode[]; 
         </div>
 
         {results.some((r) => r.justMastered) && (
-          <div style={{ marginTop: 20, padding: "12px 14px", background: "#0a1f12", border: "1px solid #2a5a3a", borderRadius: 10 }}>
+          <div style={{ marginTop: 20, padding: "12px 14px", background: "var(--accent-soft)", border: "1px solid var(--border)", borderRadius: 10 }}>
             <div style={{ fontSize: 13, fontWeight: 700, color: "var(--green)", marginBottom: 8 }}>
-              🔓 Newly mastered this session
+              Newly mastered this session
             </div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
               {results.filter((r) => r.justMastered).map((r, i) => (
@@ -332,7 +327,7 @@ export default function StudyQueue({ queue, preferKind }: { queue: QueueNode[]; 
                   href={`/node/${encodeURIComponent(r.node.id)}`}
                   style={{
                     padding: "4px 10px", borderRadius: 7,
-                    border: "1px solid #2a5a3a", background: "#112a1a",
+                    border: "1px solid var(--border)", background: "var(--panel)",
                     color: "var(--green)", fontSize: 13, textDecoration: "none",
                   }}
                 >
@@ -357,7 +352,7 @@ export default function StudyQueue({ queue, preferKind }: { queue: QueueNode[]; 
                 {r.node.title}
               </Link>
               {r.node.area && <span className="muted small"> · {r.node.area}</span>}
-              {r.justMastered && <span style={{ fontSize: 11, color: "var(--green)", fontWeight: 700 }}>🔓 mastered</span>}
+              {r.justMastered && <span style={{ fontSize: 11, color: "var(--green)", fontWeight: 700 }}>mastered</span>}
               <span className="muted small" style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8 }}>
                 {r.elapsedSec !== undefined && (
                   <span style={{ fontSize: 10, opacity: 0.6 }}>{r.elapsedSec}s</span>
@@ -387,12 +382,12 @@ export default function StudyQueue({ queue, preferKind }: { queue: QueueNode[]; 
                   window.location.href = `/learn?node=${encodeURIComponent(retryNodes[0].id)}`;
                 }
               }}
-              style={{ fontSize: 13, color: "var(--amber)", borderColor: "#4a3a1a" }}
+              style={{ fontSize: 13, color: "var(--amber)" }}
             >
-              🔁 Retry {incorrect + partial} missed
+              Retry {incorrect + partial} missed
             </button>
           )}
-          <Link href="/session" className="btn-primary" style={{ textDecoration: "none", padding: "8px 18px", borderRadius: 8, background: "var(--accent)", color: "#000", fontSize: 14, fontWeight: 600 }}>
+          <Link href="/session" className="btn-primary" style={{ textDecoration: "none", padding: "8px 18px", borderRadius: 8, background: "var(--accent)", color: "#FFFFFF", fontSize: 14, fontWeight: 600 }}>
             New session
           </Link>
           <Link href="/history" className="btn-ghost" style={{ textDecoration: "none", padding: "8px 18px", borderRadius: 8, border: "1px solid var(--border)", color: "var(--text)", fontSize: 14 }}>
@@ -448,7 +443,7 @@ export default function StudyQueue({ queue, preferKind }: { queue: QueueNode[]; 
 
       {busy && !problem && <div className="panel muted">Generating a problem…</div>}
       {error && (
-        <div className="panel" style={{ borderColor: "#5a2a2a", color: "#ff9b9b" }}>
+        <div className="panel" style={{ color: "var(--red)" }}>
           <div style={{ marginBottom: 8 }}>{error}</div>
           <div style={{ display: "flex", gap: 8 }}>
             <button className="btn-ghost" onClick={() => generate(currentNode.id, undefined)} disabled={busy} style={{ fontSize: 13 }}>
@@ -509,7 +504,7 @@ export default function StudyQueue({ queue, preferKind }: { queue: QueueNode[]; 
                 {showReminder ? "Hide reminder ↑" : "Concept reminder ↓"}
               </button>
               {showReminder && (
-                <div className="panel" style={{ fontSize: 13.5, borderColor: "#2a3050", background: "#0d1020", marginBottom: 4 }}>
+                <div className="panel" style={{ fontSize: 13.5, background: "var(--bg-soft)", marginBottom: 4 }}>
                   <div style={{ display: "flex", gap: 8, alignItems: "baseline", marginBottom: 4 }}>
                     {problem.node.type && <span className={`type-badge t-${problem.node.type}`}>{problem.node.type}</span>}
                     <Link href={`/node/${encodeURIComponent(problem.node.id)}`} target="_blank" style={{ fontWeight: 600, fontSize: 14 }}>
@@ -527,10 +522,10 @@ export default function StudyQueue({ queue, preferKind }: { queue: QueueNode[]; 
 
           {/* Hint panel */}
           {hint && !grade && (
-            <div className="panel" style={{ borderColor: "#3a3020", background: "#1a1400", marginBottom: 4 }}>
+            <div className="panel" style={{ background: "var(--accent-soft)", marginBottom: 4 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
                 <span style={{ fontSize: 11, fontWeight: 700, color: "var(--amber)", textTransform: "uppercase", letterSpacing: "0.1em" }}>
-                  💡 Hint
+                  Hint
                 </span>
                 <button className="btn-ghost" onClick={() => setHint(null)} style={{ fontSize: 11, padding: "2px 6px", color: "var(--muted)" }}>
                   ✕
@@ -549,7 +544,7 @@ export default function StudyQueue({ queue, preferKind }: { queue: QueueNode[]; 
           />
 
           {revealed && (
-            <div className="panel" style={{ borderColor: "#2a3a2a", background: "#0d1a0d", marginTop: 4 }}>
+            <div className="panel" style={{ background: "var(--accent-soft)", marginTop: 4 }}>
               <h4 style={{ color: "var(--green)", margin: "0 0 8px" }}>Ideal solution</h4>
               <div className="markdown"><Markdown>{revealed}</Markdown></div>
               <button className="btn-ghost" onClick={advance} disabled={busy} style={{ marginTop: 10, fontSize: 13 }}>
@@ -574,7 +569,7 @@ export default function StudyQueue({ queue, preferKind }: { queue: QueueNode[]; 
                   disabled={busy || hintBusy}
                   style={{ fontSize: 13, color: "var(--amber)" }}
                 >
-                  {hintBusy ? "…" : "💡 Hint"}
+                  {hintBusy ? "…" : "Hint"}
                 </button>
               )}
               <button className="btn-ghost" onClick={advance} disabled={busy}>
@@ -601,20 +596,20 @@ export default function StudyQueue({ queue, preferKind }: { queue: QueueNode[]; 
                 </span>
                 {grade.halfLife && (
                   <span className="muted small" style={{ marginLeft: "auto", whiteSpace: "nowrap" }}>
-                    ⏱ review in ~{grade.halfLife}d
+                    review in ~{grade.halfLife}d
                   </span>
                 )}
               </div>
 
               {grade.understood?.length > 0 && (
                 <div className="fb-block">
-                  <h4 style={{ color: "#57d9a3" }}>What you got</h4>
+                  <h4 style={{ color: "var(--green)" }}>What you got</h4>
                   <ul>{grade.understood.map((u, i) => <li key={i}>{u}</li>)}</ul>
                 </div>
               )}
 
               <div className="fb-block">
-                <h4 style={{ color: "#f2c94c" }}>The gap</h4>
+                <h4 style={{ color: "var(--amber)" }}>The gap</h4>
                 <div className="markdown"><Markdown>{grade.gap}</Markdown></div>
                 {grade.blamed_prerequisite && (
                   <p className="small" style={{ marginTop: 8 }}>
@@ -628,7 +623,7 @@ export default function StudyQueue({ queue, preferKind }: { queue: QueueNode[]; 
               </div>
 
               <div className="fb-block">
-                <h4 style={{ color: "#6ea8fe" }}>Hint (not the answer)</h4>
+                <h4 style={{ color: "var(--accent)" }}>Hint (not the answer)</h4>
                 <div className="markdown"><Markdown>{grade.socratic_hint}</Markdown></div>
               </div>
 
@@ -671,10 +666,10 @@ export default function StudyQueue({ queue, preferKind }: { queue: QueueNode[]; 
               {grade.justMastered && grade.unlocked && grade.unlocked.length > 0 && (
                 <div style={{
                   marginTop: 4, padding: "12px 14px",
-                  background: "#0a1f12", border: "1px solid #2a5a3a", borderRadius: 10,
+                  background: "var(--accent-soft)", border: "1px solid var(--border)", borderRadius: 10,
                 }}>
                   <div style={{ fontSize: 13, fontWeight: 700, color: "var(--green)", marginBottom: 8 }}>
-                    🔓 Mastered! {grade.unlocked.length} new concept{grade.unlocked.length !== 1 ? "s" : ""} unlocked
+                    Mastered! {grade.unlocked.length} new concept{grade.unlocked.length !== 1 ? "s" : ""} unlocked
                   </div>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                     {grade.unlocked.map((n) => (
@@ -685,7 +680,7 @@ export default function StudyQueue({ queue, preferKind }: { queue: QueueNode[]; 
                         style={{
                           display: "inline-flex", alignItems: "center", gap: 5,
                           padding: "4px 10px", borderRadius: 7,
-                          border: "1px solid #2a5a3a", background: "#112a1a",
+                          border: "1px solid var(--border)", background: "var(--panel)",
                           color: "var(--green)", fontSize: 13, textDecoration: "none",
                         }}
                       >

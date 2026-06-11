@@ -64,13 +64,13 @@ export default function Home() {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
           <span style={{ fontSize: 13, fontWeight: 600, color: today.today_concepts >= DAILY_GOAL ? "var(--green)" : undefined }}>
             {today.today_concepts >= DAILY_GOAL
-              ? `🎉 Daily goal reached! ${today.today_concepts} concepts`
+              ? `Daily goal reached — ${today.today_concepts} concepts`
               : `Today: ${today.today_concepts} / ${DAILY_GOAL} concepts`}
           </span>
           <span style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13 }}>
             {today.streak_days > 0 && (
-              <span style={{ color: "var(--amber)", fontWeight: 600 }}>
-                🔥 {today.streak_days} day{today.streak_days !== 1 ? "s" : ""}
+              <span style={{ color: "var(--muted)", fontWeight: 600 }}>
+                {today.streak_days} day{today.streak_days !== 1 ? "s" : ""} streak
               </span>
             )}
             <Link href="/session" className="pill" style={{ color: "var(--accent)", borderColor: "var(--accent-soft)" }}>
@@ -95,16 +95,11 @@ export default function Home() {
 
       {/* Concept of the Day */}
       {spotlight && (
-        <div className="panel" style={{ marginBottom: 20, borderColor: "var(--accent-soft)", position: "relative", overflow: "hidden" }}>
-          <div style={{
-            position: "absolute", top: 0, right: 0, width: 120, height: 120,
-            background: "radial-gradient(circle at 100% 0%, var(--accent-soft) 0%, transparent 70%)",
-            pointerEvents: "none",
-          }} />
+        <div className="panel" style={{ marginBottom: 20, position: "relative" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--accent)", marginBottom: 6 }}>
-                📖 Concept of the day
+                Concept of the day
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 4 }}>
                 {spotlight.type && <span className={`type-badge t-${spotlight.type}`}>{spotlight.type}</span>}
@@ -150,13 +145,12 @@ export default function Home() {
 
       {/* Due for review — shown prominently when non-empty */}
       {due.length > 0 && (
-        <div className="panel" style={{ marginBottom: 20, borderColor: "#4a3a1a" }}>
+        <div className="panel" style={{ marginBottom: 20 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
             <h2 style={{ margin: 0, color: "var(--amber)" }}>Due for review</h2>
             <Link
               href="/session?mode=due"
               className="cta"
-              style={{ fontSize: 13, padding: "6px 14px", background: "#4a3a1a", color: "var(--amber)" }}
             >
               Review all {due.length} →
             </Link>
@@ -174,7 +168,7 @@ export default function Home() {
                 <Link
                   href={`/learn?node=${encodeURIComponent(n.id)}`}
                   className="pill"
-                  style={{ color: "var(--amber)", borderColor: "#4a3a1a" }}
+                  style={{ color: "var(--amber)" }}
                 >
                   review →
                 </Link>
@@ -296,54 +290,33 @@ export default function Home() {
               <h2 style={{ margin: 0 }}>Navigate</h2>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              <Link href="/graph" style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", borderBottom: "1px solid var(--border)", color: "var(--text)" }}>
-                <span style={{ fontSize: 18 }}>🗺</span>
-                <div>
-                  <div style={{ fontWeight: 500 }}>Knowledge map</div>
-                  <div className="muted small">Full graph, colored by mastery</div>
-                </div>
+              <Link href="/graph" style={{ display: "flex", flexDirection: "column", gap: 2, padding: "8px 0", borderBottom: "1px solid var(--border)", color: "var(--text)" }}>
+                <div style={{ fontWeight: 500 }}>Knowledge map</div>
+                <div className="muted small">Full graph, colored by mastery</div>
               </Link>
-              <Link href="/progress" style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", borderBottom: "1px solid var(--border)", color: "var(--text)" }}>
-                <span style={{ fontSize: 18 }}>📈</span>
-                <div>
-                  <div style={{ fontWeight: 500 }}>Progress</div>
-                  <div className="muted small">Mastery histogram & recent activity</div>
-                </div>
+              <Link href="/progress" style={{ display: "flex", flexDirection: "column", gap: 2, padding: "8px 0", borderBottom: "1px solid var(--border)", color: "var(--text)" }}>
+                <div style={{ fontWeight: 500 }}>Progress</div>
+                <div className="muted small">Mastery histogram & recent activity</div>
               </Link>
-              <Link href="/browse" style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", borderBottom: "1px solid var(--border)", color: "var(--text)" }}>
-                <span style={{ fontSize: 18 }}>📚</span>
-                <div>
-                  <div style={{ fontWeight: 500 }}>Browse</div>
-                  <div className="muted small">All concepts by area and type</div>
-                </div>
+              <Link href="/browse" style={{ display: "flex", flexDirection: "column", gap: 2, padding: "8px 0", borderBottom: "1px solid var(--border)", color: "var(--text)" }}>
+                <div style={{ fontWeight: 500 }}>Browse</div>
+                <div className="muted small">All concepts by area and type</div>
               </Link>
-              <Link href="/quality" style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", borderBottom: "1px solid var(--border)", color: "var(--text)" }}>
-                <span style={{ fontSize: 18 }}>🔍</span>
-                <div>
-                  <div style={{ fontWeight: 500 }}>Note quality</div>
-                  <div className="muted small">Gaps, missing prereqs, isolated nodes</div>
-                </div>
+              <Link href="/quality" style={{ display: "flex", flexDirection: "column", gap: 2, padding: "8px 0", borderBottom: "1px solid var(--border)", color: "var(--text)" }}>
+                <div style={{ fontWeight: 500 }}>Note quality</div>
+                <div className="muted small">Gaps, missing prereqs, isolated nodes</div>
               </Link>
-              <Link href="/flashcard" style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", borderBottom: "1px solid var(--border)", color: "var(--text)" }}>
-                <span style={{ fontSize: 18 }}>🃏</span>
-                <div>
-                  <div style={{ fontWeight: 500 }}>Flashcards</div>
-                  <div className="muted small">Quick flip-cards, instant recall check</div>
-                </div>
+              <Link href="/flashcard" style={{ display: "flex", flexDirection: "column", gap: 2, padding: "8px 0", borderBottom: "1px solid var(--border)", color: "var(--text)" }}>
+                <div style={{ fontWeight: 500 }}>Flashcards</div>
+                <div className="muted small">Quick flip-cards, instant recall check</div>
               </Link>
-              <Link href="/learn" style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", borderBottom: "1px solid var(--border)", color: "var(--text)" }}>
-                <span style={{ fontSize: 18 }}>✏️</span>
-                <div>
-                  <div style={{ fontWeight: 500 }}>Practice</div>
-                  <div className="muted small">AI-generated problems, Socratic grading</div>
-                </div>
+              <Link href="/learn" style={{ display: "flex", flexDirection: "column", gap: 2, padding: "8px 0", borderBottom: "1px solid var(--border)", color: "var(--text)" }}>
+                <div style={{ fontWeight: 500 }}>Practice</div>
+                <div className="muted small">AI-generated problems, Socratic grading</div>
               </Link>
-              <Link href="/study-plan" style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", color: "var(--text)" }}>
-                <span style={{ fontSize: 18 }}>📅</span>
-                <div>
-                  <div style={{ fontWeight: 500 }}>Study plan</div>
-                  <div className="muted small">AI study schedule for your next exam</div>
-                </div>
+              <Link href="/study-plan" style={{ display: "flex", flexDirection: "column", gap: 2, padding: "8px 0", color: "var(--text)" }}>
+                <div style={{ fontWeight: 500 }}>Study plan</div>
+                <div className="muted small">AI study schedule for your next exam</div>
               </Link>
             </div>
           </div>

@@ -5,12 +5,12 @@ import Link from "next/link";
 import type { QualityIssue } from "@/lib/queries";
 
 const ISSUE_COLOR: Record<string, string> = {
-  "no content": "#ff6b6b",
-  "thin content": "#f2a94c",
-  "no overview": "#f2c94c",
-  "no prerequisites": "#b794f6",
-  "isolated": "#8a99b3",
-  "never practiced": "#4a7aaa",
+  "no content": "var(--red)",
+  "thin content": "var(--amber)",
+  "no overview": "var(--amber)",
+  "no prerequisites": "var(--purple)",
+  "isolated": "var(--muted)",
+  "never practiced": "var(--accent)",
 };
 
 // "never practiced" is informational — keep it separate from structural issues

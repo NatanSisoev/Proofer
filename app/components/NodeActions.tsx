@@ -111,8 +111,8 @@ export default function NodeActions({ nodeId, nodePath, hasLLM }: Props) {
       {explainError && <p style={{ color: "var(--red)", fontSize: 13, margin: 0 }}>{explainError}</p>}
 
       {explanation && (
-        <div className="panel" style={{ borderColor: "#1a2a4a", background: "#08101f", marginTop: 4 }}>
-          <h2 style={{ color: "var(--accent)", marginBottom: 10 }}>✦ AI explanation</h2>
+        <div className="panel" style={{ background: "var(--bg-soft)", marginTop: 4 }}>
+          <h2 style={{ color: "var(--accent)", marginBottom: 10 }}>AI explanation</h2>
           <div className="markdown"><Markdown>{explanation}</Markdown></div>
         </div>
       )}

@@ -113,7 +113,7 @@ export default function PersonalNotes({ nodeId }: Props) {
             placeholder="Jot down your own understanding, mnemonics, confusions, insights… Supports LaTeX with $…$. Only you see this."
             style={{
               width: "100%", minHeight: 80, padding: "12px 14px",
-              background: "#0c1520", border: "1px solid #2a3a50",
+              background: "var(--bg-soft)", border: "1px solid var(--border)",
               borderRadius: 10, color: "var(--text)", fontSize: 14,
               lineHeight: 1.65, fontFamily: "inherit", resize: "none",
               overflow: "hidden",

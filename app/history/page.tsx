@@ -4,19 +4,19 @@ import { attemptHistory, attemptKinds, browseAreas } from "@/lib/queries";
 export const dynamic = "force-dynamic";
 
 const VERDICT_COLOR: Record<string, string> = {
-  correct:   "#57d9a3",
-  partial:   "#f2c94c",
-  incorrect: "#ff6b6b",
+  correct:   "var(--green)",
+  partial:   "var(--amber)",
+  incorrect: "var(--red)",
 };
 const VERDICT_LABEL: Record<string, string> = {
-  correct:   "✓ correct",
-  partial:   "~ partial",
-  incorrect: "✗ incorrect",
+  correct:   "correct",
+  partial:   "partial",
+  incorrect: "incorrect",
 };
 const VERDICT_BG: Record<string, string> = {
-  correct:   "#0a1f12",
-  partial:   "#1f1a08",
-  incorrect: "#1f0a0a",
+  correct:   "#E8F2EC",
+  partial:   "#F5F0E0",
+  incorrect: "#F5E8E8",
 };
 
 function timeAgo(iso: string) {

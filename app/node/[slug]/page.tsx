@@ -122,8 +122,8 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
                   </span>
                 )}
                 {mastery >= 0.8 && (
-                  <span style={{ fontSize: 11, fontWeight: 700, color: "var(--green)", background: "#0d2a1a", padding: "2px 8px", borderRadius: 999, border: "1px solid #1a5a2a" }}>
-                    ✓ mastered
+                  <span style={{ fontSize: 11, fontWeight: 700, color: "var(--green)", background: "var(--accent-soft)", padding: "2px 8px", borderRadius: 999, border: "1px solid var(--border)" }}>
+                    mastered
                   </span>
                 )}
                 {attempts > 0 && (
@@ -147,14 +147,13 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
                     style={{
                       fontSize: 10,
                       color: reviewDays < 0 ? "var(--amber)" : reviewDays === 0 ? "var(--amber)" : "var(--muted)",
-                      borderColor: reviewDays <= 0 ? "#4a3a1a" : undefined,
                     }}
                   >
                     {reviewDays < 0
-                      ? `⏰ review overdue ${Math.abs(reviewDays)}d`
+                      ? `review overdue ${Math.abs(reviewDays)}d`
                       : reviewDays === 0
-                      ? "⏰ review today"
-                      : `⏱ review in ${reviewDays}d`}
+                      ? "review today"
+                      : `review in ${reviewDays}d`}
                   </span>
                 )}
                 {history.length > 0 && (
@@ -248,13 +247,13 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
                     color: "var(--muted)", userSelect: "none", listStyle: "none",
                     display: "flex", alignItems: "center", gap: 6,
                   }}>
-                    <span>🗂 Past practice</span>
+                    <span>Past practice</span>
                     <span style={{ fontWeight: 400 }}>({attemptDetails.length} attempt{attemptDetails.length !== 1 ? "s" : ""})</span>
                   </summary>
                   <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 10 }}>
                     {attemptDetails.map((a) => {
                       const verdictColor = a.verdict === "correct" ? "var(--green)" : a.verdict === "partial" ? "var(--amber)" : "var(--red)";
-                      const verdictLabel = a.verdict === "correct" ? "✓" : a.verdict === "partial" ? "~" : "✗";
+                      const verdictLabel = a.verdict === "correct" ? "correct" : a.verdict === "partial" ? "partial" : "incorrect";
                       return (
                         <div
                           key={a.id}
@@ -266,7 +265,7 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
                         >
                           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4, gap: 8 }}>
                             <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                              <span style={{ fontWeight: 700, color: verdictColor, fontSize: 14 }}>{verdictLabel}</span>
+                              <span style={{ fontWeight: 600, color: verdictColor, fontSize: 11, textTransform: "uppercase", letterSpacing: "0.04em" }}>{verdictLabel}</span>
                               {a.kind && <span className="pill" style={{ fontSize: 10 }}>{a.kind}</span>}
                             </div>
                             <span className="muted small" style={{ fontSize: 11, flexShrink: 0 }}>

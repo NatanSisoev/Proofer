@@ -29,9 +29,9 @@ type Grade = {
 };
 
 const VERDICT_STYLE: Record<string, { bg: string; label: string }> = {
-  correct: { bg: "#173a2c", label: "Correct" },
-  partial: { bg: "#3a341c", label: "Partially there" },
-  incorrect: { bg: "#3a1c1c", label: "Not yet" },
+  correct: { bg: "#E8F2EC", label: "Correct" },
+  partial: { bg: "#F5F0E0", label: "Partially there" },
+  incorrect: { bg: "#F5E8E8", label: "Not yet" },
 };
 
 export default function PracticeSession({ initialNodeId }: { initialNodeId?: string }) {
@@ -210,7 +210,7 @@ export default function PracticeSession({ initialNodeId }: { initialNodeId?: str
   return (
     <div className="practice">
       {busy && !problem && <div className="panel muted">Generating a problem…</div>}
-      {error && <div className="panel" style={{ borderColor: "#5a2a2a", color: "#ff9b9b" }}>{error}</div>}
+      {error && <div className="panel" style={{ color: "var(--red)" }}>{error}</div>}
 
       {problem && (
         <>
@@ -257,7 +257,7 @@ export default function PracticeSession({ initialNodeId }: { initialNodeId?: str
                 {showReminder ? "Hide reminder ↑" : "Concept reminder ↓"}
               </button>
               {showReminder && (
-                <div className="panel" style={{ fontSize: 13.5, borderColor: "#2a3050", background: "#0d1020", marginBottom: 4 }}>
+                <div className="panel" style={{ fontSize: 13.5, background: "var(--bg-soft)", marginBottom: 4 }}>
                   <div style={{ display: "flex", gap: 8, alignItems: "baseline", marginBottom: 6 }}>
                     {problem.node.type && <span className={`type-badge t-${problem.node.type}`}>{problem.node.type}</span>}
                     <Link href={`/node/${encodeURIComponent(problem.node.id)}`} style={{ fontWeight: 600, fontSize: 14 }}>
@@ -275,10 +275,10 @@ export default function PracticeSession({ initialNodeId }: { initialNodeId?: str
 
           {/* Hint panel */}
           {hint && !grade && (
-            <div className="panel" style={{ borderColor: "#3a3020", background: "#1a1400", marginBottom: 4 }}>
+            <div className="panel" style={{ background: "var(--accent-soft)", marginBottom: 4 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
                 <span style={{ fontSize: 11, fontWeight: 700, color: "var(--amber)", textTransform: "uppercase", letterSpacing: "0.1em" }}>
-                  💡 Hint
+                  Hint
                 </span>
                 <button className="btn-ghost" onClick={() => setHint(null)} style={{ fontSize: 11, padding: "2px 6px", color: "var(--muted)" }}>
                   ✕
@@ -297,7 +297,7 @@ export default function PracticeSession({ initialNodeId }: { initialNodeId?: str
           />
 
           {revealed && (
-            <div className="panel" style={{ borderColor: "#2a3a2a", background: "#0d1a0d", marginTop: 4 }}>
+            <div className="panel" style={{ background: "var(--accent-soft)", marginTop: 4 }}>
               <h4 style={{ color: "var(--green)", margin: "0 0 8px" }}>Ideal solution</h4>
               <div className="markdown"><Markdown>{revealed}</Markdown></div>
               <button
@@ -313,9 +313,9 @@ export default function PracticeSession({ initialNodeId }: { initialNodeId?: str
 
           {/* AI explanation panel */}
           {explanation && !grade && (
-            <div className="panel" style={{ borderColor: "#2a3050", background: "#0d1020", marginTop: 0 }}>
+            <div className="panel" style={{ background: "var(--bg-soft)", marginTop: 0 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                <h4 style={{ margin: 0, color: "#6ea8fe", fontSize: 12, textTransform: "uppercase", letterSpacing: "0.1em" }}>
+                <h4 style={{ margin: 0, color: "var(--accent)", fontSize: 12, textTransform: "uppercase", letterSpacing: "0.1em" }}>
                   AI Explanation
                 </h4>
                 <button className="btn-ghost" onClick={() => setExplanation(null)} style={{ fontSize: 12, padding: "2px 8px" }}>
@@ -374,20 +374,20 @@ export default function PracticeSession({ initialNodeId }: { initialNodeId?: str
                 </span>
                 {grade.halfLife && (
                   <span className="muted small" style={{ marginLeft: "auto", whiteSpace: "nowrap" }}>
-                    ⏱ review in ~{grade.halfLife}d
+                    review in ~{grade.halfLife}d
                   </span>
                 )}
               </div>
 
               {grade.understood?.length > 0 && (
                 <div className="fb-block">
-                  <h4 style={{ color: "#57d9a3" }}>What you got</h4>
+                  <h4 style={{ color: "var(--green)" }}>What you got</h4>
                   <ul>{grade.understood.map((u, i) => <li key={i}>{u}</li>)}</ul>
                 </div>
               )}
 
               <div className="fb-block">
-                <h4 style={{ color: "#f2c94c" }}>The gap</h4>
+                <h4 style={{ color: "var(--amber)" }}>The gap</h4>
                 <div className="markdown"><Markdown>{grade.gap}</Markdown></div>
                 {grade.blamed_prerequisite && (
                   <p className="small" style={{ marginTop: 8 }}>
@@ -401,7 +401,7 @@ export default function PracticeSession({ initialNodeId }: { initialNodeId?: str
               </div>
 
               <div className="fb-block">
-                <h4 style={{ color: "#6ea8fe" }}>Hint (not the answer)</h4>
+                <h4 style={{ color: "var(--accent)" }}>Hint (not the answer)</h4>
                 <div className="markdown"><Markdown>{grade.socratic_hint}</Markdown></div>
               </div>
 
@@ -445,10 +445,10 @@ export default function PracticeSession({ initialNodeId }: { initialNodeId?: str
               {grade.justMastered && grade.unlocked && grade.unlocked.length > 0 && (
                 <div style={{
                   marginTop: 4, padding: "12px 14px",
-                  background: "#0a1f12", border: "1px solid #2a5a3a", borderRadius: 10,
+                  background: "var(--accent-soft)", border: "1px solid var(--border)", borderRadius: 10,
                 }}>
                   <div style={{ fontSize: 13, fontWeight: 700, color: "var(--green)", marginBottom: 8 }}>
-                    🔓 Mastered! You just unlocked {grade.unlocked.length} new concept{grade.unlocked.length !== 1 ? "s" : ""}
+                    Mastered! You just unlocked {grade.unlocked.length} new concept{grade.unlocked.length !== 1 ? "s" : ""}
                   </div>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                     {grade.unlocked.map((n) => (
@@ -458,7 +458,7 @@ export default function PracticeSession({ initialNodeId }: { initialNodeId?: str
                         style={{
                           display: "inline-flex", alignItems: "center", gap: 5,
                           padding: "4px 10px", borderRadius: 7,
-                          border: "1px solid #2a5a3a", background: "#112a1a",
+                          border: "1px solid var(--border)", background: "var(--panel)",
                           color: "var(--green)", fontSize: 13, textDecoration: "none",
                         }}
                       >

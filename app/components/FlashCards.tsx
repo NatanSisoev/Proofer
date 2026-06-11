@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import MathText from "./MathText";
-import Confetti from "./Confetti";
 
 type Card = {
   id: string;
@@ -107,11 +106,7 @@ export default function FlashCards({ initialCards }: { initialCards: Card[] }) {
     const pct = total2 > 0 ? Math.round((known / total2) * 100) : 0;
     return (
       <div className="wrap" style={{ maxWidth: 520, margin: "0 auto" }}>
-        {pct === 100 && <Confetti count={60} />}
         <div className="panel" style={{ textAlign: "center", padding: "36px 28px" }}>
-          <div style={{ fontSize: 36, marginBottom: 12 }}>
-            {pct === 100 ? "🎉" : pct >= 70 ? "🙌" : "📚"}
-          </div>
           <h2 style={{ margin: "0 0 6px", fontSize: 22 }}>
             {pct === 100 ? "Perfect round!" : "Round complete"}
           </h2>
@@ -264,7 +259,7 @@ export default function FlashCards({ initialCards }: { initialCards: Card[] }) {
           <button
             className="btn-ghost"
             onClick={() => advance(false)}
-            style={{ flex: 1, padding: "12px", fontSize: 14, borderColor: "#5a2a2a", color: "var(--red)" }}
+            style={{ flex: 1, padding: "12px", fontSize: 14, color: "var(--red)" }}
           >
             ← Not yet
           </button>

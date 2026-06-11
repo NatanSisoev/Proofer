@@ -55,7 +55,7 @@ export default async function BrowsePage({
               </div>
               <span className="pill" style={{
                 color: masteredCount === totalCount ? "var(--green)" : "var(--muted)",
-                borderColor: masteredCount === totalCount ? "#1a5a2a" : undefined,
+                borderColor: masteredCount === totalCount ? "var(--green)" : undefined,
               }}>
                 {masteredCount}/{totalCount} mastered
               </span>

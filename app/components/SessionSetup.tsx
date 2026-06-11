@@ -170,7 +170,6 @@ export default function SessionSetup({
                       <span className="pill" style={{
                         fontSize: 11,
                         color: isEmpty ? "var(--muted)" : m.key === "due" ? "var(--amber)" : "var(--accent)",
-                        borderColor: isEmpty ? "var(--border)" : m.key === "due" ? "#4a3a1a" : "var(--accent-soft)",
                       }}>
                         {modeCount}
                       </span>
@@ -328,7 +327,7 @@ export default function SessionSetup({
         </div>
 
         {error && (
-          <div className="panel" style={{ borderColor: "#5a2a2a", color: "#ff9b9b", marginBottom: 16 }}>
+          <div className="panel" style={{ color: "var(--red)", marginBottom: 16 }}>
             {error}
           </div>
         )}

@@ -23,7 +23,7 @@ export default function WeaknessDiagnosis({ nodeId, attemptCount }: { nodeId: st
     return (
       <div
         className="panel"
-        style={{ borderColor: "#2a3a5a", background: "#0d1a2e", marginTop: 12 }}
+        style={{ background: "var(--bg-soft)", marginTop: 12 }}
       >
         <h2 style={{ color: "var(--accent)", marginBottom: 8 }}>AI diagnosis</h2>
         <p style={{ margin: 0, fontSize: 14, lineHeight: 1.6, color: "var(--text)" }}>{diagnosis}</p>

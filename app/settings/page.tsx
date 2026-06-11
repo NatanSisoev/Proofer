@@ -116,10 +116,10 @@ export default function SettingsPage() {
           {/* Saved indicator */}
           {saved && (
             <div style={{
-              padding: "10px 14px", background: "#0a1f12", border: "1px solid #2a5a3a",
+              padding: "10px 14px", background: "var(--accent-soft)", border: "1px solid var(--border)",
               borderRadius: 8, fontSize: 13, color: "var(--green)", fontWeight: 600,
             }}>
-              ✓ Settings saved
+              Settings saved
             </div>
           )}
 

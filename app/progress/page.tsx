@@ -6,9 +6,9 @@ import { getDailyGoal } from "@/lib/settings";
 export const dynamic = "force-dynamic";
 
 const VERDICT_COLOR: Record<string, string> = {
-  correct: "#57d9a3",
-  partial: "#f2c94c",
-  incorrect: "#ff6b6b",
+  correct: "var(--green)",
+  partial: "var(--amber)",
+  incorrect: "var(--red)",
 };
 const VERDICT_LABEL: Record<string, string> = {
   correct: "✓",
@@ -42,22 +42,6 @@ export default function ProgressPage() {
 
   const masteredPct = s.real > 0 ? Math.round((s.known / s.real) * 100) : 0;
   const maxBucket = Math.max(...hist.map((h) => h.count), 1);
-
-  // Achievements: computed from existing data, no extra DB calls needed
-  const achievements: { emoji: string; label: string; desc: string; unlocked: boolean }[] = [
-    { emoji: "🌱", label: "First steps",    desc: "Attempted your first problem",           unlocked: s.practiced >= 1 },
-    { emoji: "📖", label: "Scholar",        desc: "10 problems attempted",                  unlocked: s.practiced >= 10 },
-    { emoji: "💯", label: "Century",        desc: "100 problems attempted",                 unlocked: s.practiced >= 100 },
-    { emoji: "🔥", label: "On fire",        desc: "3-day practice streak",                  unlocked: today.streak_days >= 3 },
-    { emoji: "⚡", label: "Dedicated",      desc: "7-day streak",                           unlocked: today.streak_days >= 7 },
-    { emoji: "🔓", label: "First mastery",  desc: "Mastered your first concept",            unlocked: s.known >= 1 },
-    { emoji: "🏅", label: "Pathfinder",     desc: "10 concepts mastered",                   unlocked: s.known >= 10 },
-    { emoji: "🥇", label: "Expert",         desc: "50 concepts mastered",                   unlocked: s.known >= 50 },
-    { emoji: "🎯", label: "Polymath",       desc: "25% of all concepts mastered",           unlocked: masteredPct >= 25 },
-    { emoji: "🚀", label: "Mastery run",    desc: "7 new masteries this week",              unlocked: velocity.last7 >= 7 },
-    { emoji: "🗺", label: "Explorer",       desc: "Studied 5 or more different areas",      unlocked: areas.filter(a => a.practiced > 0).length >= 5 },
-    { emoji: "⭐", label: "Half-way",       desc: "50% of all concepts mastered",           unlocked: masteredPct >= 50 },
-  ];
 
   return (
     <div className="wrap">
@@ -99,8 +83,8 @@ export default function ProgressPage() {
           <div className="l">remaining</div>
         </div>
         {today.streak_days > 0 && (
-          <div className="stat" style={{ borderColor: "#4a3a1a" }}>
-            <div className="n" style={{ color: "var(--amber)" }}>🔥 {today.streak_days}</div>
+          <div className="stat">
+            <div className="n" style={{ color: "var(--amber)" }}>{today.streak_days}</div>
             <div className="l">day streak</div>
           </div>
         )}
@@ -116,36 +100,6 @@ export default function ProgressPage() {
             <div className="l">mastered this week</div>
           </div>
         )}
-      </div>
-
-      {/* Achievements */}
-      <div className="panel" style={{ marginBottom: 20 }}>
-        <h2>Achievements</h2>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-          {achievements.map((a) => (
-            <div
-              key={a.label}
-              title={a.desc}
-              style={{
-                display: "flex", alignItems: "center", gap: 7,
-                padding: "6px 12px", borderRadius: 20,
-                border: `1px solid ${a.unlocked ? "var(--accent-soft)" : "var(--border)"}`,
-                background: a.unlocked ? "var(--accent-soft)" : "var(--bg-soft)",
-                opacity: a.unlocked ? 1 : 0.45,
-                fontSize: 13, fontWeight: a.unlocked ? 600 : 400,
-                color: a.unlocked ? "var(--text)" : "var(--muted)",
-                transition: "opacity 0.2s",
-              }}
-            >
-              <span style={{ fontSize: 15 }}>{a.emoji}</span>
-              {a.label}
-              {a.unlocked && <span style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--accent)", flexShrink: 0 }} />}
-            </div>
-          ))}
-        </div>
-        <p className="muted small" style={{ marginTop: 10, marginBottom: 0 }}>
-          {achievements.filter(a => a.unlocked).length}/{achievements.length} unlocked · hover for details
-        </p>
       </div>
 
       {/* Activity calendar — full width */}
@@ -183,13 +137,7 @@ export default function ProgressPage() {
                       preserveAspectRatio="none"
                       style={{ width: "100%", height: chartH, display: "block" }}
                     >
-                      <defs>
-                        <linearGradient id="mastGrad" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="var(--accent)" stopOpacity="0.35" />
-                          <stop offset="100%" stopColor="var(--accent)" stopOpacity="0.03" />
-                        </linearGradient>
-                      </defs>
-                      <path d={fill} fill="url(#mastGrad)" />
+                      <path d={fill} fill="var(--accent-soft)" />
                       <path d={d} fill="none" stroke="var(--accent)" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
                     </svg>
                     <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4 }}>
@@ -300,7 +248,7 @@ export default function ProgressPage() {
                   <Link
                     href={`/session?mode=area&area=${encodeURIComponent(areas[areas.length - 1].area)}`}
                     className="pill"
-                    style={{ color: "var(--red)", borderColor: "#3a1c1c", fontSize: 11 }}
+                    style={{ color: "var(--red)", fontSize: 11 }}
                     title={`Weakest area: ${areas[areas.length - 1].area}`}
                   >
                     Drill weakest →
