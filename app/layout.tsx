@@ -28,7 +28,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
               <DailyGoalIndicator />
               <SearchTrigger />
-              <Link href="/settings" className="nav-link" title="Settings">⚙</Link>
+              <Link href="/settings" className="nav-link" title="Settings">Settings</Link>
               <SyncButton />
               <ShortcutsTrigger />
             </div>

@@ -12,18 +12,17 @@ type GEdge = { src: string; dst: string; type: string };
 type Area = { area: string; c: number };
 
 const EDGE_COLOR: Record<string, string> = {
-  depends_on: "#2a4a7a",
-  generalizes: "#3a2a5a",
-  equivalent_to: "#1a3a2a",
-  contradicts: "#5a1a1a",
+  depends_on: "#C9CDD8",
+  generalizes: "#D8D0E8",
+  equivalent_to: "#CFE0D5",
+  contradicts: "#E8D0D0",
 };
 
 function masteryColor(p: number): string {
-  // 0 = dark red, 0.5 = amber, 1 = green
-  if (p <= 0) return "#2a1a1a";
-  if (p < 0.4) return `hsl(${Math.round(p * 60)}, 70%, 28%)`;
-  if (p < 0.8) return `hsl(${Math.round(40 + p * 40)}, 75%, 32%)`;
-  return `hsl(${Math.round(140 - (p - 0.8) * 20)}, 65%, 35%)`;
+  if (p < 0.2) return "#E8E8E4";
+  if (p < 0.5) return "#C5D4E8";
+  if (p < 0.8) return "#A8C4A0";
+  return "#5B8A6B";
 }
 
 export default function GlobalGraph({ initialArea }: { initialArea?: string }) {
@@ -73,7 +72,7 @@ export default function GlobalGraph({ initialArea }: { initialArea?: string }) {
             id: `${e.src}→${e.dst}`,
             source: e.src,
             target: e.dst,
-            color: EDGE_COLOR[e.type] || "#1a2a3a",
+            color: EDGE_COLOR[e.type] || "#D0D0CC",
           },
         })),
       ],
@@ -82,10 +81,10 @@ export default function GlobalGraph({ initialArea }: { initialArea?: string }) {
           selector: "node",
           style: {
             "background-color": "data(color)",
-            "border-color": "#4a6a9a",
-            "border-width": 0,
+            "border-color": "#D0D0CC",
+            "border-width": 1,
             label: "data(label)",
-            color: "#c8d8f0",
+            color: "#374151",
             "font-size": 7,
             "text-valign": "bottom",
             "text-margin-y": 2,
@@ -93,13 +92,13 @@ export default function GlobalGraph({ initialArea }: { initialArea?: string }) {
             height: "data(size)",
             "text-max-width": "80px",
             "text-wrap": "ellipsis",
-            "text-outline-color": "#0b0e14",
+            "text-outline-color": "#FAFAF8",
             "text-outline-width": 1,
           },
         },
         {
           selector: "node:selected",
-          style: { "border-width": 2.5, "border-color": "#6ea8fe" },
+          style: { "border-width": 2.5, "border-color": "#5B6B9A" },
         },
         {
           selector: "edge",
@@ -166,9 +165,9 @@ export default function GlobalGraph({ initialArea }: { initialArea?: string }) {
       n.style("display", shouldHide ? "none" : "element");
       // Highlight matching nodes
       if (q && matchesSearch && !masteryHide) {
-        n.style({ "border-width": 2.5, "border-color": "#6ea8fe", "font-size": 9 });
+        n.style({ "border-width": 2.5, "border-color": "#5B6B9A", "font-size": 9 });
       } else {
-        n.style({ "border-width": 0, "border-color": "#4a6a9a", "font-size": 7 });
+        n.style({ "border-width": 1, "border-color": "#D0D0CC", "font-size": 7 });
       }
     });
     cy.edges().forEach((e) => {
@@ -245,18 +244,18 @@ export default function GlobalGraph({ initialArea }: { initialArea?: string }) {
       {/* Legend */}
       <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
         {[
-          { label: "Not practiced", color: "#2a1a1a" },
-          { label: "Learning", color: "#5a3a1a" },
-          { label: "Partially known", color: "#4a4a1a" },
-          { label: "Mastered", color: "#1a4a2a" },
+          { label: "Not practiced", color: "#E8E8E4" },
+          { label: "Learning", color: "#C5D4E8" },
+          { label: "Partially known", color: "#A8C4A0" },
+          { label: "Mastered", color: "#5B8A6B" },
         ].map((l) => (
           <div key={l.label} style={{ display: "flex", alignItems: "center", gap: 5 }}>
-            <div style={{ width: 12, height: 12, borderRadius: "50%", background: l.color }} />
+            <div style={{ width: 12, height: 12, borderRadius: "50%", background: l.color, border: "1px solid #D0D0CC" }} />
             <span className="small muted">{l.label}</span>
           </div>
         ))}
         <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-          <div style={{ width: 20, height: 8, borderRadius: 4, background: "#1a2a3a", border: "1px solid #2a4a7a" }} />
+          <div style={{ width: 20, height: 8, borderRadius: 4, background: "#F3F3F0", border: "1px solid #C9CDD8" }} />
           <span className="small muted">depends on</span>
         </div>
       </div>
@@ -264,9 +263,9 @@ export default function GlobalGraph({ initialArea }: { initialArea?: string }) {
       {/* Graph */}
       <div ref={ref} style={{
         flex: 1, minHeight: 500,
-        background: "var(--bg-soft)",
+        background: "var(--bg)",
         border: "1px solid var(--border)",
-        borderRadius: 12,
+        borderRadius: 10,
         position: "relative",
       }} />
 

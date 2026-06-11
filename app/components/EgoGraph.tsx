@@ -11,22 +11,22 @@ type Ego = {
 };
 
 const EDGE_COLOR: Record<string, string> = {
-  depends_on: "#6ea8fe",
-  generalizes: "#b794f6",
-  equivalent_to: "#57d9a3",
-  instance_of: "#f2c94c",
-  contradicts: "#ff6b6b",
-  related: "#3a465c",
+  depends_on: "#C9CDD8",
+  generalizes: "#D8D0E8",
+  equivalent_to: "#CFE0D5",
+  instance_of: "#F0E4C5",
+  contradicts: "#E8D0D0",
+  related: "#D0D0CC",
 };
 
 const TYPE_COLOR: Record<string, string> = {
-  Definition: "#2b6cb0",
-  Theorem: "#6b46c1",
-  Proposition: "#6b46c1",
-  Lemma: "#6b46c1",
-  Corollary: "#6b46c1",
-  Algorithm: "#2f855a",
-  Example: "#b7791f",
+  Definition: "#C5D4E8",
+  Theorem: "#D8D0E8",
+  Proposition: "#D8D0E8",
+  Lemma: "#D8D0E8",
+  Corollary: "#D8D0E8",
+  Algorithm: "#C5DCC0",
+  Example: "#F0E4C5",
 };
 
 export default function EgoGraph({ slug, depth = 1 }: { slug: string; depth?: number }) {
@@ -48,14 +48,14 @@ export default function EgoGraph({ slug, depth = 1 }: { slug: string; depth?: nu
             data: {
               id: n.id,
               label: n.title.length > 26 ? n.title.slice(0, 24) + "…" : n.title,
-              color: n.exists_ === 0 ? "#5a2a2a" : TYPE_COLOR[n.type || ""] || "#37445c",
-              border: n.id === data.center ? "#ffffff" : n.known ? "#57d9a3" : "transparent",
+              color: n.exists_ === 0 ? "#F5E8E8" : TYPE_COLOR[n.type || ""] || "#E8E8E4",
+              border: n.id === data.center ? "#5B6B9A" : n.known ? "#3D6B4F" : "transparent",
               bw: n.id === data.center ? 3 : n.known ? 2.5 : 0,
               isCenter: n.id === data.center ? 1 : 0,
             },
           })),
           ...data.edges.map((e) => ({
-            data: { id: `${e.src}->${e.dst}-${e.type}`, source: e.src, target: e.dst, color: EDGE_COLOR[e.type] || "#33415a" },
+            data: { id: `${e.src}->${e.dst}-${e.type}`, source: e.src, target: e.dst, color: EDGE_COLOR[e.type] || "#D0D0CC" },
           })),
         ],
         style: [
@@ -66,7 +66,7 @@ export default function EgoGraph({ slug, depth = 1 }: { slug: string; depth?: nu
               "border-color": "data(border)",
               "border-width": "data(bw)",
               label: "data(label)",
-              color: "#d6deeb",
+              color: "#374151",
               "font-size": 9,
               "text-valign": "bottom",
               "text-margin-y": 3,
@@ -111,10 +111,10 @@ export default function EgoGraph({ slug, depth = 1 }: { slug: string; depth?: nu
     <div className="graph-shell">
       <div ref={ref} style={{ width: "100%", height: "100%" }} />
       <div className="graph-legend">
-        <span style={{ color: "#6ea8fe" }}>depends on</span>
-        <span style={{ color: "#b794f6" }}>generalizes</span>
-        <span style={{ color: "#57d9a3" }}>equivalent</span>
-        <span style={{ color: "#8a99b3" }}>related</span>
+        <span style={{ color: "var(--accent)" }}>depends on</span>
+        <span style={{ color: "var(--purple)" }}>generalizes</span>
+        <span style={{ color: "var(--green)" }}>equivalent</span>
+        <span style={{ color: "var(--muted)" }}>related</span>
       </div>
     </div>
   );

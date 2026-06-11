@@ -21,7 +21,7 @@ export default function MasterySparkline({ nodeId }: { nodeId: string }) {
   const fill = `${d} L ${pts[pts.length - 1].x.toFixed(1)} ${H - PAD} L ${pts[0].x.toFixed(1)} ${H - PAD} Z`;
 
   const latest = pts[pts.length - 1];
-  const color = latest.p >= 0.8 ? "#57d9a3" : latest.p >= 0.4 ? "#f2c94c" : "#6ea8fe";
+  const color = latest.p >= 0.8 ? "var(--green)" : latest.p >= 0.4 ? "var(--amber)" : "var(--accent)";
 
   return (
     <svg

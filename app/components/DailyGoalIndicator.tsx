@@ -24,12 +24,12 @@ export default function DailyGoalIndicator() {
   return (
     <Link
       href="/progress"
-      title={`Today: ${today_concepts}/${daily_goal} concepts${streak_days > 0 ? ` · 🔥 ${streak_days} day streak` : ""}`}
+      title={`Today: ${today_concepts}/${daily_goal} concepts${streak_days > 0 ? ` · ${streak_days} day streak` : ""}`}
       style={{
         display: "flex", alignItems: "center", gap: 6,
         textDecoration: "none", padding: "3px 8px",
-        borderRadius: 8, border: "1px solid var(--border)",
-        background: done ? "#0d2a1a" : "var(--bg-soft)",
+        borderRadius: 6, border: "1px solid var(--border)",
+        background: done ? "var(--accent-soft)" : "var(--bg-soft)",
         transition: "border-color 0.15s",
       }}
     >
@@ -53,7 +53,7 @@ export default function DailyGoalIndicator() {
         {today_concepts}/{daily_goal}
       </span>
       {streak_days >= 2 && (
-        <span style={{ fontSize: 11, color: "var(--amber)" }}>🔥{streak_days}</span>
+        <span style={{ fontSize: 11, color: "var(--muted)" }}>{streak_days}d streak</span>
       )}
     </Link>
   );
