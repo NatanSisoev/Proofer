@@ -152,7 +152,7 @@ export async function explainConcept(
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 0.7 },
+          generationConfig: { temperature: 0.7, thinkingConfig: { thinkingBudget: 0 } },
         }),
       }
     );
@@ -449,7 +449,7 @@ export async function compareConcepts(
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 0.5, maxOutputTokens: 2000 },
+          generationConfig: { temperature: 0.5, maxOutputTokens: 2000, thinkingConfig: { thinkingBudget: 0 } },
         }),
       }
     );
@@ -509,7 +509,7 @@ export async function reExplainConcept(
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 0.75, maxOutputTokens: 1500 },
+          generationConfig: { temperature: 0.75, maxOutputTokens: 1500, thinkingConfig: { thinkingBudget: 0 } },
         }),
       }
     );
@@ -617,7 +617,7 @@ export async function generateStudyPlan(input: StudyPlanInput): Promise<string> 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 0.6, maxOutputTokens: 2000 },
+          generationConfig: { temperature: 0.6, maxOutputTokens: 2000, thinkingConfig: { thinkingBudget: 0 } },
         }),
       }
     );
