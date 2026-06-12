@@ -1,8 +1,6 @@
 import GlobalGraph from "@/app/components/GlobalGraph";
 import Link from "next/link";
 
-export const dynamic = "force-dynamic";
-
 export default async function GraphPage({
   searchParams,
 }: {

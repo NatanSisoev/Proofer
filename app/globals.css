@@ -15,6 +15,25 @@
 
 * { box-sizing: border-box; }
 
+/* Loading skeletons */
+.skel {
+  display: block;
+  background: linear-gradient(90deg, var(--bg-soft) 25%, var(--border) 37%, var(--bg-soft) 63%);
+  background-size: 400% 100%;
+  animation: skel-pulse 1.6s ease-in-out infinite;
+  border-radius: 6px;
+}
+@keyframes skel-pulse {
+  0% { background-position: 100% 50%; }
+  100% { background-position: 0 50%; }
+}
+.skel-title { height: 26px; width: 220px; margin-bottom: 6px; }
+.skel-tag { height: 14px; width: 320px; }
+.skel-line { height: 13px; width: 100%; margin: 8px 0; }
+.skel-line:last-child { margin-bottom: 0; }
+.skel-stat { height: 64px; border-radius: 10px; min-width: 110px; flex: 1; }
+.skel-panel-title { height: 11px; width: 90px; margin-bottom: 16px; }
+
 html {
   scroll-behavior: smooth;
 }

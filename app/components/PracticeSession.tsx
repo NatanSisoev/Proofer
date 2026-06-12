@@ -345,7 +345,7 @@ export default function PracticeSession({ initialNodeId }: { initialNodeId?: str
                   disabled={busy || hintBusy}
                   style={{ fontSize: 13, color: "var(--amber)" }}
                 >
-                  {hintBusy ? "…" : "💡 Hint"}
+                  {hintBusy ? "…" : "Hint"}
                 </button>
               )}
               {!explanation && problem.mode !== "demo" && (

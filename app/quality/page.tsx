@@ -1,9 +1,18 @@
 import Link from "next/link";
+import { unstable_cache } from "next/cache";
 import { noteQuality, linkSuggestions } from "@/lib/queries";
 import QualityFilters from "@/app/components/QualityFilters";
 import LinkSuggestions from "@/app/components/LinkSuggestions";
 
 export const dynamic = "force-dynamic";
+
+// linkSuggestions() is an O(n^2) scan over all note content — cache it
+// instead of recomputing on every /quality?tab=links request.
+const getLinkSuggestions = unstable_cache(
+  async (limit: number) => linkSuggestions(limit),
+  ["link-suggestions"],
+  { revalidate: 120 }
+);
 
 export default async function QualityPage({
   searchParams,
@@ -27,7 +36,7 @@ export default async function QualityPage({
   }
   const topAreas = [...areaMap.entries()].sort((a, b) => b[1] - a[1]).slice(0, 8);
 
-  const suggestions = tab === "links" ? linkSuggestions(60) : [];
+  const suggestions = tab === "links" ? await getLinkSuggestions(60) : [];
 
   // Generate an actionable summary
   const topIssue = Object.entries(byIssue).sort((a, b) => b[1] - a[1])[0];

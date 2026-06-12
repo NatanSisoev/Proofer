@@ -2,8 +2,6 @@ import Link from "next/link";
 import PracticeSession from "@/app/components/PracticeSession";
 import { HAS_KEY } from "@/lib/llm";
 
-export const dynamic = "force-dynamic";
-
 export default async function LearnPage({ searchParams }: { searchParams: Promise<{ node?: string }> }) {
   const { node } = await searchParams;
   return (
