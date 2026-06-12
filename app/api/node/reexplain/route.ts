@@ -1,9 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
+import { unstable_cache } from "next/cache";
 import { getNode } from "@/lib/queries";
 import { reExplainConcept, friendlyLLMError, type ExplainAngle } from "@/lib/llm";
-import { db } from "@/lib/db";
+import { db, type NodeRow } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
+
+// Re-explanations only depend on the node, its prerequisites, and the chosen
+// angle — cache so switching back to a previously-viewed angle is instant.
+const getReExplanation = unstable_cache(
+  async (node: NodeRow, prereqs: string[], angle: ExplainAngle) => reExplainConcept(node, prereqs, angle),
+  ["reexplain-concept"],
+  { revalidate: 86400 }
+);
 
 export async function POST(req: NextRequest) {
   try {
@@ -23,7 +32,7 @@ export async function POST(req: NextRequest) {
       .all(nodeId) as { id: string }[];
     const prereqs = prereqRows.map((r) => r.id);
 
-    const explanation = await reExplainConcept(node, prereqs, angle ?? "intuitive");
+    const explanation = await getReExplanation(node, prereqs, angle ?? "intuitive");
     return NextResponse.json({ explanation });
   } catch (e) {
     const { status, message } = friendlyLLMError(e);
