@@ -156,7 +156,6 @@ export default function StudyPlanClient({
 
         {!plan && !busy && (
           <div className="panel" style={{ background: "var(--bg-soft)", textAlign: "center", padding: 40 }}>
-            <div style={{ fontSize: 36, marginBottom: 12 }}>📅</div>
             <div className="muted" style={{ fontSize: 14 }}>
               Set your target date and click <strong>Generate study plan</strong> to get a personalised schedule.
             </div>
