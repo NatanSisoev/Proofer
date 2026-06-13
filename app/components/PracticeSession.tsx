@@ -5,6 +5,7 @@ import Link from "next/link";
 import Markdown from "./Markdown";
 import VoiceInput from "./VoiceInput";
 import AnswerBox from "./AnswerBox";
+import { VERDICT } from "@/lib/verdict";
 
 type Problem = {
   problemId: number;
@@ -26,12 +27,6 @@ type Grade = {
   halfLife?: number;
   justMastered?: boolean;
   unlocked?: { id: string; title: string; type: string | null; area: string | null }[];
-};
-
-const VERDICT_STYLE: Record<string, { bg: string; label: string }> = {
-  correct: { bg: "var(--green-soft)", label: "Correct" },
-  partial: { bg: "var(--amber-soft)", label: "Partially there" },
-  incorrect: { bg: "var(--red-soft)", label: "Not yet" },
 };
 
 export default function PracticeSession({ initialNodeId }: { initialNodeId?: string }) {
@@ -362,8 +357,8 @@ export default function PracticeSession({ initialNodeId }: { initialNodeId?: str
 
           {grade && (
             <div className="panel feedback">
-              <div className={`verdict${grade.verdict === "correct" ? " verdict-correct" : ""}`} style={{ background: VERDICT_STYLE[grade.verdict]?.bg }}>
-                {VERDICT_STYLE[grade.verdict]?.label || grade.verdict}
+              <div className={`verdict${grade.verdict === "correct" ? " verdict-correct" : ""}`} style={{ background: VERDICT[grade.verdict]?.bg }}>
+                {VERDICT[grade.verdict]?.label || grade.verdict}
               </div>
 
               <div className="mastery-move">

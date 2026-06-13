@@ -2,19 +2,9 @@ import Link from "next/link";
 import { masteryHistogram, recentAttemptsGlobal, weakSpots, stats, todayStats, reviewForecast, masteryVelocity, activityCalendar, areaMastery, masteryMilestones, recurringWeakPrerequisites } from "@/lib/queries";
 import ActivityCalendar from "@/app/components/ActivityCalendar";
 import { getDailyGoal } from "@/lib/settings";
+import { VERDICT, type Verdict } from "@/lib/verdict";
 
 export const dynamic = "force-dynamic";
-
-const VERDICT_COLOR: Record<string, string> = {
-  correct: "var(--green)",
-  partial: "var(--amber)",
-  incorrect: "var(--red)",
-};
-const VERDICT_LABEL: Record<string, string> = {
-  correct: "✓",
-  partial: "~",
-  incorrect: "✗",
-};
 
 function timeAgo(iso: string) {
   const diff = Date.now() - new Date(iso).getTime();
@@ -204,9 +194,9 @@ export default function ProgressPage() {
                 <div key={a.id} className="attempt-row">
                   <span
                     className="verdict-dot"
-                    style={{ color: VERDICT_COLOR[a.verdict] || "var(--muted)" }}
+                    style={{ color: VERDICT[a.verdict as Verdict]?.color || "var(--muted)" }}
                   >
-                    {VERDICT_LABEL[a.verdict] || "?"}
+                    {VERDICT[a.verdict as Verdict]?.icon || "?"}
                   </span>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <Link

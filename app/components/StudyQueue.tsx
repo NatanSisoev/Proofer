@@ -5,6 +5,7 @@ import Link from "next/link";
 import Markdown from "./Markdown";
 import VoiceInput from "./VoiceInput";
 import AnswerBox from "./AnswerBox";
+import { VERDICT } from "@/lib/verdict";
 
 type QueueNode = { id: string; title: string; type: string | null; area: string | null };
 
@@ -38,18 +39,6 @@ type SessionResult = {
   masteryAfter: number;
   justMastered?: boolean;
   elapsedSec?: number;
-};
-
-const VERDICT_STYLE: Record<string, { bg: string; label: string; color: string }> = {
-  correct: { bg: "var(--green-soft)", label: "Correct", color: "var(--green)" },
-  partial: { bg: "var(--amber-soft)", label: "Partially there", color: "var(--amber)" },
-  incorrect: { bg: "var(--red-soft)", label: "Not yet", color: "var(--red)" },
-};
-
-const VERDICT_ICON: Record<string, string> = {
-  correct: "✓",
-  partial: "~",
-  incorrect: "✗",
 };
 
 export default function StudyQueue({ queue, preferKind }: { queue: QueueNode[]; preferKind?: string }) {
@@ -354,9 +343,9 @@ export default function StudyQueue({ queue, preferKind }: { queue: QueueNode[]; 
             <div key={i} className="session-result-row">
               <span
                 className="verdict-dot"
-                style={{ background: VERDICT_STYLE[r.verdict]?.bg, color: VERDICT_STYLE[r.verdict]?.color }}
+                style={{ background: VERDICT[r.verdict]?.bg, color: VERDICT[r.verdict]?.color }}
               >
-                {VERDICT_ICON[r.verdict]}
+                {VERDICT[r.verdict]?.icon}
               </span>
               <Link href={`/node/${encodeURIComponent(r.node.id)}`} style={{ color: "var(--text)" }}>
                 {r.node.title}
@@ -430,7 +419,7 @@ export default function StudyQueue({ queue, preferKind }: { queue: QueueNode[]; 
               title={r.node.title}
               style={{
                 width: 10, height: 10, borderRadius: "50%",
-                background: VERDICT_STYLE[r.verdict]?.color,
+                background: VERDICT[r.verdict]?.color,
                 display: "inline-block",
               }}
             />
@@ -591,8 +580,8 @@ export default function StudyQueue({ queue, preferKind }: { queue: QueueNode[]; 
 
           {grade && (
             <div className="panel feedback">
-              <div className={`verdict${grade.verdict === "correct" ? " verdict-correct" : ""}`} style={{ background: VERDICT_STYLE[grade.verdict]?.bg }}>
-                {VERDICT_STYLE[grade.verdict]?.label || grade.verdict}
+              <div className={`verdict${grade.verdict === "correct" ? " verdict-correct" : ""}`} style={{ background: VERDICT[grade.verdict]?.bg }}>
+                {VERDICT[grade.verdict]?.label || grade.verdict}
               </div>
 
               <div className="mastery-move">

@@ -1,23 +1,8 @@
 import Link from "next/link";
 import { attemptHistory, attemptKinds, browseAreas } from "@/lib/queries";
+import { VERDICT, type Verdict } from "@/lib/verdict";
 
 export const dynamic = "force-dynamic";
-
-const VERDICT_COLOR: Record<string, string> = {
-  correct:   "var(--green)",
-  partial:   "var(--amber)",
-  incorrect: "var(--red)",
-};
-const VERDICT_LABEL: Record<string, string> = {
-  correct:   "correct",
-  partial:   "partial",
-  incorrect: "incorrect",
-};
-const VERDICT_BG: Record<string, string> = {
-  correct:   "#E8F2EC",
-  partial:   "#F5F0E0",
-  incorrect: "#F5E8E8",
-};
 
 function timeAgo(iso: string) {
   const diff = Date.now() - new Date(iso).getTime();
@@ -92,10 +77,10 @@ export default async function HistoryPage({
               href={filterLink("verdict", v)}
               className={verdict === v ? "btn-primary" : "btn-ghost"}
               style={{ fontSize: 12, padding: "3px 10px", borderRadius: 6, textDecoration: "none",
-                color: !v ? undefined : VERDICT_COLOR[v],
+                color: !v ? undefined : VERDICT[v as Verdict]?.color,
               }}
             >
-              {v ? VERDICT_LABEL[v] : "all"}
+              {v ? VERDICT[v as Verdict]?.short : "all"}
             </Link>
           ))}
         </div>
@@ -170,17 +155,17 @@ export default async function HistoryPage({
               style={{
                 padding: "12px 16px",
                 borderLeftWidth: 3,
-                borderLeftColor: VERDICT_COLOR[a.verdict] || "var(--border)",
-                background: VERDICT_BG[a.verdict] || "var(--bg-soft)",
+                borderLeftColor: VERDICT[a.verdict as Verdict]?.color || "var(--border)",
+                background: VERDICT[a.verdict as Verdict]?.bg || "var(--bg-soft)",
               }}
             >
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8, marginBottom: 6 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                   <span style={{
-                    fontSize: 11, fontWeight: 700, color: VERDICT_COLOR[a.verdict],
+                    fontSize: 11, fontWeight: 700, color: VERDICT[a.verdict as Verdict]?.color,
                     textTransform: "uppercase", letterSpacing: "0.07em",
                   }}>
-                    {VERDICT_LABEL[a.verdict] || a.verdict}
+                    {VERDICT[a.verdict as Verdict]?.short || a.verdict}
                   </span>
                   {a.kind && (
                     <span className="pill" style={{ fontSize: 10 }}>{a.kind}</span>
