@@ -25,6 +25,34 @@ function masteryColor(p: number): string {
   return "#5B8A6B";
 }
 
+type SavedPositions = Record<string, { x: number; y: number }>;
+
+function layoutKey(area: string): string {
+  return `proofer-graph-layout:${area || "all"}`;
+}
+
+function loadSavedPositions(area: string): SavedPositions | null {
+  try {
+    const raw = localStorage.getItem(layoutKey(area));
+    return raw ? (JSON.parse(raw) as SavedPositions) : null;
+  } catch {
+    return null;
+  }
+}
+
+function savePositions(area: string, cy: cytoscape.Core) {
+  const positions: SavedPositions = {};
+  cy.nodes().forEach((n) => {
+    const p = n.position();
+    positions[n.id()] = { x: p.x, y: p.y };
+  });
+  try {
+    localStorage.setItem(layoutKey(area), JSON.stringify(positions));
+  } catch {
+    // ignore quota errors
+  }
+}
+
 export default function GlobalGraph({ initialArea }: { initialArea?: string }) {
   const ref = useRef<HTMLDivElement>(null);
   const cyRef = useRef<cytoscape.Core | null>(null);
@@ -52,6 +80,11 @@ export default function GlobalGraph({ initialArea }: { initialArea?: string }) {
     cyRef.current?.destroy();
 
     const maxDep = Math.max(...data.nodes.map((n) => n.dep_count), 1);
+
+    // Reuse the last computed layout for this area if we have positions for
+    // every current node — skips the expensive cose layout on repeat visits.
+    const saved = loadSavedPositions(filterArea);
+    const hasFullLayout = !!saved && data.nodes.every((n) => saved[n.id]);
 
     const cy = cytoscape({
       container: ref.current,
@@ -113,17 +146,24 @@ export default function GlobalGraph({ initialArea }: { initialArea?: string }) {
           },
         },
       ],
-      layout: {
-        name: "cose",
-        animate: data.nodes.length < 300,
-        animationDuration: 800,
-        randomize: false,
-        nodeRepulsion: () => 8000,
-        idealEdgeLength: () => 60,
-        gravity: 0.8,
-        numIter: 500,
-        padding: 30,
-      } as any,
+      layout: hasFullLayout
+        ? ({
+            name: "preset",
+            positions: (node: cytoscape.NodeSingular) => saved![node.id()],
+            fit: true,
+            padding: 30,
+          } as any)
+        : ({
+            name: "cose",
+            animate: data.nodes.length < 300,
+            animationDuration: 800,
+            randomize: false,
+            nodeRepulsion: () => 8000,
+            idealEdgeLength: () => 60,
+            gravity: 0.8,
+            numIter: 500,
+            padding: 30,
+          } as any),
       minZoom: 0.1,
       maxZoom: 4,
       wheelSensitivity: 0.15,
@@ -147,6 +187,10 @@ export default function GlobalGraph({ initialArea }: { initialArea?: string }) {
     });
 
     cy.on("mouseout", "node", () => setTooltip(null));
+
+    // Persist node positions once the layout settles so the next visit to
+    // this area can skip straight to "preset" instead of re-running cose.
+    cy.on("layoutstop", () => savePositions(filterArea, cy));
 
     cyRef.current = cy;
     setLoading(false);
