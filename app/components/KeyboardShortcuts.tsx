@@ -7,7 +7,6 @@ const SHORTCUTS = [
   { key: "s / /", desc: "Focus search" },
   { key: "p",     desc: "Practice (free)" },
   { key: "e",     desc: "Study session" },
-  { key: "c",     desc: "Flashcards" },
   { key: "b",     desc: "Browse topics" },
   { key: "g",     desc: "Knowledge map" },
   { key: "r",     desc: "Progress" },
@@ -41,7 +40,6 @@ export default function KeyboardShortcuts() {
       }
       if (e.key === "p") { router.push("/learn"); return; }
       if (e.key === "e") { router.push("/session"); return; }
-      if (e.key === "c") { router.push("/flashcard"); return; }
       if (e.key === "b") { router.push("/browse"); return; }
       if (e.key === "g") { router.push("/graph"); return; }
       if (e.key === "r") { router.push("/progress"); return; }
