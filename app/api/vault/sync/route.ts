@@ -8,7 +8,23 @@ export const maxDuration = 120;
 
 const execFileAsync = promisify(execFile);
 
+// Module-scoped lock. Now that sync runs async (non-blocking), two POSTs
+// (rapid double-click, a second browser tab, a stray retry) could otherwise
+// each spawn import-vault.mjs against the SAME graph.db at once — two writers
+// rebuilding one SQLite file is a recipe for corruption. Reject the second
+// while the first is in flight. Held on globalThis so it survives the HMR
+// module re-evaluation that would otherwise reset a plain module variable.
+const lockHost = globalThis as typeof globalThis & { __prooferSyncing?: boolean };
+
 export async function POST() {
+  if (lockHost.__prooferSyncing) {
+    return NextResponse.json(
+      { error: "A vault sync is already in progress — wait for it to finish." },
+      { status: 409 }
+    );
+  }
+  lockHost.__prooferSyncing = true;
+
   const scriptPath = join(process.cwd(), "scripts", "import-vault.mjs");
   try {
     // execFile (async) instead of execSync so the event loop — and every
@@ -31,5 +47,7 @@ export async function POST() {
       { error: e.message || "Sync failed", detail: e.stderr || "" },
       { status: 500 }
     );
+  } finally {
+    lockHost.__prooferSyncing = false;
   }
 }
