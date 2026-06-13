@@ -53,6 +53,7 @@ const VERDICT_ICON: Record<string, string> = {
 };
 
 export default function StudyQueue({ queue, preferKind }: { queue: QueueNode[]; preferKind?: string }) {
+  const [activeQueue, setActiveQueue] = useState<QueueNode[]>(queue);
   const [index, setIndex] = useState(0);
   const [problem, setProblem] = useState<Problem | null>(null);
   const [answer, setAnswer] = useState("");
@@ -73,7 +74,7 @@ export default function StudyQueue({ queue, preferKind }: { queue: QueueNode[]; 
   // Prefetch cache: map nodeId → fetched Problem data
   const prefetchCache = useRef<Map<string, Promise<any>>>(new Map());
   const questionStart = useRef<number>(Date.now());
-  const currentNode = queue[index];
+  const currentNode = activeQueue[index];
 
   /** Fire-and-forget: start generating a problem for nodeId, storing the
    *  promise in prefetchCache so generate() can await it instead of re-fetching. */
@@ -130,9 +131,9 @@ export default function StudyQueue({ queue, preferKind }: { queue: QueueNode[]; 
   // Prefetch next problem while the user is answering the current one.
   useEffect(() => {
     if (!problem || done) return;
-    const nextNode = queue[index + 1];
+    const nextNode = activeQueue[index + 1];
     if (nextNode) prefetch(nextNode.id);
-  }, [problem, index, queue, done, prefetch]);
+  }, [problem, index, activeQueue, done, prefetch]);
 
   // Session elapsed timer
   useEffect(() => {
@@ -258,7 +259,7 @@ export default function StudyQueue({ queue, preferKind }: { queue: QueueNode[]; 
   }
 
   function advance() {
-    if (index + 1 >= queue.length) {
+    if (index + 1 >= activeQueue.length) {
       setDone(true);
     } else {
       setIndex((i) => i + 1);
@@ -285,7 +286,7 @@ export default function StudyQueue({ queue, preferKind }: { queue: QueueNode[]; 
             {isPerfect ? "Perfect session!" : "Session complete"}
           </h2>
           <p className="muted" style={{ margin: "0 0 20px", fontSize: 13 }}>
-            {queue.length} concept{queue.length !== 1 ? "s" : ""} ·{" "}
+            {activeQueue.length} concept{activeQueue.length !== 1 ? "s" : ""} ·{" "}
             {Math.floor(sessionElapsed / 60)}m {sessionElapsed % 60}s ·{" "}
             {accuracy}% accuracy
             {avgTimeSec !== null && ` · ~${avgTimeSec}s/problem`}
@@ -372,14 +373,11 @@ export default function StudyQueue({ queue, preferKind }: { queue: QueueNode[]; 
                   .filter((r) => r.verdict === "incorrect" || r.verdict === "partial")
                   .map((r) => r.node);
                 if (retryNodes.length > 0) {
+                  setActiveQueue(retryNodes);
                   setResults([]);
                   setIndex(0);
                   setDone(false);
                   setSessionElapsed(0);
-                  // Replace queue with retry nodes (re-use index cycling)
-                  // We can't mutate queue prop, but we can reset index and done
-                  // and rely on the queue being reset externally — instead, navigate
-                  window.location.href = `/learn?node=${encodeURIComponent(retryNodes[0].id)}`;
                 }
               }}
               style={{ fontSize: 13, color: "var(--amber)" }}
@@ -401,17 +399,17 @@ export default function StudyQueue({ queue, preferKind }: { queue: QueueNode[]; 
     );
   }
 
-  const progress = index / queue.length;
+  const progress = index / activeQueue.length;
 
   return (
     <div className="practice">
       {/* Session progress bar */}
       <div className="session-progress">
-        <div className="session-progress-bar" style={{ width: `${(index / queue.length) * 100}%` }} />
+        <div className="session-progress-bar" style={{ width: `${(index / activeQueue.length) * 100}%` }} />
       </div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <span className="muted small">Concept {index + 1} of {queue.length}</span>
+          <span className="muted small">Concept {index + 1} of {activeQueue.length}</span>
           <span className="muted small" style={{ fontVariantNumeric: "tabular-nums" }}>
             {Math.floor(sessionElapsed / 60)}:{String(sessionElapsed % 60).padStart(2, "0")}
           </span>
@@ -428,7 +426,7 @@ export default function StudyQueue({ queue, preferKind }: { queue: QueueNode[]; 
               }}
             />
           ))}
-          {Array.from({ length: queue.length - results.length }).map((_, i) => (
+          {Array.from({ length: activeQueue.length - results.length }).map((_, i) => (
             <span
               key={`empty-${i}`}
               style={{
@@ -548,7 +546,7 @@ export default function StudyQueue({ queue, preferKind }: { queue: QueueNode[]; 
               <h4 style={{ color: "var(--green)", margin: "0 0 8px" }}>Ideal solution</h4>
               <div className="markdown"><Markdown>{revealed}</Markdown></div>
               <button className="btn-ghost" onClick={advance} disabled={busy} style={{ marginTop: 10, fontSize: 13 }}>
-                {index + 1 >= queue.length ? "Finish session →" : "Next concept →"}
+                {index + 1 >= activeQueue.length ? "Finish session →" : "Next concept →"}
               </button>
             </div>
           )}
@@ -694,7 +692,7 @@ export default function StudyQueue({ queue, preferKind }: { queue: QueueNode[]; 
 
               <div className="practice-actions" style={{ marginTop: 12 }}>
                 <button className="btn-primary" onClick={advance} disabled={busy}>
-                  {index + 1 >= queue.length ? "Finish session →" : "Next concept →"}
+                  {index + 1 >= activeQueue.length ? "Finish session →" : "Next concept →"}
                 </button>
                 <span className="muted small" style={{ alignSelf: "center" }}>Ctrl+Enter</span>
               </div>
