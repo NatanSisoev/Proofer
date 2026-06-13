@@ -88,7 +88,10 @@ header.top {
 header.top h1 { font-size: 24px; margin: 0; letter-spacing: -0.02em; font-weight: 700; }
 header.top .tag { color: var(--muted); font-size: 14px; }
 
-.grid { display: grid; grid-template-columns: 1fr 360px; gap: 24px; align-items: start; }
+/* minmax(0, 1fr) — not 1fr — so the main column can shrink below its
+   content's min-content. Without it, a nowrap line (e.g. a long attempt
+   "gap" comment) forces the track wider than the page instead of clipping. */
+.grid { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 24px; align-items: start; }
 @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
 
 .panel {

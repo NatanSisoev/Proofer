@@ -101,7 +101,7 @@ export default function ProgressPage() {
 
       <div className="grid" style={{ gap: 20 }}>
         {/* Left column */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 20, minWidth: 0 }}>
           {/* Cumulative mastery chart */}
           {milestones.length >= 2 && (
             <div className="panel">
