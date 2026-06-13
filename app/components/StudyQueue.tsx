@@ -128,6 +128,15 @@ export default function StudyQueue({ queue, preferKind }: { queue: QueueNode[]; 
     return () => ctrl.abort();
   }, [index, generate, currentNode, done]);
 
+  // Drop prefetch entries for nodes we've skipped past (e.g. double-skip
+  // jumping over the prefetched "next" node) so they don't sit unconsumed.
+  useEffect(() => {
+    const keep = new Set([currentNode?.id, activeQueue[index + 1]?.id].filter(Boolean));
+    for (const id of prefetchCache.current.keys()) {
+      if (!keep.has(id)) prefetchCache.current.delete(id);
+    }
+  }, [index, currentNode, activeQueue]);
+
   // Prefetch next problem while the user is answering the current one.
   useEffect(() => {
     if (!problem || done) return;
