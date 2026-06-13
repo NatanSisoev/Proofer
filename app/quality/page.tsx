@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { unstable_cache } from "next/cache";
-import { noteQuality, linkSuggestions } from "@/lib/queries";
+import { noteQuality, linkSuggestions, dependencyCycles } from "@/lib/queries";
 import QualityFilters from "@/app/components/QualityFilters";
 import LinkSuggestions from "@/app/components/LinkSuggestions";
 
@@ -14,13 +14,21 @@ const getLinkSuggestions = unstable_cache(
   { revalidate: 120 }
 );
 
+// dependencyCycles() is cheap (O(V+E)) but only changes when the graph does —
+// cache it so the count badge + tab are instant on every visit.
+const getDependencyCycles = unstable_cache(
+  async (limit: number) => dependencyCycles(limit),
+  ["dependency-cycles"],
+  { revalidate: 120 }
+);
+
 export default async function QualityPage({
   searchParams,
 }: {
   searchParams: Promise<{ tab?: string }>;
 }) {
   const { tab: tabParam } = await searchParams;
-  const tab = tabParam === "links" ? "links" : "issues";
+  const tab = tabParam === "links" ? "links" : tabParam === "cycles" ? "cycles" : "issues";
 
   const issues = noteQuality();
   const allIssueTypes = Array.from(new Set(issues.flatMap((n) => n.issues))).sort();
@@ -37,6 +45,7 @@ export default async function QualityPage({
   const topAreas = [...areaMap.entries()].sort((a, b) => b[1] - a[1]).slice(0, 8);
 
   const suggestions = tab === "links" ? await getLinkSuggestions(60) : [];
+  const cycles = await getDependencyCycles(40);
 
   // Generate an actionable summary
   const topIssue = Object.entries(byIssue).sort((a, b) => b[1] - a[1])[0];
@@ -70,6 +79,12 @@ export default async function QualityPage({
             <div className="l">{t}</div>
           </div>
         ))}
+        {cycles.length > 0 && (
+          <div className="stat">
+            <div className="n" style={{ color: "var(--red)" }}>{cycles.length}</div>
+            <div className="l">dep cycles</div>
+          </div>
+        )}
       </div>
 
       {/* Tab bar */}
@@ -77,10 +92,11 @@ export default async function QualityPage({
         {[
           { key: "issues", label: "Note issues" },
           { key: "links", label: "Link suggestions" },
+          { key: "cycles", label: `Dependency cycles${cycles.length > 0 ? ` (${cycles.length})` : ""}` },
         ].map((t) => (
           <Link
             key={t.key}
-            href={`/quality${t.key === "issues" ? "" : "?tab=links"}`}
+            href={`/quality${t.key === "issues" ? "" : `?tab=${t.key}`}`}
             style={{
               padding: "8px 16px", fontSize: 14, borderRadius: "8px 8px 0 0",
               background: tab === t.key ? "var(--panel)" : "transparent",
@@ -115,6 +131,57 @@ export default async function QualityPage({
 
       {tab === "links" && (
         <LinkSuggestions initial={suggestions} />
+      )}
+
+      {tab === "cycles" && (
+        <div className="panel">
+          <h2 style={{ marginBottom: 4 }}>Dependency cycles</h2>
+          <p className="muted small" style={{ marginTop: 0, marginBottom: 16, maxWidth: 680 }}>
+            These concepts list each other as prerequisites, directly or transitively.
+            A cycle is a contradiction — you can never be &ldquo;ready&rdquo; for any concept
+            in the loop, so it distorts the frontier and learning-path logic. Break each
+            loop by removing or retyping one <code>depends_on</code> edge (e.g. to
+            <code>related</code> or <code>generalizes</code>) in the source note.
+          </p>
+          {cycles.length === 0 ? (
+            <p className="muted">No dependency cycles — your prerequisite graph is a clean DAG. ✓</p>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {cycles.map((c, i) => (
+                <div
+                  key={i}
+                  style={{
+                    padding: "10px 12px", borderRadius: 8,
+                    border: "1px solid var(--border)", background: "var(--bg-soft)",
+                    display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap",
+                  }}
+                >
+                  <span
+                    className="pill"
+                    style={{ fontSize: 10, color: c.mutual ? "var(--red)" : "var(--amber)", flexShrink: 0 }}
+                  >
+                    {c.mutual ? "mutual" : `${c.nodes.length}-cycle`}
+                  </span>
+                  <span style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap", fontSize: 13.5 }}>
+                    {c.nodes.map((n, j) => (
+                      <span key={j} style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                        {j > 0 && <span className="muted" style={{ fontSize: 12 }}>{c.mutual ? "⇄" : "→"}</span>}
+                        <Link href={`/node/${encodeURIComponent(n)}`}>{n}</Link>
+                      </span>
+                    ))}
+                    {/* close the loop for cycles longer than a mutual pair */}
+                    {!c.mutual && (
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                        <span className="muted" style={{ fontSize: 12 }}>→</span>
+                        <Link href={`/node/${encodeURIComponent(c.nodes[0])}`} className="muted">{c.nodes[0]}</Link>
+                      </span>
+                    )}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       )}
     </div>
   );

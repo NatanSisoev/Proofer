@@ -714,6 +714,72 @@ export function noteQuality(): QualityIssue[] {
     .sort((a, b) => b.score - a.score || a.title.localeCompare(b.title));
 }
 
+export type DependencyCycle = {
+  nodes: string[];   // node ids forming the cycle (in traversal order, no repeat of the closing node)
+  mutual: boolean;   // true for a 2-cycle A→B→A (mutual prerequisites — the clearest error)
+};
+
+/**
+ * Detect cycles in the `depends_on` graph. A cycle means "A is a prerequisite
+ * of B and B is (transitively) a prerequisite of A" — a contradiction that
+ * corrupts the readiness/frontier model (you can never be "ready" for either).
+ * `prerequisites()` is already cycle-safe via path tracking, so this is purely
+ * a reporting view for /quality. Cycles are canonicalised (rotated to start at
+ * the smallest id) and deduped, then returned shortest-first.
+ */
+export function dependencyCycles(limit = 40): DependencyCycle[] {
+  const edges = db()
+    .prepare(`SELECT src, dst FROM edges WHERE type = 'depends_on'`)
+    .all() as { src: string; dst: string }[];
+
+  const adj = new Map<string, string[]>();
+  for (const e of edges) {
+    if (!adj.has(e.src)) adj.set(e.src, []);
+    adj.get(e.src)!.push(e.dst);
+  }
+
+  const WHITE = 0, GRAY = 1, BLACK = 2;
+  const color = new Map<string, number>();
+  const stack: string[] = [];
+  const seen = new Set<string>();
+  const cycles: DependencyCycle[] = [];
+
+  // Canonicalise a cycle: rotate so the lexicographically smallest id leads,
+  // then key by the joined path so rotations/duplicates collapse to one entry.
+  function record(path: string[]) {
+    let min = 0;
+    for (let i = 1; i < path.length; i++) if (path[i] < path[min]) min = i;
+    const rotated = path.slice(min).concat(path.slice(0, min));
+    const key = rotated.join(" ");
+    if (seen.has(key)) return;
+    seen.add(key);
+    cycles.push({ nodes: rotated, mutual: rotated.length === 2 });
+  }
+
+  function dfs(u: string) {
+    color.set(u, GRAY);
+    stack.push(u);
+    for (const v of adj.get(u) ?? []) {
+      const c = color.get(v) ?? WHITE;
+      if (c === WHITE) dfs(v);
+      else if (c === GRAY) {
+        const idx = stack.indexOf(v);
+        if (idx !== -1) record(stack.slice(idx));
+      }
+    }
+    stack.pop();
+    color.set(u, BLACK);
+  }
+
+  for (const u of adj.keys()) {
+    if ((color.get(u) ?? WHITE) === WHITE) dfs(u);
+  }
+
+  return cycles
+    .sort((a, b) => a.nodes.length - b.nodes.length || a.nodes[0].localeCompare(b.nodes[0]))
+    .slice(0, limit);
+}
+
 /** Count of distinct concepts practiced today and the last N days. */
 export function todayStats(): { today_concepts: number; today_attempts: number; streak_days: number } {
   const d = db();
