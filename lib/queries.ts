@@ -219,6 +219,45 @@ export function nodeAttemptDetails(
     .all(nodeId, limit) as any[];
 }
 
+export type WeakPrerequisite = {
+  prereq: string;            // the blamed prerequisite (a node id)
+  blame_count: number;       // total attempts that blamed it
+  concept_count: number;     // distinct downstream concepts it was blamed for
+  concepts: string;          // comma-joined sample of those downstream concept ids
+  exists_: number;           // 1 if the prereq has its own note, 0 if it's a ghost
+  mastery_p: number;         // current mastery of the prerequisite itself
+};
+
+/**
+ * Cross-concept misconception signal: prerequisites that the grader has blamed
+ * across MULTIPLE distinct downstream concepts. A single weak foundation that
+ * keeps surfacing as the root cause of unrelated errors is the highest-leverage
+ * thing to fix — practising it lifts every concept that depends on it. This is
+ * the single-user seed of the misconception dataset VISION.md describes.
+ */
+export function recurringWeakPrerequisites(limit = 8): WeakPrerequisite[] {
+  return db()
+    .prepare(
+      `SELECT a.blamed_prereq AS prereq,
+              COUNT(*) AS blame_count,
+              COUNT(DISTINCT a.node_id) AS concept_count,
+              GROUP_CONCAT(DISTINCT a.node_id) AS concepts,
+              COALESCE(n.exists_, 0) AS exists_,
+              COALESCE(m.p, 0) AS mastery_p
+         FROM attempts a
+         LEFT JOIN nodes n ON n.id = a.blamed_prereq
+         LEFT JOIN mastery m ON m.node_id = a.blamed_prereq
+        WHERE a.blamed_prereq IS NOT NULL
+          AND a.blamed_prereq != ''
+          AND a.blamed_prereq != 'none'
+        GROUP BY a.blamed_prereq
+       HAVING concept_count >= 2
+        ORDER BY concept_count DESC, blame_count DESC
+        LIMIT ?`
+    )
+    .all(limit) as WeakPrerequisite[];
+}
+
 /** Time series of mastery for one concept, for sparklines. */
 export function masteryHistory(nodeId: string, limit = 30): { p: number; recorded_at: string }[] {
   return db()

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { masteryHistogram, recentAttemptsGlobal, weakSpots, stats, todayStats, reviewForecast, masteryVelocity, activityCalendar, areaMastery, masteryMilestones } from "@/lib/queries";
+import { masteryHistogram, recentAttemptsGlobal, weakSpots, stats, todayStats, reviewForecast, masteryVelocity, activityCalendar, areaMastery, masteryMilestones, recurringWeakPrerequisites } from "@/lib/queries";
 import ActivityCalendar from "@/app/components/ActivityCalendar";
 import { getDailyGoal } from "@/lib/settings";
 
@@ -39,6 +39,7 @@ export default function ProgressPage() {
   const calendar = activityCalendar();
   const areas = areaMastery();
   const milestones = masteryMilestones();
+  const weakPrereqs = recurringWeakPrerequisites(6);
 
   const masteredPct = s.real > 0 ? Math.round((s.known / s.real) * 100) : 0;
   const maxBucket = Math.max(...hist.map((h) => h.count), 1);
@@ -284,6 +285,63 @@ export default function ProgressPage() {
                       >
                         drill
                       </Link>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Recurring weak prerequisites — cross-concept misconception signal */}
+          {weakPrereqs.length > 0 && (
+            <div className="panel">
+              <h2>Foundations tripping you up</h2>
+              <p className="muted small" style={{ marginTop: -4, marginBottom: 12 }}>
+                Prerequisites the tutor blamed across multiple concepts. Fixing one
+                of these lifts everything that depends on it.
+              </p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {weakPrereqs.map((w) => {
+                  const concepts = w.concepts.split(",").filter(Boolean);
+                  return (
+                    <div
+                      key={w.prereq}
+                      style={{
+                        padding: "10px 12px", borderRadius: 8,
+                        border: "1px solid var(--border)", background: "var(--bg-soft)",
+                      }}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 4 }}>
+                        <div style={{ minWidth: 0, display: "flex", alignItems: "center", gap: 8 }}>
+                          {w.exists_ === 1 ? (
+                            <Link href={`/node/${encodeURIComponent(w.prereq)}`} style={{ fontSize: 14, fontWeight: 600 }}>
+                              {w.prereq}
+                            </Link>
+                          ) : (
+                            <span style={{ fontSize: 14, fontWeight: 600, color: "var(--muted)" }} title="No note yet — a gap in your graph">
+                              {w.prereq} <span className="pill" style={{ fontSize: 9 }}>gap</span>
+                            </span>
+                          )}
+                          <span className="pill" style={{ fontSize: 10, color: "var(--red)" }}>
+                            {w.concept_count} concepts
+                          </span>
+                        </div>
+                        {w.exists_ === 1 && (
+                          <Link href={`/learn?node=${encodeURIComponent(w.prereq)}`} className="pill" style={{ color: "var(--accent)", borderColor: "var(--accent-soft)", flexShrink: 0 }}>
+                            drill →
+                          </Link>
+                        )}
+                      </div>
+                      <p className="muted small" style={{ margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        Blocks:{" "}
+                        {concepts.slice(0, 3).map((c, i) => (
+                          <span key={c}>
+                            {i > 0 && ", "}
+                            <Link href={`/node/${encodeURIComponent(c)}`}>{c}</Link>
+                          </span>
+                        ))}
+                        {concepts.length > 3 && ` +${concepts.length - 3} more`}
+                      </p>
                     </div>
                   );
                 })}
