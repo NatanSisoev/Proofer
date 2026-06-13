@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { attemptHistory, attemptKinds, browseAreas } from "@/lib/queries";
 import { VERDICT, type Verdict } from "@/lib/verdict";
+import HistoryAreaFilter from "@/app/components/HistoryAreaFilter";
 
 export const dynamic = "force-dynamic";
 
@@ -111,28 +112,7 @@ export default async function HistoryPage({
 
         {/* Area filter (select dropdown for space) */}
         {areas.length > 0 && (
-          <form method="GET" action="/history" style={{ display: "flex", gap: 4, alignItems: "center" }}>
-            {verdict && <input type="hidden" name="verdict" value={verdict} />}
-            {kind && <input type="hidden" name="kind" value={kind} />}
-            <input type="hidden" name="page" value="1" />
-            <span className="muted small" style={{ fontSize: 11 }}>area:</span>
-            <select
-              name="area"
-              defaultValue={area}
-              onChange={(e) => (e.target.form as HTMLFormElement).submit()}
-              style={{
-                background: "var(--bg-soft)", border: "1px solid var(--border)",
-                color: "var(--text)", borderRadius: 6, padding: "3px 8px",
-                fontSize: 12,
-              }}
-            >
-              <option value="">all areas</option>
-              {areas.map((a) => <option key={a} value={a}>{a}</option>)}
-            </select>
-            <noscript>
-              <button type="submit" className="btn-ghost" style={{ fontSize: 12, padding: "3px 8px" }}>Go</button>
-            </noscript>
-          </form>
+          <HistoryAreaFilter areas={areas} area={area} verdict={verdict} kind={kind} />
         )}
 
         {/* Clear filters */}
