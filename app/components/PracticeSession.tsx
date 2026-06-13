@@ -29,9 +29,9 @@ type Grade = {
 };
 
 const VERDICT_STYLE: Record<string, { bg: string; label: string }> = {
-  correct: { bg: "#E8F2EC", label: "Correct" },
-  partial: { bg: "#F5F0E0", label: "Partially there" },
-  incorrect: { bg: "#F5E8E8", label: "Not yet" },
+  correct: { bg: "var(--green-soft)", label: "Correct" },
+  partial: { bg: "var(--amber-soft)", label: "Partially there" },
+  incorrect: { bg: "var(--red-soft)", label: "Not yet" },
 };
 
 export default function PracticeSession({ initialNodeId }: { initialNodeId?: string }) {

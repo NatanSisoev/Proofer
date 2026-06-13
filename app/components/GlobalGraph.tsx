@@ -11,18 +11,36 @@ type GNode = {
 type GEdge = { src: string; dst: string; type: string };
 type Area = { area: string; c: number };
 
-const EDGE_COLOR: Record<string, string> = {
-  depends_on: "#C9CDD8",
-  generalizes: "#D8D0E8",
-  equivalent_to: "#CFE0D5",
-  contradicts: "#E8D0D0",
+const EDGE_COLOR_VAR: Record<string, string> = {
+  depends_on: "--edge-depends-on",
+  generalizes: "--edge-generalizes",
+  equivalent_to: "--edge-equivalent-to",
+  contradicts: "--edge-contradicts",
 };
 
-function masteryColor(p: number): string {
-  if (p < 0.2) return "#E8E8E4";
-  if (p < 0.5) return "#C5D4E8";
-  if (p < 0.8) return "#A8C4A0";
-  return "#5B8A6B";
+function masteryColorVar(p: number): string {
+  if (p < 0.2) return "--mastery-0";
+  if (p < 0.5) return "--mastery-1";
+  if (p < 0.8) return "--mastery-2";
+  return "--mastery-3";
+}
+
+// Cytoscape's canvas renderer can't resolve CSS var() strings, so read the
+// computed values from :root once and use those literal colors.
+function readThemeColors() {
+  const root = getComputedStyle(document.documentElement);
+  const read = (v: string) => root.getPropertyValue(v).trim();
+  return {
+    edgeColor: Object.fromEntries(
+      Object.entries(EDGE_COLOR_VAR).map(([k, v]) => [k, read(v)])
+    ) as Record<string, string>,
+    edgeDefault: read("--edge-default"),
+    masteryColor: (p: number) => read(masteryColorVar(p)),
+    graphBorder: read("--graph-border"),
+    label: read("--graph-label"),
+    textOutline: read("--bg"),
+    selectedBorder: read("--accent"),
+  };
 }
 
 type SavedPositions = Record<string, { x: number; y: number }>;
@@ -85,6 +103,7 @@ export default function GlobalGraph({ initialArea }: { initialArea?: string }) {
     // every current node — skips the expensive cose layout on repeat visits.
     const saved = loadSavedPositions(filterArea);
     const hasFullLayout = !!saved && data.nodes.every((n) => saved[n.id]);
+    const theme = readThemeColors();
 
     const cy = cytoscape({
       container: ref.current,
@@ -93,7 +112,7 @@ export default function GlobalGraph({ initialArea }: { initialArea?: string }) {
           data: {
             id: n.id,
             label: n.title.length > 20 ? n.title.slice(0, 18) + "…" : n.title,
-            color: masteryColor(n.mastery_p),
+            color: theme.masteryColor(n.mastery_p),
             size: 14 + (n.dep_count / maxDep) * 22,
             mastery: n.mastery_p,
             type: n.type,
@@ -105,7 +124,7 @@ export default function GlobalGraph({ initialArea }: { initialArea?: string }) {
             id: `${e.src}→${e.dst}`,
             source: e.src,
             target: e.dst,
-            color: EDGE_COLOR[e.type] || "#D0D0CC",
+            color: theme.edgeColor[e.type] || theme.edgeDefault,
           },
         })),
       ],
@@ -114,10 +133,10 @@ export default function GlobalGraph({ initialArea }: { initialArea?: string }) {
           selector: "node",
           style: {
             "background-color": "data(color)",
-            "border-color": "#D0D0CC",
+            "border-color": theme.graphBorder,
             "border-width": 1,
             label: "data(label)",
-            color: "#374151",
+            color: theme.label,
             "font-size": 7,
             "text-valign": "bottom",
             "text-margin-y": 2,
@@ -125,13 +144,13 @@ export default function GlobalGraph({ initialArea }: { initialArea?: string }) {
             height: "data(size)",
             "text-max-width": "80px",
             "text-wrap": "ellipsis",
-            "text-outline-color": "#FAFAF8",
+            "text-outline-color": theme.textOutline,
             "text-outline-width": 1,
           },
         },
         {
           selector: "node:selected",
-          style: { "border-width": 2.5, "border-color": "#5B6B9A" },
+          style: { "border-width": 2.5, "border-color": theme.selectedBorder },
         },
         {
           selector: "edge",
@@ -200,6 +219,7 @@ export default function GlobalGraph({ initialArea }: { initialArea?: string }) {
   useEffect(() => {
     const cy = cyRef.current;
     if (!cy) return;
+    const theme = readThemeColors();
     const q = searchQ.trim().toLowerCase();
     cy.nodes().forEach((n) => {
       const m = n.data("mastery") as number;
@@ -209,9 +229,9 @@ export default function GlobalGraph({ initialArea }: { initialArea?: string }) {
       n.style("display", shouldHide ? "none" : "element");
       // Highlight matching nodes
       if (q && matchesSearch && !masteryHide) {
-        n.style({ "border-width": 2.5, "border-color": "#5B6B9A", "font-size": 9 });
+        n.style({ "border-width": 2.5, "border-color": theme.selectedBorder, "font-size": 9 });
       } else {
-        n.style({ "border-width": 1, "border-color": "#D0D0CC", "font-size": 7 });
+        n.style({ "border-width": 1, "border-color": theme.graphBorder, "font-size": 7 });
       }
     });
     cy.edges().forEach((e) => {
@@ -288,18 +308,18 @@ export default function GlobalGraph({ initialArea }: { initialArea?: string }) {
       {/* Legend */}
       <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
         {[
-          { label: "Not practiced", color: "#E8E8E4" },
-          { label: "Learning", color: "#C5D4E8" },
-          { label: "Partially known", color: "#A8C4A0" },
-          { label: "Mastered", color: "#5B8A6B" },
+          { label: "Not practiced", color: "var(--mastery-0)" },
+          { label: "Learning", color: "var(--mastery-1)" },
+          { label: "Partially known", color: "var(--mastery-2)" },
+          { label: "Mastered", color: "var(--mastery-3)" },
         ].map((l) => (
           <div key={l.label} style={{ display: "flex", alignItems: "center", gap: 5 }}>
-            <div style={{ width: 12, height: 12, borderRadius: "50%", background: l.color, border: "1px solid #D0D0CC" }} />
+            <div style={{ width: 12, height: 12, borderRadius: "50%", background: l.color, border: "1px solid var(--graph-border)" }} />
             <span className="small muted">{l.label}</span>
           </div>
         ))}
         <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-          <div style={{ width: 20, height: 8, borderRadius: 4, background: "#F3F3F0", border: "1px solid #C9CDD8" }} />
+          <div style={{ width: 20, height: 8, borderRadius: 4, background: "var(--bg-soft)", border: "1px solid var(--edge-depends-on)" }} />
           <span className="small muted">depends on</span>
         </div>
       </div>

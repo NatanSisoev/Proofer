@@ -41,9 +41,9 @@ type SessionResult = {
 };
 
 const VERDICT_STYLE: Record<string, { bg: string; label: string; color: string }> = {
-  correct: { bg: "#E8F2EC", label: "Correct", color: "var(--green)" },
-  partial: { bg: "#F5F0E0", label: "Partially there", color: "var(--amber)" },
-  incorrect: { bg: "#F5E8E8", label: "Not yet", color: "var(--red)" },
+  correct: { bg: "var(--green-soft)", label: "Correct", color: "var(--green)" },
+  partial: { bg: "var(--amber-soft)", label: "Partially there", color: "var(--amber)" },
+  incorrect: { bg: "var(--red-soft)", label: "Not yet", color: "var(--red)" },
 };
 
 const VERDICT_ICON: Record<string, string> = {
