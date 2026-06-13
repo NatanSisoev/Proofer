@@ -15,6 +15,7 @@ import ReExplain from "@/app/components/ReExplain";
 import CompareWith from "@/app/components/CompareWith";
 import ReadingProgress from "@/app/components/ReadingProgress";
 import { getNode, edgesOf, isKnown, readiness, prerequisites, attemptCount, isBookmarked, nodeAttempts, nodeAttemptDetails, nextReviewDays, similarConcepts } from "@/lib/queries";
+import { truncateMath } from "@/lib/text";
 import { getMasteryP } from "@/lib/mastery";
 import { HAS_KEY } from "@/lib/llm";
 import type { EdgeRow } from "@/lib/db";
@@ -273,11 +274,11 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
                             </span>
                           </div>
                           <p style={{ margin: "0 0 4px", color: "var(--text)", lineHeight: 1.5 }}>
-                            {a.problem.length > 200 ? a.problem.slice(0, 200) + "…" : a.problem}
+                            <MathText>{truncateMath(a.problem, 200)}</MathText>
                           </p>
                           {a.gap && a.gap !== "none" && a.gap !== "(gave up — showed answer)" && (
                             <p className="muted small" style={{ margin: 0, fontStyle: "italic" }}>
-                              Gap: {a.gap.length > 120 ? a.gap.slice(0, 120) + "…" : a.gap}
+                              Gap: <MathText>{truncateMath(a.gap, 120)}</MathText>
                             </p>
                           )}
                         </div>

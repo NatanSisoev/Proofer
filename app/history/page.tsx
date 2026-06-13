@@ -2,6 +2,8 @@ import Link from "next/link";
 import { attemptHistory, attemptKinds, browseAreas } from "@/lib/queries";
 import { VERDICT, type Verdict } from "@/lib/verdict";
 import HistoryAreaFilter from "@/app/components/HistoryAreaFilter";
+import MathText from "@/app/components/MathText";
+import { truncateMath } from "@/lib/text";
 
 export const dynamic = "force-dynamic";
 
@@ -177,13 +179,13 @@ export default async function HistoryPage({
 
               {a.problem && (
                 <p style={{ margin: "0 0 4px", fontSize: 13, color: "var(--text)", lineHeight: 1.5 }}>
-                  {a.problem.length > 240 ? a.problem.slice(0, 240) + "…" : a.problem}
+                  <MathText>{truncateMath(a.problem, 240)}</MathText>
                 </p>
               )}
 
               {a.gap && a.gap !== "none" && a.gap !== "(gave up — showed answer)" && (
                 <p className="muted small" style={{ margin: 0, fontStyle: "italic", fontSize: 12 }}>
-                  Gap: {a.gap.length > 150 ? a.gap.slice(0, 150) + "…" : a.gap}
+                  Gap: <MathText>{truncateMath(a.gap, 150)}</MathText>
                 </p>
               )}
               {a.gap === "(gave up — showed answer)" && (
