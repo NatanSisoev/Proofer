@@ -1,12 +1,25 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function SyncButton() {
   const [state, setState] = useState<"idle" | "syncing" | "done" | "error">("idle");
   const [msg, setMsg] = useState("");
+  const [elapsed, setElapsed] = useState(0);
+
+  // Tick an elapsed-seconds counter while a sync is in flight. The import can
+  // take up to ~90s on the full vault; without a live counter "Syncing…" looks
+  // frozen and the button feels unsafe to click.
+  useEffect(() => {
+    if (state !== "syncing") return;
+    const start = Date.now();
+    setElapsed(0);
+    const t = setInterval(() => setElapsed(Math.floor((Date.now() - start) / 1000)), 250);
+    return () => clearInterval(t);
+  }, [state]);
 
   async function sync() {
+    if (state === "syncing") return;
     setState("syncing");
     setMsg("");
     try {
@@ -29,9 +42,16 @@ export default function SyncButton() {
         onClick={sync}
         disabled={state === "syncing"}
         className="btn-ghost"
-        style={{ fontSize: 12, padding: "5px 12px" }}
+        style={{ fontSize: 12, padding: "5px 12px", display: "inline-flex", alignItems: "center", gap: 6 }}
       >
-        {state === "syncing" ? "Syncing…" : "↺ Sync vault"}
+        {state === "syncing" ? (
+          <>
+            <span className="sync-spin" aria-hidden style={{ display: "inline-block" }}>↻</span>
+            Syncing… {elapsed}s
+          </>
+        ) : (
+          "↺ Sync vault"
+        )}
       </button>
       {msg && (
         <span
