@@ -8,6 +8,13 @@ type Settings = {
   voice_lang: string;
 };
 
+type ProviderInfo = {
+  provider: "gemini" | "anthropic" | "none";
+  label: string;
+  model: string | null;
+  hasKey: boolean;
+};
+
 const VOICE_LANGS = [
   { value: "en-US", label: "English (US)" },
   { value: "en-GB", label: "English (UK)" },
@@ -24,6 +31,7 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [provider, setProvider] = useState<ProviderInfo | null>(null);
 
   useEffect(() => {
     fetch("/api/settings")
@@ -32,6 +40,10 @@ export default function SettingsPage() {
         setSettings(data);
         setLoading(false);
       });
+    fetch("/api/provider")
+      .then((r) => r.json())
+      .then(setProvider)
+      .catch(() => {});
   }, []);
 
   async function save(patch: Partial<Settings>) {
@@ -142,9 +154,43 @@ export default function SettingsPage() {
           {/* Info: LLM provider */}
           <div className="panel">
             <h2 style={{ marginTop: 0 }}>LLM provider</h2>
-            <p className="muted small" style={{ marginTop: -4 }}>
-              The AI provider is configured via environment variables in <code>.env.local</code>. Set{" "}
-              <code>GEMINI_API_KEY</code> for the free Gemini tier, or <code>ANTHROPIC_API_KEY</code> for Claude.
+
+            {/* Active provider/model badge */}
+            <div
+              style={{
+                display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap",
+                padding: "10px 14px", borderRadius: 10, marginTop: 4, marginBottom: 14,
+                background: provider && !provider.hasKey ? "var(--amber-soft)" : "var(--green-soft)",
+                border: "1px solid var(--border)",
+              }}
+            >
+              <span
+                style={{
+                  width: 8, height: 8, borderRadius: "50%", flexShrink: 0,
+                  background: provider && !provider.hasKey ? "var(--amber)" : "var(--green)",
+                }}
+              />
+              {!provider ? (
+                <span className="muted small">Checking…</span>
+              ) : provider.hasKey ? (
+                <span style={{ fontSize: 13.5 }}>
+                  Currently answering with <strong>{provider.label}</strong>
+                  {provider.model && (
+                    <code style={{ marginLeft: 6, fontSize: 12 }}>{provider.model}</code>
+                  )}
+                </span>
+              ) : (
+                <span style={{ fontSize: 13.5, color: "var(--amber)" }}>
+                  <strong>Demo mode</strong> — no API key set. Problems and grading use canned
+                  stubs; explain / compare / study-plan are disabled.
+                </span>
+              )}
+            </div>
+
+            <p className="muted small" style={{ marginTop: 0 }}>
+              The provider is configured via environment variables in <code>.env.local</code>:{" "}
+              <code>GEMINI_API_KEY</code> selects the free Gemini tier (preferred),{" "}
+              <code>ANTHROPIC_API_KEY</code> selects Claude. Gemini wins if both are set.
             </p>
             <div style={{ display: "flex", gap: 10, marginTop: 12 }}>
               <Link href="/quality" className="pill" style={{ color: "var(--accent)", borderColor: "var(--accent-soft)" }}>

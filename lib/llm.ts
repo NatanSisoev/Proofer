@@ -16,6 +16,21 @@ const ANTHROPIC_GRADE_MODEL = "claude-opus-4-8";
 
 const anthropic = ANTHROPIC_KEY ? new Anthropic() : null;
 
+export type ProviderInfo = {
+  provider: "gemini" | "anthropic" | "none";
+  label: string;       // human-readable provider name
+  model: string | null; // active model id, or null in demo mode
+  hasKey: boolean;
+};
+
+/** The currently active LLM provider + model, for surfacing in the UI so users
+ *  know which tier (Gemini → Anthropic → demo stub) is answering. */
+export function providerInfo(): ProviderInfo {
+  if (PROVIDER === "gemini") return { provider: "gemini", label: "Google Gemini", model: GEMINI_MODEL, hasKey: true };
+  if (PROVIDER === "anthropic") return { provider: "anthropic", label: "Anthropic Claude", model: ANTHROPIC_PROBLEM_MODEL, hasKey: true };
+  return { provider: "none", label: "Demo mode", model: null, hasKey: false };
+}
+
 export type GeneratedProblem = {
   problem: string;
   kind: "compute" | "prove" | "counterexample" | "explain";
