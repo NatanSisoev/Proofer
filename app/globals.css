@@ -29,6 +29,40 @@
   --edge-default: #D0D0CC;
   --graph-border: #D0D0CC;
   --graph-label: #374151;
+  --panel-translucent: rgba(255, 255, 255, 0.95);
+}
+
+[data-theme="dark"] {
+  --bg: #1A1B1E;
+  --bg-soft: #232428;
+  --panel: #212226;
+  --border: #36383D;
+  --text: #E8E8E6;
+  --muted: #9298A3;
+  --accent: #8FA0DC;
+  --accent-soft: #2B3050;
+  --green: #84C49E;
+  --amber: #D9B35C;
+  --red: #E08F8F;
+  --purple: #B6A5E6;
+  --green-soft: #1E2D26;
+  --amber-soft: #332C1A;
+  --red-soft: #332323;
+  --purple-soft: #2B2640;
+  --green-border: #3E5C4B;
+
+  --mastery-0: #3A3B3F;
+  --mastery-1: #3E4F6E;
+  --mastery-2: #44614C;
+  --mastery-3: #5FA579;
+  --edge-depends-on: #4B4E5C;
+  --edge-generalizes: #4A4264;
+  --edge-equivalent-to: #3D5048;
+  --edge-contradicts: #5C3E3E;
+  --edge-default: #404249;
+  --graph-border: #404249;
+  --graph-label: #C5C9D1;
+  --panel-translucent: rgba(26, 27, 30, 0.85);
 }
 
 * { box-sizing: border-box; }
@@ -69,6 +103,7 @@ html, body {
   font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   font-size: 15px;
   line-height: 1.6;
+  transition: background-color 0.15s, color 0.15s;
 }
 
 ::selection { background: rgba(91, 107, 154, 0.15); }
@@ -245,8 +280,9 @@ button.know.on { background: var(--green-soft); border-color: var(--green-border
 /* nav */
 .app-nav {
   position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-  background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(8px);
+  background: var(--panel-translucent); backdrop-filter: blur(8px);
   border-bottom: 1px solid var(--border);
+  transition: background-color 0.15s, border-color 0.15s;
 }
 .app-nav-inner {
   max-width: 1200px; margin: 0 auto; padding: 0 24px;
@@ -259,6 +295,14 @@ button.know.on { background: var(--green-soft); border-color: var(--green-border
 .nav-link { font-size: 13px; color: var(--muted); padding: 5px 9px; border-radius: 6px; white-space: nowrap; flex-shrink: 0; transition: background 0.15s, color 0.15s; }
 .nav-link:hover { color: var(--text); text-decoration: none; background: var(--bg-soft); }
 .nav-spacer { height: 48px; }
+
+.theme-toggle {
+  display: flex; align-items: center; justify-content: center;
+  width: 30px; height: 30px; border-radius: 6px; border: 1px solid var(--border);
+  background: transparent; color: var(--muted); cursor: pointer; flex-shrink: 0;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.theme-toggle:hover { color: var(--text); background: var(--bg-soft); }
 
 /* browse */
 .area-grid {
