@@ -2,35 +2,11 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
-import Markdown from "./Markdown";
 import VoiceInput from "./VoiceInput";
-import AnswerBox from "./AnswerBox";
 import { VERDICT } from "@/lib/verdict";
+import { ProblemPanel, GradeFeedback, type Problem, type Grade, type ProblemNode } from "./ProblemCard";
 
-type QueueNode = { id: string; title: string; type: string | null; area: string | null };
-
-type Problem = {
-  problemId: number;
-  problem: string;
-  kind: string;
-  mode: "ai" | "demo";
-  masteryBefore: number;
-  node: { id: string; title: string; type: string | null; area: string | null };
-};
-
-type Grade = {
-  verdict: "correct" | "partial" | "incorrect";
-  mastery_evidence: number;
-  understood: string[];
-  gap: string;
-  blamed_prerequisite: string;
-  socratic_hint: string;
-  masteryBefore: number;
-  masteryAfter: number;
-  halfLife?: number;
-  justMastered?: boolean;
-  unlocked?: { id: string; title: string; type: string | null; area: string | null }[];
-};
+type QueueNode = ProblemNode;
 
 type SessionResult = {
   node: QueueNode;
@@ -466,88 +442,28 @@ export default function StudyQueue({ queue, preferKind }: { queue: QueueNode[]; 
             <span className="pill">{problem.kind}</span>
           </div>
 
-          <div className="panel" style={{ position: "relative" }}>
-            <Markdown>{problem.problem}</Markdown>
-            <button
-              type="button"
-              onClick={() => {
-                navigator.clipboard.writeText(problem.problem).then(() => {
-                  setCopied(true);
-                  setTimeout(() => setCopied(false), 1500);
-                });
-              }}
-              title="Copy problem to clipboard"
-              style={{
-                position: "absolute", top: 10, right: 10,
-                background: "none", cursor: "pointer",
-                fontSize: 12, color: "var(--muted)", padding: "3px 7px",
-                borderRadius: 5, border: "1px solid var(--border)",
-              }}
-            >
-              {copied ? "✓" : "⎘"}
-            </button>
-          </div>
-
-          {/* Concept reminder toggle */}
-          {!grade && !revealed && (
-            <div>
-              <button
-                type="button"
-                className="btn-ghost"
-                onClick={() => setShowReminder((s) => !s)}
-                style={{ fontSize: 12, color: "var(--muted)", marginBottom: showReminder ? 4 : 0 }}
-              >
-                {showReminder ? "Hide reminder ↑" : "Concept reminder ↓"}
-              </button>
-              {showReminder && (
-                <div className="panel" style={{ fontSize: 13.5, background: "var(--bg-soft)", marginBottom: 4 }}>
-                  <div style={{ display: "flex", gap: 8, alignItems: "baseline", marginBottom: 4 }}>
-                    {problem.node.type && <span className={`type-badge t-${problem.node.type}`}>{problem.node.type}</span>}
-                    <Link href={`/node/${encodeURIComponent(problem.node.id)}`} target="_blank" style={{ fontWeight: 600, fontSize: 14 }}>
-                      {problem.node.title}
-                    </Link>
-                    {problem.node.area && <span className="muted small">{problem.node.area}</span>}
-                  </div>
-                  <p className="muted small" style={{ margin: 0, fontStyle: "italic" }}>
-                    Click to open the full note in a new tab.
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Hint panel */}
-          {hint && !grade && (
-            <div className="panel" style={{ background: "var(--accent-soft)", marginBottom: 4 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-                <span style={{ fontSize: 11, fontWeight: 700, color: "var(--amber)", textTransform: "uppercase", letterSpacing: "0.1em" }}>
-                  Hint
-                </span>
-                <button className="btn-ghost" onClick={() => setHint(null)} style={{ fontSize: 11, padding: "2px 6px", color: "var(--muted)" }}>
-                  ✕
-                </button>
-              </div>
-              <div className="markdown" style={{ fontSize: 14 }}><Markdown>{hint}</Markdown></div>
-            </div>
-          )}
-
-          <AnswerBox
-            value={answer}
-            onChange={setAnswer}
-            disabled={!!grade || busy}
-            placeholder="Write your answer — proof, definition, counterexample. Type $...$ for math."
-            autoFocus
-          />
-
-          {revealed && (
-            <div className="panel" style={{ background: "var(--accent-soft)", marginTop: 4 }}>
-              <h4 style={{ color: "var(--green)", margin: "0 0 8px" }}>Ideal solution</h4>
-              <div className="markdown"><Markdown>{revealed}</Markdown></div>
+          <ProblemPanel
+            problem={problem}
+            answer={answer}
+            onAnswerChange={setAnswer}
+            answerDisabled={!!grade || busy}
+            answerPlaceholder="Write your answer — proof, definition, counterexample. Type $...$ for math."
+            copied={copied}
+            onCopy={() => navigator.clipboard.writeText(problem.problem).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1500); })}
+            showConceptReminder={!grade && !revealed}
+            reminderOpen={showReminder}
+            onToggleReminder={() => setShowReminder((s) => !s)}
+            reminderCaption="Click to open the full note in a new tab."
+            reminderLinkTarget="_blank"
+            hint={!grade ? hint : null}
+            onDismissHint={() => setHint(null)}
+            revealed={revealed}
+            revealedFooter={
               <button className="btn-ghost" onClick={advance} disabled={busy} style={{ marginTop: 10, fontSize: 13 }}>
                 {index + 1 >= activeQueue.length ? "Finish session →" : "Next concept →"}
               </button>
-            </div>
-          )}
+            }
+          />
 
           {!grade && !revealed && (
             <div className="practice-actions">
@@ -580,113 +496,17 @@ export default function StudyQueue({ queue, preferKind }: { queue: QueueNode[]; 
 
           {grade && (
             <div className="panel feedback">
-              <div className={`verdict${grade.verdict === "correct" ? " verdict-correct" : ""}`} style={{ background: VERDICT[grade.verdict]?.bg }}>
-                {VERDICT[grade.verdict]?.label || grade.verdict}
-              </div>
-
-              <div className="mastery-move">
-                <span className="muted small">Mastery</span>
-                <div className="bar"><span style={{ width: `${Math.round(grade.masteryAfter * 100)}%` }} /></div>
-                <span className="small">
-                  {Math.round(grade.masteryBefore * 100)}% → <strong>{Math.round(grade.masteryAfter * 100)}%</strong>
-                </span>
-                {grade.halfLife && (
-                  <span className="muted small" style={{ marginLeft: "auto", whiteSpace: "nowrap" }}>
-                    review in ~{grade.halfLife}d
-                  </span>
-                )}
-              </div>
-
-              {grade.understood?.length > 0 && (
-                <div className="fb-block">
-                  <h4 style={{ color: "var(--green)" }}>What you got</h4>
-                  <ul>{grade.understood.map((u, i) => <li key={i}>{u}</li>)}</ul>
-                </div>
-              )}
-
-              <div className="fb-block">
-                <h4 style={{ color: "var(--amber)" }}>The gap</h4>
-                <div className="markdown"><Markdown>{grade.gap}</Markdown></div>
-                {grade.blamed_prerequisite && (
-                  <p className="small" style={{ marginTop: 8 }}>
-                    This traces back to{" "}
-                    <Link href={`/learn?node=${encodeURIComponent(grade.blamed_prerequisite)}`}>
-                      <strong>{grade.blamed_prerequisite}</strong>
-                    </Link>{" "}
-                    — practice that first.
-                  </p>
-                )}
-              </div>
-
-              <div className="fb-block">
-                <h4 style={{ color: "var(--accent)" }}>Hint (not the answer)</h4>
-                <div className="markdown"><Markdown>{grade.socratic_hint}</Markdown></div>
-              </div>
-
-              {grade.verdict !== "correct" && (
-                <div style={{ borderTop: "1px solid var(--border)", paddingTop: 14, marginTop: 4 }}>
-                  <p className="muted small" style={{ margin: "0 0 8px" }}>
-                    Address the gap — no need to start over:
-                  </p>
-                  <AnswerBox
-                    value={followUp}
-                    onChange={setFollowUp}
-                    disabled={followUpBusy}
-                    placeholder="Show the missing step, fix the misconception…"
-                    style={{ minHeight: 90 }}
-                    onKeyDown={(e) => {
-                      if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
-                        e.preventDefault();
-                        if (followUp.trim()) submitFollowUp();
-                      }
-                    }}
-                  />
-                  <div className="practice-actions" style={{ marginTop: 8 }}>
-                    <button
-                      className="btn-primary"
-                      onClick={submitFollowUp}
-                      disabled={followUpBusy || !followUp.trim()}
-                    >
-                      {followUpBusy ? "Checking…" : "Submit follow-up"}
-                    </button>
-                    <VoiceInput
-                      onTranscript={(t) => setFollowUp((prev) => prev ? prev + " " + t : t)}
-                      disabled={followUpBusy}
-                    />
-                    <span className="muted small" style={{ alignSelf: "center" }}>Ctrl+Enter</span>
-                  </div>
-                </div>
-              )}
-
-              {/* Unlock celebration */}
-              {grade.justMastered && grade.unlocked && grade.unlocked.length > 0 && (
-                <div style={{
-                  marginTop: 4, padding: "12px 14px",
-                  background: "var(--accent-soft)", border: "1px solid var(--border)", borderRadius: 10,
-                }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: "var(--green)", marginBottom: 8 }}>
-                    Mastered! {grade.unlocked.length} new concept{grade.unlocked.length !== 1 ? "s" : ""} unlocked
-                  </div>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                    {grade.unlocked.map((n) => (
-                      <Link
-                        key={n.id}
-                        href={`/node/${encodeURIComponent(n.id)}`}
-                        target="_blank"
-                        style={{
-                          display: "inline-flex", alignItems: "center", gap: 5,
-                          padding: "4px 10px", borderRadius: 7,
-                          border: "1px solid var(--border)", background: "var(--panel)",
-                          color: "var(--green)", fontSize: 13, textDecoration: "none",
-                        }}
-                      >
-                        {n.type && <span style={{ fontSize: 10, opacity: 0.7 }}>{n.type}</span>}
-                        {n.title}
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              )}
+              <GradeFeedback
+                grade={grade}
+                followUp={followUp}
+                onFollowUpChange={setFollowUp}
+                followUpBusy={followUpBusy}
+                onSubmitFollowUp={submitFollowUp}
+                followUpPlaceholder="Show the missing step, fix the misconception…"
+                followUpLeadText="Address the gap — no need to start over:"
+                followUpMinHeight={90}
+                unlockTarget="_blank"
+              />
 
               <div className="practice-actions" style={{ marginTop: 12 }}>
                 <button className="btn-primary" onClick={advance} disabled={busy}>
