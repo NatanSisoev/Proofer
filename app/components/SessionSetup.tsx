@@ -176,11 +176,7 @@ export default function SessionSetup({
               <select
                 value={area}
                 onChange={(e) => setArea(e.target.value)}
-                style={{
-                  background: "var(--bg-soft)", border: "1px solid var(--border)",
-                  color: "var(--text)", borderRadius: 8, padding: "8px 12px",
-                  fontSize: 14, width: "100%",
-                }}
+                style={{ width: "100%" }}
               >
                 {areas.map((a) => <option key={a} value={a}>{a}</option>)}
               </select>

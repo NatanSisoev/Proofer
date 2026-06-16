@@ -25,11 +25,6 @@ export default function HistoryAreaFilter({
         name="area"
         defaultValue={area}
         onChange={(e) => (e.target.form as HTMLFormElement).submit()}
-        style={{
-          background: "var(--bg-soft)", border: "1px solid var(--border)",
-          color: "var(--text)", borderRadius: 6, padding: "3px 8px",
-          fontSize: 12,
-        }}
       >
         <option value="">all areas</option>
         {areas.map((a) => <option key={a} value={a}>{a}</option>)}
