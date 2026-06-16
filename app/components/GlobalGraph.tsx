@@ -252,9 +252,9 @@ export default function GlobalGraph({ initialArea }: { initialArea?: string }) {
   }, [area, load]);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 12, height: "100%" }}>
+    <div className="graph-layout">
       {/* Controls */}
-      <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+      <div className="graph-controls">
         <input
           type="text"
           value={searchQ}
@@ -277,7 +277,7 @@ export default function GlobalGraph({ initialArea }: { initialArea?: string }) {
           ))}
         </select>
 
-        <label style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, color: "var(--muted)", cursor: "pointer" }}>
+        <label className="graph-label" style={{ cursor: "pointer" }}>
           <input
             type="checkbox"
             checked={hideMastered}
@@ -287,7 +287,7 @@ export default function GlobalGraph({ initialArea }: { initialArea?: string }) {
           Hide mastered
         </label>
 
-        <label style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, color: "var(--muted)" }}>
+        <label className="graph-label">
           Min mastery:
           <input
             type="range"
@@ -306,49 +306,30 @@ export default function GlobalGraph({ initialArea }: { initialArea?: string }) {
       </div>
 
       {/* Legend */}
-      <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
+      <div className="legend-row">
         {[
           { label: "Not practiced", color: "var(--mastery-0)" },
           { label: "Learning", color: "var(--mastery-1)" },
           { label: "Partially known", color: "var(--mastery-2)" },
           { label: "Mastered", color: "var(--mastery-3)" },
         ].map((l) => (
-          <div key={l.label} style={{ display: "flex", alignItems: "center", gap: 5 }}>
-            <div style={{ width: 12, height: 12, borderRadius: "50%", background: l.color, border: "1px solid var(--graph-border)" }} />
+          <div key={l.label} className="legend-item">
+            <div className="legend-dot" style={{ background: l.color }} />
             <span className="small muted">{l.label}</span>
           </div>
         ))}
-        <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-          <div style={{ width: 20, height: 8, borderRadius: 4, background: "var(--bg-soft)", border: "1px solid var(--edge-depends-on)" }} />
+        <div className="legend-item">
+          <div className="edge-legend-sample" />
           <span className="small muted">depends on</span>
         </div>
       </div>
 
       {/* Graph */}
-      <div ref={ref} style={{
-        flex: 1, minHeight: 500,
-        background: "var(--bg)",
-        border: "1px solid var(--border)",
-        borderRadius: 10,
-        position: "relative",
-      }} />
+      <div ref={ref} className="graph-canvas" />
 
       {/* Tooltip */}
       {tooltip && (
-        <div style={{
-          position: "fixed",
-          left: tooltip.x,
-          top: tooltip.y,
-          transform: "translateX(-50%)",
-          background: "var(--panel)",
-          border: "1px solid var(--border)",
-          borderRadius: 8,
-          padding: "6px 12px",
-          fontSize: 12.5,
-          pointerEvents: "none",
-          zIndex: 200,
-          whiteSpace: "nowrap",
-        }}>
+        <div className="graph-tooltip" style={{ left: tooltip.x, top: tooltip.y }}>
           <strong>{tooltip.title}</strong>
           {tooltip.type && <span className="muted"> · {tooltip.type}</span>}
           <span style={{ marginLeft: 8, color: tooltip.mastery >= 0.8 ? "var(--green)" : tooltip.mastery > 0 ? "var(--amber)" : "var(--muted)" }}>

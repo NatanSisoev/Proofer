@@ -39,11 +39,11 @@ export default function LinkSuggestions({ initial }: { initial: LinkSuggestion[]
 
   return (
     <div>
-      <p className="muted small" style={{ marginTop: 0, marginBottom: 16 }}>
+      <p className="muted small section-intro">
         {visible.length} potential link{visible.length !== 1 ? "s" : ""} — concept names mentioned in notes without a graph edge.
         Add as <strong>related</strong> or dismiss each suggestion.
       </p>
-      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      <div className="suggestions-list">
         {visible.map((s) => {
           const k = key(s);
           const isAdded = added.has(k);
@@ -57,8 +57,8 @@ export default function LinkSuggestions({ initial }: { initial: LinkSuggestion[]
                 borderColor: isAdded ? "var(--green)" : undefined,
               }}
             >
-              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
-                <div style={{ flex: 1, minWidth: 0 }}>
+              <div className="link-suggestion-row">
+                <div className="flex-fill">
                   <div style={{ fontSize: 13, marginBottom: 4 }}>
                     <Link href={`/node/${encodeURIComponent(s.src_id)}`} style={{ fontWeight: 600 }}>
                       {s.src_title}
@@ -70,16 +70,11 @@ export default function LinkSuggestions({ initial }: { initial: LinkSuggestion[]
                     </Link>
                     {s.tgt_area && <span className="muted small"> · {s.tgt_area}</span>}
                   </div>
-                  <blockquote style={{
-                    margin: 0, fontSize: 12, color: "var(--muted)",
-                    borderLeft: "2px solid var(--border)", paddingLeft: 8,
-                    fontStyle: "italic", overflow: "hidden", textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
-                  }}>
+                  <blockquote className="quote-snippet">
                     {s.snippet}
                   </blockquote>
                 </div>
-                <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+                <div className="item-actions">
                   {isAdded ? (
                     <span style={{ color: "var(--green)", fontSize: 12 }}>✓ added</span>
                   ) : (
@@ -87,21 +82,13 @@ export default function LinkSuggestions({ initial }: { initial: LinkSuggestion[]
                       <button
                         onClick={() => addLink(s, "related")}
                         disabled={busy === k}
-                        style={{
-                          fontSize: 11, padding: "3px 10px", borderRadius: 6,
-                          background: "var(--accent-soft)", border: "1px solid var(--accent)",
-                          color: "var(--accent)", cursor: "pointer",
-                        }}
+                        className="add-link-btn"
                       >
                         {busy === k ? "…" : "Add link"}
                       </button>
                       <button
                         onClick={() => dismiss(s)}
-                        style={{
-                          fontSize: 11, padding: "3px 8px", borderRadius: 6,
-                          background: "transparent", border: "1px solid var(--border)",
-                          color: "var(--muted)", cursor: "pointer",
-                        }}
+                        className="dismiss-btn"
                       >
                         ✕
                       </button>
