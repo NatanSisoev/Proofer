@@ -83,15 +83,14 @@ export default function StudyPlanClient({
           </div>
 
           <button
-            className="btn-primary"
-            style={{ width: "100%", fontSize: 15, padding: "10px 0" }}
+            className="btn-primary btn-full btn-lg"
             onClick={generate}
             disabled={busy || daysLeft <= 0}
           >
             {busy ? "Generating plan…" : "Generate study plan →"}
           </button>
 
-          {error && <p style={{ color: "var(--red)", fontSize: 13, marginTop: 10 }}>{error}</p>}
+          {error && <p className="action-error" style={{ marginTop: 10 }}>{error}</p>}
         </div>
 
         {/* Weak areas summary */}
@@ -140,7 +139,7 @@ export default function StudyPlanClient({
               <Markdown>{plan}</Markdown>
             </div>
             <div className="regen-row">
-              <button className="btn-ghost" onClick={generate} style={{ fontSize: 13 }}>
+              <button className="btn-ghost btn-sm" onClick={generate}>
                 ↻ Regenerate
               </button>
             </div>
