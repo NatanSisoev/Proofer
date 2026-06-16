@@ -973,4 +973,13 @@ details[open].practice-history > summary::before { transform: rotate(90deg); }
 .legend-dot { width: 12px; height: 12px; border-radius: 50%; border: 1px solid var(--graph-border); }
 .edge-legend-sample { width: 20px; height: 8px; border-radius: 4px; background: var(--bg-soft); border: 1px solid var(--edge-depends-on); }
 .graph-canvas { flex: 1; min-height: 500px; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; position: relative; }
+
+/* page / spotlight */
+.cta-slot { margin-left: auto; flex-shrink: 0; }
+.cta-sm { font-size: 13px; padding: 7px 16px; }
+.spotlight-read { font-size: 12px; text-align: center; }
+
+/* charts + pill sizes */
+.chart-svg { width: 100%; display: block; }
+.pill-xs { font-size: 10px; }
 .graph-tooltip { position: fixed; transform: translateX(-50%); background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 6px 12px; font-size: 12.5px; pointer-events: none; z-index: 200; white-space: nowrap; }

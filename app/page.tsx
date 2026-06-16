@@ -41,7 +41,7 @@ export default function Home() {
             AI tutor that models your understanding of mathematics
           </p>
         </div>
-        <span style={{ marginLeft: "auto", flexShrink: 0 }}>
+        <span className="cta-slot">
           <Link href="/session" className="cta">Start session →</Link>
         </span>
       </header>
@@ -116,15 +116,13 @@ export default function Home() {
             <div className="spotlight-actions">
               <Link
                 href={`/learn?node=${encodeURIComponent(spotlight.id)}`}
-                className="cta"
-                style={{ fontSize: 13, padding: "7px 16px" }}
+                className="cta cta-sm"
               >
                 Practice →
               </Link>
               <Link
                 href={`/node/${encodeURIComponent(spotlight.id)}`}
-                className="btn-ghost"
-                style={{ fontSize: 12, textAlign: "center" }}
+                className="btn-ghost spotlight-read"
               >
                 Read
               </Link>

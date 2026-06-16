@@ -126,7 +126,8 @@ export default function ProgressPage() {
                     <svg
                       viewBox={`0 0 100 ${chartH}`}
                       preserveAspectRatio="none"
-                      style={{ width: "100%", height: chartH, display: "block" }}
+                      className="chart-svg"
+                      style={{ height: chartH }}
                     >
                       <path d={fill} fill="var(--accent-soft)" />
                       <path d={d} fill="none" stroke="var(--accent)" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
@@ -236,8 +237,7 @@ export default function ProgressPage() {
                 {areas.length > 0 && (
                   <Link
                     href={`/session?mode=area&area=${encodeURIComponent(areas[areas.length - 1].area)}`}
-                    className="pill pill-red"
-                    style={{ fontSize: 11 }}
+                    className="pill pill-red pill-sm"
                     title={`Weakest area: ${areas[areas.length - 1].area}`}
                   >
                     Drill weakest →
@@ -263,8 +263,8 @@ export default function ProgressPage() {
                       </span>
                       <Link
                         href={`/session?mode=area&area=${encodeURIComponent(a.area)}`}
-                        className="pill pill-accent"
-                        style={{ fontSize: 10, flexShrink: 0 }}
+                        className="pill pill-accent pill-xs"
+                        style={{ flexShrink: 0 }}
                       >
                         drill
                       </Link>
@@ -299,7 +299,7 @@ export default function ProgressPage() {
                               {w.prereq} <span className="pill" style={{ fontSize: 9 }}>gap</span>
                             </span>
                           )}
-                          <span className="pill pill-red" style={{ fontSize: 10 }}>
+                          <span className="pill pill-red pill-xs">
                             {w.concept_count} concepts
                           </span>
                         </div>
