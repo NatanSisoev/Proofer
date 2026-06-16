@@ -306,7 +306,7 @@ export default function Home() {
                 <div style={{ fontWeight: 500 }}>Note quality</div>
                 <div className="muted small">Gaps, missing prereqs, isolated nodes</div>
               </Link>
-              <Link href="/learn" style={{ display: "flex", flexDirection: "column", gap: 2, padding: "8px 0", borderBottom: "1px solid var(--border)", color: "var(--text)" }}>
+              <Link href="/session" style={{ display: "flex", flexDirection: "column", gap: 2, padding: "8px 0", borderBottom: "1px solid var(--border)", color: "var(--text)" }}>
                 <div style={{ fontWeight: 500 }}>Practice</div>
                 <div className="muted small">AI-generated problems, Socratic grading</div>
               </Link>
@@ -320,4 +320,3 @@ export default function Home() {
       </div>
     </div>
   );
-}

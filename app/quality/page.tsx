@@ -22,6 +22,14 @@ const getDependencyCycles = unstable_cache(
   { revalidate: 120 }
 );
 
+// noteQuality() scans every node and its attempt history — cache it so the
+// issues tab doesn't rerun the full scan on every page visit.
+const getNoteQuality = unstable_cache(
+  async () => noteQuality(),
+  ["note-quality"],
+  { revalidate: 120 }
+);
+
 export default async function QualityPage({
   searchParams,
 }: {
@@ -30,7 +38,7 @@ export default async function QualityPage({
   const { tab: tabParam } = await searchParams;
   const tab = tabParam === "links" ? "links" : tabParam === "cycles" ? "cycles" : "issues";
 
-  const issues = noteQuality();
+  const issues = await getNoteQuality();
   const allIssueTypes = Array.from(new Set(issues.flatMap((n) => n.issues))).sort();
   const structural = issues.filter((n) => n.issues.some((i) => i !== "never practiced"));
   const critical = issues.filter((n) => n.score >= 40).length;
@@ -173,16 +181,4 @@ export default async function QualityPage({
                     {!c.mutual && (
                       <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
                         <span className="muted" style={{ fontSize: 12 }}>→</span>
-                        <Link href={`/node/${encodeURIComponent(c.nodes[0])}`} className="muted">{c.nodes[0]}</Link>
-                      </span>
-                    )}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
+                        <Link href={`/node/${en
