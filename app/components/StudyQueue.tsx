@@ -256,9 +256,7 @@ export default function StudyQueue({ queue, preferKind }: { queue: QueueNode[]; 
     return (
       <div className="session-summary">
         <div style={{ marginBottom: 6 }}>
-          <h2 style={{ margin: "0 0 2px", fontSize: 22 }}>
-            {isPerfect ? "Perfect session!" : "Session complete"}
-          </h2>
+          <h2>{isPerfect ? "Perfect session!" : "Session complete"}</h2>
           <p className="muted" style={{ margin: "0 0 20px", fontSize: 13 }}>
             {activeQueue.length} concept{activeQueue.length !== 1 ? "s" : ""} ·{" "}
             {Math.floor(sessionElapsed / 60)}m {sessionElapsed % 60}s ·{" "}
@@ -270,20 +268,20 @@ export default function StudyQueue({ queue, preferKind }: { queue: QueueNode[]; 
         </div>
 
         <div className="session-score">
-          <div className="score-chip" style={{ borderColor: "var(--border)", color: "var(--green)" }}>
+          <div className="score-chip correct">
             <span className="score-n">{correct}</span>
             <span className="score-l">correct</span>
           </div>
-          <div className="score-chip" style={{ borderColor: "var(--border)", color: "var(--amber)" }}>
+          <div className="score-chip partial">
             <span className="score-n">{partial}</span>
             <span className="score-l">partial</span>
           </div>
-          <div className="score-chip" style={{ borderColor: "var(--border)", color: "var(--red)" }}>
+          <div className="score-chip incorrect">
             <span className="score-n">{incorrect}</span>
             <span className="score-l">needs work</span>
           </div>
           {masteredCount > 0 && (
-            <div className="score-chip" style={{ borderColor: "var(--border)", color: "var(--green)" }}>
+            <div className="score-chip mastered">
               <span className="score-n">{masteredCount}</span>
               <span className="score-l">mastered</span>
             </div>
@@ -327,7 +325,7 @@ export default function StudyQueue({ queue, preferKind }: { queue: QueueNode[]; 
                 {r.node.title}
               </Link>
               {r.node.area && <span className="muted small"> · {r.node.area}</span>}
-              {r.justMastered && <span style={{ fontSize: 11, color: "var(--green)", fontWeight: 700 }}>mastered</span>}
+              {r.justMastered && <span className="mastered-badge">mastered</span>}
               <span className="muted small" style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8 }}>
                 {r.elapsedSec !== undefined && (
                   <span style={{ fontSize: 10, opacity: 0.6 }}>{r.elapsedSec}s</span>

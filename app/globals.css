@@ -431,6 +431,11 @@ select.filter-btn { appearance: none; padding-right: 20px; }
 }
 .score-n { font-size: 32px; font-weight: 700; line-height: 1; }
 .score-l { font-size: 12px; color: var(--muted); margin-top: 4px; }
+.score-chip.correct .score-n { color: var(--green); }
+.score-chip.partial .score-n { color: var(--amber); }
+.score-chip.incorrect .score-n { color: var(--red); }
+.score-chip.mastered .score-n { color: var(--green); }
+.session-summary h2 { font-size: 22px; margin: 0 0 2px; }
 .session-result-row {
   display: flex; align-items: center; gap: 10px;
   padding: 7px 4px; border-bottom: 1px solid var(--border);
