@@ -78,9 +78,9 @@ export function ProblemPanel({
         <div>
           <button
             type="button"
-            className="btn-ghost"
+            className="btn-ghost muted"
             onClick={onToggleReminder}
-            style={{ fontSize: 12, color: "var(--muted)", marginBottom: reminderOpen ? 4 : 0 }}
+            style={{ fontSize: 12, marginBottom: reminderOpen ? 4 : 0 }}
           >
             {reminderOpen ? "Hide reminder ↑" : "Concept reminder ↓"}
           </button>
@@ -105,7 +105,7 @@ export function ProblemPanel({
         <div className="panel hint-panel">
           <div className="panel-header" style={{ marginBottom: 6 }}>
             <h2 className="amber">Hint</h2>
-            <button className="btn-ghost" onClick={onDismissHint} style={{ fontSize: 11, padding: "2px 6px", color: "var(--muted)" }}>
+            <button className="btn-ghost close-btn" onClick={onDismissHint}>
               ✕
             </button>
           </div>
@@ -123,7 +123,7 @@ export function ProblemPanel({
 
       {revealed && (
         <div className="panel reveal-panel">
-          <h4 style={{ color: "var(--green)", margin: "0 0 8px" }}>Ideal solution</h4>
+          <h4 className="reveal-heading">Ideal solution</h4>
           <div className="markdown"><Markdown>{revealed}</Markdown></div>
           {revealedFooter}
         </div>
@@ -235,7 +235,7 @@ export function GradeFeedback({
           <div className="chips-row">
             {grade.unlocked.map((n) => (
               <Link key={n.id} href={`/node/${encodeURIComponent(n.id)}`} target={unlockTarget} className="mastered-node-chip">
-                {n.type && <span style={{ fontSize: 10, opacity: 0.7 }}>{n.type}</span>}
+                {n.type && <span className="label-xs" style={{ opacity: 0.7 }}>{n.type}</span>}
                 {n.title}
               </Link>
             ))}

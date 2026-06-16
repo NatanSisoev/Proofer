@@ -102,12 +102,13 @@ export default function RelatedEdges({ initial, hasKey }: { initial: RelatedEdge
 
         {hasKey && notYetClassified.length > 0 && (
           <div className="edge-actions">
-            <label style={{ fontSize: 13, color: "var(--muted)" }}>
+            <label className="muted" style={{ fontSize: 13 }}>
               Batch size:
               <select
                 value={batchSize}
                 onChange={(e) => setBatchSize(Number(e.target.value))}
-                style={{ marginLeft: 6, background: "var(--bg)" }}
+                className="field-select"
+                style={{ marginLeft: 6 }}
               >
                 {[5, 10, 20].map((n) => <option key={n} value={n}>{n}</option>)}
               </select>
@@ -216,7 +217,7 @@ function EdgeRow({
         <select
           value={selected}
           onChange={(e) => setSelected(e.target.value)}
-          style={{ background: "var(--bg)" }}
+          className="field-select"
           disabled={edge.retying}
         >
           {TYPE_OPTIONS.map((t) => (
@@ -225,12 +226,8 @@ function EdgeRow({
         </select>
 
         <button
-          className="pill"
-          style={{
-            cursor: edge.retying ? "default" : "pointer",
-            color: selected === "related" ? "var(--muted)" : "var(--accent)",
-            borderColor: selected === "related" ? "var(--border)" : "var(--accent-soft)",
-          }}
+          className={`pill ${selected === "related" ? "pill-muted" : "pill-accent"}`}
+          style={{ cursor: edge.retying ? "default" : "pointer" }}
           disabled={edge.retying || selected === "related"}
           onClick={() => onRetype(edge.src_id, edge.tgt_id, selected)}
           title={selected === "related" ? "Choose a more specific type first" : `Retype as "${selected}"`}
@@ -240,15 +237,14 @@ function EdgeRow({
 
         {hasKey && !edge.suggestion && !edge.classifying && (
           <button
-            className="pill"
-            style={{ cursor: "pointer", color: "var(--muted)", borderColor: "var(--border)" }}
+            className="pill pill-muted"
             onClick={onClassifySingle}
           >
             AI suggest
           </button>
         )}
 
-        {edge.error && <span style={{ color: "var(--red)", fontSize: 12 }}>{edge.error}</span>}
+        {edge.error && <span className="error-inline">{edge.error}</span>}
       </div>
     </div>
   );

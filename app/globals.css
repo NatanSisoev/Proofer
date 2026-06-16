@@ -903,6 +903,10 @@ details[open].practice-history > summary::before { transform: rotate(90deg); }
 /* compare-with component */
 .panel-label { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
 .close-btn { font-size: 11px; padding: 2px 8px; color: var(--muted); }
+.pill-muted { cursor: pointer; color: var(--muted); border-color: var(--border); }
+.error-inline { color: var(--red); font-size: 12px; }
+.reveal-heading { color: var(--green); margin: 0 0 8px; }
+.field-select { background: var(--bg); }
 
 /* link suggestions */
 .section-intro { margin-top: 0; margin-bottom: 16px; }
