@@ -876,3 +876,11 @@ details[open].practice-history > summary::before { transform: rotate(90deg); }
 .panel-desc { margin-top: -4px; margin-bottom: 16px; }
 .provider-banner { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 10px 14px; border-radius: 10px; margin-top: 4px; margin-bottom: 14px; border: 1px solid var(--border); }
 .panel-link-row { display: flex; gap: 10px; margin-top: 12px; }
+
+/* progress page */
+.page-actions { display: flex; gap: 12px; align-items: center; }
+.panel-activity { margin-bottom: 20px; overflow-x: auto; }
+.label-xs { font-size: 10px; line-height: 1; }
+.accent-link { color: var(--accent); }
+.recent-list { display: flex; flex-direction: column; gap: 1px; }
+.weak-spot-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }

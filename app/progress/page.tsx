@@ -41,7 +41,7 @@ export default function ProgressPage() {
           <h1>Progress</h1>
           <p className="muted small" style={{ marginTop: 4 }}>Your mastery across {s.real} concepts</p>
         </div>
-        <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+        <div className="page-actions">
           <Link href="/session" className="pill pill-accent">
             Start session →
           </Link>
@@ -94,7 +94,7 @@ export default function ProgressPage() {
       </div>
 
       {/* Activity calendar — full width */}
-      <div className="panel" style={{ marginBottom: 20, overflowX: "auto" }}>
+      <div className="panel panel-activity">
         <h2>Activity — last 12 weeks</h2>
         <ActivityCalendar data={calendar} />
       </div>
@@ -132,9 +132,9 @@ export default function ProgressPage() {
                       <path d={d} fill="none" stroke="var(--accent)" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
                     </svg>
                     <div className="chart-label-row">
-                      <span className="muted small" style={{ fontSize: 10 }}>{milestones[0].day}</span>
+                      <span className="muted small label-xs">{milestones[0].day}</span>
                       <span className="chart-label-accent">{maxVal} mastered</span>
-                      <span className="muted small" style={{ fontSize: 10 }}>{milestones[milestones.length - 1].day}</span>
+                      <span className="muted small label-xs">{milestones[milestones.length - 1].day}</span>
                     </div>
                   </div>
                 );
@@ -182,12 +182,12 @@ export default function ProgressPage() {
           <div className="panel">
             <div className="panel-header">
               <h2>Recent attempts</h2>
-              <Link href="/history" className="small" style={{ color: "var(--accent)" }}>
+              <Link href="/history" className="small accent-link">
                 Full history →
               </Link>
             </div>
             {recent.length === 0 && <p className="muted">No attempts yet — start practicing!</p>}
-            <div style={{ display: "flex", flexDirection: "column", gap: 1 }}>
+            <div className="recent-list">
               {recent.map((a) => (
                 <div key={a.id} className="attempt-row">
                   <span
@@ -279,7 +279,7 @@ export default function ProgressPage() {
           {weakPrereqs.length > 0 && (
             <div className="panel">
               <h2>Foundations tripping you up</h2>
-              <p className="muted small" style={{ marginTop: -4, marginBottom: 12 }}>
+              <p className="muted small panel-desc">
                 Prerequisites the tutor blamed across multiple concepts. Fixing one
                 of these lifts everything that depends on it.
               </p>
@@ -344,7 +344,7 @@ export default function ProgressPage() {
                         const barH = d.count > 0 ? Math.max(8, Math.round((d.count / maxCount) * 56)) : 3;
                         return (
                           <div key={d.date} className="forecast-day">
-                            <span className="muted small" style={{ fontSize: 10, lineHeight: 1 }}>
+                            <span className="muted small label-xs">
                               {d.count > 0 ? d.count : ""}
                             </span>
                             <div
@@ -354,7 +354,7 @@ export default function ProgressPage() {
                                 borderRadius: 3, opacity: d.count === 0 ? 0.2 : 0.85,
                               }}
                             />
-                            <span className="muted small" style={{ fontSize: 10, lineHeight: 1, color: isToday ? "var(--amber)" : undefined }}>
+                            <span className="muted small label-xs" style={{ color: isToday ? "var(--amber)" : undefined }}>
                               {isToday ? "today" : days[date.getDay()]}
                             </span>
                           </div>
@@ -372,19 +372,19 @@ export default function ProgressPage() {
 
           <div className="panel">
             <h2>Weak spots</h2>
-            <p className="muted small" style={{ marginTop: -4, marginBottom: 12 }}>
+            <p className="muted small panel-desc">
               Concepts you've practiced but haven't mastered yet.
             </p>
             {weak.length === 0 && <p className="muted">Nothing here yet — keep practicing!</p>}
             {weak.map((n) => (
               <div key={n.id} className="frontier-item">
-                <div style={{ minWidth: 0 }}>
+                <div>
                   {n.type && <span className={`type-badge t-${n.type}`} style={{ marginRight: 6 }}>{n.type}</span>}
-                  <Link href={`/node/${encodeURIComponent(n.id)}`} style={{ fontSize: 13.5 }}>
+                  <Link href={`/node/${encodeURIComponent(n.id)}`} className="preview-link">
                     {n.title}
                   </Link>
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+                <div className="weak-spot-right">
                   <div className="bar" style={{ width: 60 }}>
                     <span style={{ width: `${Math.round(n.mastery_p * 100)}%` }} />
                   </div>
