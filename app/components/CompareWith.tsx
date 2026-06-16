@@ -57,9 +57,9 @@ export default function CompareWith({ nodeId, nodeTitle }: { nodeId: string; nod
   if (!open) {
     return (
       <button
-        className="btn-ghost"
+        className="btn-ghost btn-sm"
         onClick={() => setOpen(true)}
-        style={{ fontSize: 13, marginTop: 8 }}
+        style={{ marginTop: 8 }}
       >
         ⚖ Compare with…
       </button>
@@ -117,7 +117,7 @@ export default function CompareWith({ nodeId, nodeTitle }: { nodeId: string; nod
       {/* Selected + loading */}
       {selected && (
         <div style={{ marginBottom: 10 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+          <div className="compare-header">
             <span className="muted small">Comparing</span>
             <strong>{nodeTitle}</strong>
             <span className="muted small">vs</span>
@@ -125,9 +125,9 @@ export default function CompareWith({ nodeId, nodeTitle }: { nodeId: string; nod
               {selected.title}
             </Link>
             <button
-              className="btn-ghost"
+              className="btn-ghost close-btn"
               onClick={() => { setSelected(null); setComparison(null); setError(null); }}
-              style={{ fontSize: 11, padding: "2px 6px", marginLeft: 4, color: "var(--muted)" }}
+              style={{ marginLeft: 4 }}
             >
               change
             </button>
@@ -144,9 +144,9 @@ export default function CompareWith({ nodeId, nodeTitle }: { nodeId: string; nod
             <Markdown>{comparison}</Markdown>
           </div>
           <button
-            className="btn-ghost"
+            className="btn-ghost btn-sm"
             onClick={() => { setSelected(null); setComparison(null); setError(null); setQuery(""); }}
-            style={{ marginTop: 10, fontSize: 12 }}
+            style={{ marginTop: 10 }}
           >
             Compare with another →
           </button>
