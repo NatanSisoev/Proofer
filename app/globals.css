@@ -302,8 +302,13 @@ button.know.on { background: var(--green-soft); border-color: var(--green-border
 .nav-links::-webkit-scrollbar { display: none; }
 .nav-brand { font-weight: 700; font-size: 15px; color: var(--text); letter-spacing: -0.01em; white-space: nowrap; flex-shrink: 0; margin-right: 4px; }
 .nav-brand:hover { text-decoration: none; color: var(--text); }
-.nav-link { font-size: 13px; color: var(--muted); padding: 5px 9px; border-radius: 6px; white-space: nowrap; flex-shrink: 0; transition: background 0.15s, color 0.15s; }
-.nav-link:hover { color: var(--text); text-decoration: none; background: var(--bg-soft); }
+.nav-link { font-size: 13px; color: var(--muted); padding: 5px 9px; border-radius: 6px; white-space: nowrap; flex-shrink: 0; transition: color 0.15s; }
+.nav-link:hover { color: var(--text); text-decoration: none; background: none; }
+.nav-link-active { color: var(--text); font-weight: 600; position: relative; }
+.nav-link-active::after {
+  content: ''; position: absolute; bottom: -9px; left: 9px; right: 9px;
+  height: 2px; background: var(--accent); border-radius: 1px;
+}
 .nav-spacer { height: 48px; }
 
 .theme-toggle {

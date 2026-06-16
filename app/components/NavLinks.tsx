@@ -27,12 +27,7 @@ export default function NavLinks() {
         <Link
           key={l.href}
           href={l.href}
-          className="nav-link"
-          style={
-            isActive(l.href)
-              ? { color: "var(--text)", background: "var(--bg-soft)", fontWeight: 600 }
-              : undefined
-          }
+          className={`nav-link${isActive(l.href) ? " nav-link-active" : ""}`}
         >
           {l.label}
         </Link>
