@@ -65,7 +65,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="wrap" style={{ maxWidth: 640 }}>
+    <div className="wrap wrap-narrow">
       <div className="page-top" style={{ marginBottom: 28 }}>
         <div>
           <h1>Settings</h1>
@@ -77,15 +77,15 @@ export default function SettingsPage() {
       {loading ? (
         <div className="panel muted">Loading…</div>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        <div className="panel-stack">
 
           {/* Daily goal */}
           <div className="panel">
             <h2>Daily goal</h2>
-            <p className="muted small" style={{ marginTop: -4, marginBottom: 16 }}>
+            <p className="muted small panel-desc">
               How many concepts you aim to practice each day. Shown in the progress bar on the home page.
             </p>
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <div className="action-row">
               {[3, 5, 8, 10, 15, 20].map((n) => (
                 <button
                   key={n}
@@ -106,7 +106,7 @@ export default function SettingsPage() {
           {/* Voice language */}
           <div className="panel">
             <h2>Voice input language</h2>
-            <p className="muted small" style={{ marginTop: -4, marginBottom: 16 }}>
+            <p className="muted small panel-desc">
               Language for the 🎤 Speak button. Used by the Web Speech API in your browser.
             </p>
             <select
@@ -129,7 +129,7 @@ export default function SettingsPage() {
           {/* Export personal notes */}
           <div className="panel">
             <h2>Export personal notes</h2>
-            <p className="muted small" style={{ marginTop: -4, marginBottom: 14 }}>
+            <p className="muted small panel-desc">
               Download all your personal annotations on concept pages as a Markdown file.
             </p>
             <a
@@ -148,12 +148,8 @@ export default function SettingsPage() {
 
             {/* Active provider/model badge */}
             <div
-              style={{
-                display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap",
-                padding: "10px 14px", borderRadius: 10, marginTop: 4, marginBottom: 14,
-                background: provider && !provider.hasKey ? "var(--amber-soft)" : "var(--green-soft)",
-                border: "1px solid var(--border)",
-              }}
+              className="provider-banner"
+              style={{ background: provider && !provider.hasKey ? "var(--amber-soft)" : "var(--green-soft)" }}
             >
               <span
                 className="verdict-dot-sm"
@@ -181,7 +177,7 @@ export default function SettingsPage() {
               <code>GEMINI_API_KEY</code> selects the free Gemini tier (preferred),{" "}
               <code>ANTHROPIC_API_KEY</code> selects Claude. Gemini wins if both are set.
             </p>
-            <div style={{ display: "flex", gap: 10, marginTop: 12 }}>
+            <div className="panel-link-row">
               <Link href="/quality" className="pill pill-accent">
                 Note quality →
               </Link>

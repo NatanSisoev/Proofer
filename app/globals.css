@@ -301,6 +301,7 @@ button.know.on { background: var(--green-soft); border-color: var(--green-border
 .btn-ghost:hover:not(:disabled) { background: var(--bg-soft); border-color: var(--muted); text-decoration: none; }
 .btn-ghost:disabled { opacity: 0.4; cursor: default; }
 .btn-xs { font-size: 12px; padding: 3px 10px; border-radius: 6px; }
+.btn-sm { font-size: 13px; }
 .feedback { display: flex; flex-direction: column; gap: 18px; }
 .verdict { display: inline-block; align-self: flex-start; padding: 7px 18px; border-radius: 8px; font-weight: 600; font-size: 14px; letter-spacing: 0.01em; }
 .verdict-correct { animation: correctFade 0.25s ease-out; }
@@ -852,3 +853,26 @@ details[open].practice-history > summary::before { transform: rotate(90deg); }
 .preview-link:hover { color: var(--text); }
 .preview-mastery { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
 .preview-pct { font-size: 11px; width: 28px; text-align: right; }
+
+/* node/[slug] page */
+.node-overview { display: block; margin-top: -2px; max-width: 640px; line-height: 1.5; }
+.mastery-pct { font-weight: 700; font-size: 15px; letter-spacing: -0.02em; }
+.node-cta { display: flex; align-items: center; gap: 6px; }
+.content-meta { margin-top: 0; margin-bottom: 12px; }
+.browse-more { display: block; margin-top: 8px; font-size: 11px; }
+
+/* node actions component */
+.actions-col { display: flex; flex-direction: column; gap: 12px; }
+.action-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.action-error { color: var(--red); font-size: 13px; margin: 0; }
+.action-success { color: var(--green); font-size: 13px; margin: 0; }
+.code-preview { white-space: pre-wrap; font-size: 12.5px; line-height: 1.55; max-height: 500px; overflow: auto; background: var(--bg); padding: 14px; border-radius: 8px; border: 1px solid var(--border); font-family: ui-monospace, monospace; }
+.explain-panel { background: var(--bg-soft); margin-top: 4px; }
+.confirm-row { display: flex; gap: 8px; margin-top: 12px; }
+
+/* settings page */
+.wrap-narrow { max-width: 640px; }
+.panel-stack { display: flex; flex-direction: column; gap: 16px; }
+.panel-desc { margin-top: -4px; margin-bottom: 16px; }
+.provider-banner { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 10px 14px; border-radius: 10px; margin-top: 4px; margin-bottom: 14px; border: 1px solid var(--border); }
+.panel-link-row { display: flex; gap: 10px; margin-top: 12px; }

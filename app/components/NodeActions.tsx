@@ -79,18 +79,17 @@ export default function NodeActions({ nodeId, nodePath, hasLLM }: Props) {
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+    <div className="actions-col">
+      <div className="action-row">
         {obsidianHref && (
-          <a href={obsidianHref} className="btn-ghost" style={{ fontSize: 13 }}>
+          <a href={obsidianHref} className="btn-ghost btn-sm">
             Open in Obsidian ↗
           </a>
         )}
         {hasLLM && (
           <button
             onClick={handleExplain}
-            className="btn-ghost"
-            style={{ fontSize: 13 }}
+            className="btn-ghost btn-sm"
             disabled={explainLoading}
           >
             {explainLoading ? "Thinking…" : explanation ? "Hide explanation" : "Explain this ✦"}
@@ -99,8 +98,7 @@ export default function NodeActions({ nodeId, nodePath, hasLLM }: Props) {
         {hasLLM && nodePath && (
           <button
             onClick={handleImprove}
-            className="btn-ghost"
-            style={{ fontSize: 13 }}
+            className="btn-ghost btn-sm"
             disabled={improveState === "loading" || improveState === "applying"}
           >
             {improveState === "loading" ? "Thinking…" : "Improve note"}
@@ -108,21 +106,21 @@ export default function NodeActions({ nodeId, nodePath, hasLLM }: Props) {
         )}
       </div>
 
-      {explainError && <p style={{ color: "var(--red)", fontSize: 13, margin: 0 }}>{explainError}</p>}
+      {explainError && <p className="action-error">{explainError}</p>}
 
       {explanation && (
-        <div className="panel" style={{ background: "var(--bg-soft)", marginTop: 4 }}>
+        <div className="panel explain-panel">
           <h2 style={{ color: "var(--accent)", marginBottom: 10 }}>AI explanation</h2>
           <div className="markdown"><Markdown>{explanation}</Markdown></div>
         </div>
       )}
 
       {improveState === "error" && (
-        <p style={{ color: "var(--red)", fontSize: 13, margin: 0 }}>{improveError}</p>
+        <p className="action-error">{improveError}</p>
       )}
 
       {improveState === "done" && (
-        <p style={{ color: "var(--green)", fontSize: 13, margin: 0 }}>✓ Note updated in Obsidian. Re-sync vault to refresh.</p>
+        <p className="action-success">✓ Note updated in Obsidian. Re-sync vault to refresh.</p>
       )}
 
       {improveState === "preview" && preview && (
@@ -131,19 +129,12 @@ export default function NodeActions({ nodeId, nodePath, hasLLM }: Props) {
             <h2>AI improvement preview</h2>
             <span className="muted small">Review before applying</span>
           </div>
-          <pre style={{
-            whiteSpace: "pre-wrap", fontSize: 12.5, lineHeight: 1.55,
-            maxHeight: 500, overflow: "auto", background: "var(--bg)",
-            padding: 14, borderRadius: 8, border: "1px solid var(--border)",
-            fontFamily: "ui-monospace, monospace",
-          }}>
-            {preview}
-          </pre>
-          <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
-            <button onClick={handleApply} className="btn-primary" style={{ fontSize: 13 }}>
+          <pre className="code-preview">{preview}</pre>
+          <div className="confirm-row">
+            <button onClick={handleApply} className="btn-primary btn-sm">
               Apply to Obsidian
             </button>
-            <button onClick={() => setImproveState("idle")} className="btn-ghost" style={{ fontSize: 13 }}>
+            <button onClick={() => setImproveState("idle")} className="btn-ghost btn-sm">
               Discard
             </button>
           </div>

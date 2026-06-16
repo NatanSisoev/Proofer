@@ -131,14 +131,14 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
               </div>
               <h1>{node.title}</h1>
               {node.overview && (
-                <MathText className="muted" style={{ display: "block", marginTop: -2, maxWidth: 640, lineHeight: 1.5 }}>
+                <MathText className="muted node-overview">
                   {node.overview}
                 </MathText>
               )}
               <div className="mastery-chip">
                 <span className="muted small">mastery</span>
                 <div className="bar" style={{ width: 120 }}><span style={{ width: `${Math.round(mastery * 100)}%` }} /></div>
-                <span style={{ fontWeight: 700, fontSize: 15, letterSpacing: "-0.02em" }}>{Math.round(mastery * 100)}%</span>
+                <span className="mastery-pct">{Math.round(mastery * 100)}%</span>
                 <MasterySparkline nodeId={id} />
                 {reviewDays !== null && (
                   <span
@@ -174,7 +174,7 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
               {HAS_KEY && <WeaknessDiagnosis nodeId={id} attemptCount={attempts} />}
             </div>
             <div className="node-side-col">
-              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <div className="node-cta">
                 <Link href={`/learn?node=${encodeURIComponent(id)}`} className="cta">Practice this →</Link>
                 <BookmarkButton nodeId={id} initial={bookmarked} />
               </div>
@@ -225,7 +225,7 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
                     const words = node.content!.split(/\s+/).length;
                     const mins = Math.max(1, Math.round(words / 200));
                     return (
-                      <p className="muted small" style={{ marginTop: 0, marginBottom: 12 }}>
+                      <p className="muted small content-meta">
                         ~{mins} min read · {words} words
                       </p>
                     );
@@ -293,9 +293,9 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
                   <h2>Also in {node.area}</h2>
                   {similar.map((s) => (
                     <div key={s.id} className="frontier-item">
-                      <div style={{ minWidth: 0 }}>
+                      <div>
                         {s.type && <span className={`type-badge t-${s.type}`} style={{ marginRight: 6 }}>{s.type}</span>}
-                        <Link href={`/node/${encodeURIComponent(s.id)}`} style={{ fontSize: 13.5, color: "var(--text)" }}>
+                        <Link href={`/node/${encodeURIComponent(s.id)}`} className="preview-link">
                           {s.title}
                         </Link>
                       </div>
@@ -311,8 +311,7 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
                   ))}
                   <Link
                     href={`/browse?area=${encodeURIComponent(node.area!)}`}
-                    className="muted small"
-                    style={{ display: "block", marginTop: 8, fontSize: 11 }}
+                    className="muted small browse-more"
                   >
                     Browse all {node.area} →
                   </Link>
