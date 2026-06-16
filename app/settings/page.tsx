@@ -98,7 +98,7 @@ export default function SettingsPage() {
                 </button>
               ))}
             </div>
-            <p className="muted small" style={{ marginTop: 10, marginBottom: 0 }}>
+            <p className="muted small panel-tip">
               Current: <strong>{settings.daily_goal} concepts / day</strong>
             </p>
           </div>
@@ -113,7 +113,7 @@ export default function SettingsPage() {
               value={settings.voice_lang}
               onChange={(e) => save({ voice_lang: e.target.value })}
               disabled={saving}
-              style={{ width: "100%", maxWidth: 260 }}
+              className="field-select-lg"
             >
               {VOICE_LANGS.map((l) => (
                 <option key={l.value} value={l.value}>{l.label}</option>
@@ -135,8 +135,7 @@ export default function SettingsPage() {
             <a
               href="/api/notes/export"
               download="proofer-notes.md"
-              className="btn-ghost"
-              style={{ display: "inline-block", fontSize: 13 }}
+              className="btn-ghost btn-download"
             >
               ⬇ Download notes.md
             </a>
@@ -161,11 +160,11 @@ export default function SettingsPage() {
                 <span style={{ fontSize: 13.5 }}>
                   Currently answering with <strong>{provider.label}</strong>
                   {provider.model && (
-                    <code style={{ marginLeft: 6, fontSize: 12 }}>{provider.model}</code>
+                    <code className="model-code">{provider.model}</code>
                   )}
                 </span>
               ) : (
-                <span style={{ fontSize: 13.5, color: "var(--amber)" }}>
+                <span className="warn-text">
                   <strong>Demo mode</strong> — no API key set. Problems and grading use canned
                   stubs; explain / compare / study-plan are disabled.
                 </span>

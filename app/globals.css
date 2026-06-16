@@ -990,4 +990,11 @@ details[open].practice-history > summary::before { transform: rotate(90deg); }
 .bar-mini { width: 36px; height: 5px; }
 .panel-tip { margin-top: 10px; margin-bottom: 0; }
 .tabular { font-variant-numeric: tabular-nums; }
+
+/* Settings / Quality */
+.field-select-lg { width: 100%; max-width: 260px; }
+.btn-download { display: inline-block; font-size: 13px; }
+.model-code { margin-left: 6px; font-size: 12px; }
+.warn-text { font-size: 13.5px; color: var(--amber); }
+.cycle-arrow { font-size: 12px; }
 .graph-tooltip { position: fixed; transform: translateX(-50%); background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 6px 12px; font-size: 12.5px; pointer-events: none; z-index: 200; white-space: nowrap; }
