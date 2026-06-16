@@ -982,4 +982,12 @@ details[open].practice-history > summary::before { transform: rotate(90deg); }
 /* charts + pill sizes */
 .chart-svg { width: 100%; display: block; }
 .pill-xs { font-size: 10px; }
+
+/* SessionSetup / StudyQueue */
+.search-sm { font-size: 13px; padding: 7px 12px; }
+.field-hint { margin-top: 8px; margin-bottom: 0; }
+.loading-tag { margin-left: 8px; font-weight: 400; }
+.bar-mini { width: 36px; height: 5px; }
+.panel-tip { margin-top: 10px; margin-bottom: 0; }
+.tabular { font-variant-numeric: tabular-nums; }
 .graph-tooltip { position: fixed; transform: translateX(-50%); background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 6px 12px; font-size: 12.5px; pointer-events: none; z-index: 200; white-space: nowrap; }

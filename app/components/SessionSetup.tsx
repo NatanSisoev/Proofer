@@ -193,8 +193,7 @@ export default function SessionSetup({
                   value={customSearch}
                   onChange={e => setCustomSearch(e.target.value)}
                   placeholder="Search concepts to add…"
-                  className="search-box"
-                  style={{ fontSize: 13, padding: "7px 12px" }}
+                  className="search-box search-sm"
                 />
                 {customResults.length > 0 && (
                   <div className="search-dropdown">
@@ -248,7 +247,7 @@ export default function SessionSetup({
               </button>
             ))}
           </div>
-          <p className="muted small" style={{ marginTop: 8, marginBottom: 0 }}>
+          <p className="muted small field-hint">
             {count} concept{count !== 1 ? "s" : ""} · ~{count * 3}–{count * 5} min
           </p>
         </div>
@@ -299,7 +298,7 @@ export default function SessionSetup({
       <div className="panel">
         <h2>
           {mode === "custom" ? "Your custom queue" : "Queue preview"}
-          {previewLoading && mode !== "custom" && <span className="muted small" style={{ marginLeft: 8, fontWeight: 400 }}>loading…</span>}
+          {previewLoading && mode !== "custom" && <span className="muted small loading-tag">loading…</span>}
         </h2>
         {!previewLoading && preview.length === 0 && mode !== "custom" && (
           <p className="muted">No concepts found for this mode.</p>
@@ -320,7 +319,7 @@ export default function SessionSetup({
             </Link>
             {n.area && <span className="muted small" style={{ flexShrink: 0 }}>{n.area}</span>}
             <div className="preview-mastery">
-              <div className="bar" style={{ width: 36, height: 5 }}>
+              <div className="bar bar-mini">
                 <span style={{ width: `${Math.round((n.mastery_p ?? 0) * 100)}%` }} />
               </div>
               <span className="muted small preview-pct">
@@ -330,7 +329,7 @@ export default function SessionSetup({
           </div>
         ))}
         {preview.length > 0 && (
-          <p className="muted small" style={{ marginTop: 10, marginBottom: 0 }}>
+          <p className="muted small panel-tip">
             Click any concept to preview it · queue shuffles on start
           </p>
         )}

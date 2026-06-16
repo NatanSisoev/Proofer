@@ -365,7 +365,7 @@ export default function StudyQueue({ queue, preferKind }: { queue: QueueNode[]; 
       <div className="session-progress-header">
         <div className="session-progress-left">
           <span className="muted small">Concept {index + 1} of {activeQueue.length}</span>
-          <span className="muted small" style={{ fontVariantNumeric: "tabular-nums" }}>
+          <span className="muted small tabular">
             {Math.floor(sessionElapsed / 60)}:{String(sessionElapsed % 60).padStart(2, "0")}
           </span>
         </div>
