@@ -70,9 +70,9 @@ export default async function HistoryPage({
       </div>
 
       {/* Filter bar */}
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 20 }}>
+      <div className="filter-bar">
         {/* Verdict filter */}
-        <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+        <div className="filter-group">
           <span className="muted small" style={{ fontSize: 11 }}>result:</span>
           {["", "correct", "partial", "incorrect"].map((v) => (
             <Link
@@ -88,7 +88,7 @@ export default async function HistoryPage({
 
         {/* Kind filter */}
         {kinds.length > 0 && (
-          <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+          <div className="filter-group">
             <span className="muted small" style={{ fontSize: 11 }}>kind:</span>
             <Link
               href={filterLink("kind", "")}
@@ -115,7 +115,7 @@ export default async function HistoryPage({
 
         {/* Clear filters */}
         {(verdict || area || kind) && (
-          <Link href="/history" className="muted small" style={{ alignSelf: "center", fontSize: 11, textDecoration: "underline" }}>
+          <Link href="/history" className="muted small filter-clear">
             clear
           </Link>
         )}
@@ -125,7 +125,7 @@ export default async function HistoryPage({
       {rows.length === 0 ? (
         <div className="panel muted">No attempts match these filters.</div>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        <div className="flex-col" style={{ gap: 8 }}>
           {rows.map((a) => (
             <div
               key={a.id}
@@ -137,19 +137,16 @@ export default async function HistoryPage({
                 background: VERDICT[a.verdict as Verdict]?.bg || "var(--bg-soft)",
               }}
             >
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8, marginBottom: 6 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                  <span style={{
-                    fontSize: 11, fontWeight: 700, color: VERDICT[a.verdict as Verdict]?.color,
-                    textTransform: "uppercase", letterSpacing: "0.07em",
-                  }}>
+              <div className="attempt-row-header">
+                <div className="attempt-row-left">
+                  <span className="verdict-label" style={{ color: VERDICT[a.verdict as Verdict]?.color }}>
                     {VERDICT[a.verdict as Verdict]?.short || a.verdict}
                   </span>
                   {a.kind && (
                     <span className="pill" style={{ fontSize: 10 }}>{a.kind}</span>
                   )}
                   {a.title ? (
-                    <Link href={`/node/${encodeURIComponent(a.node_id)}`} style={{ fontWeight: 600, fontSize: 14 }}>
+                    <Link href={`/node/${encodeURIComponent(a.node_id)}`} className="concept-link">
                       {a.title}
                     </Link>
                   ) : (
@@ -161,12 +158,12 @@ export default async function HistoryPage({
                     </Link>
                   )}
                 </div>
-                <div style={{ display: "flex", gap: 8, alignItems: "center", flexShrink: 0 }}>
+                <div className="attempt-row-right">
                   <span className="muted small" style={{ fontSize: 11 }}>{timeAgo(a.created_at)}</span>
                   <Link
                     href={`/learn?node=${encodeURIComponent(a.node_id)}`}
-                    className="pill"
-                    style={{ fontSize: 11, color: "var(--accent)", borderColor: "var(--accent-soft)" }}
+                    className="pill pill-accent"
+                    style={{ fontSize: 11 }}
                   >
                     practice →
                   </Link>
@@ -174,18 +171,18 @@ export default async function HistoryPage({
               </div>
 
               {a.problem && (
-                <p style={{ margin: "0 0 4px", fontSize: 13, color: "var(--text)", lineHeight: 1.5 }}>
+                <p className="problem-text">
                   <MathText>{truncateMath(a.problem, 240)}</MathText>
                 </p>
               )}
 
               {a.gap && a.gap !== "none" && a.gap !== "(gave up — showed answer)" && (
-                <p className="muted small" style={{ margin: 0, fontStyle: "italic", fontSize: 12 }}>
+                <p className="muted small gap-text">
                   Gap: <MathText>{truncateMath(a.gap, 150)}</MathText>
                 </p>
               )}
               {a.gap === "(gave up — showed answer)" && (
-                <p className="muted small" style={{ margin: 0, fontStyle: "italic", fontSize: 12 }}>
+                <p className="muted small gap-text">
                   Viewed answer
                 </p>
               )}
@@ -196,7 +193,7 @@ export default async function HistoryPage({
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div style={{ display: "flex", gap: 8, justifyContent: "center", alignItems: "center", marginTop: 24 }}>
+        <div className="pagination">
           {page > 1 && (
             <Link href={buildUrl({ page: page - 1 })} className="btn-ghost" style={{ fontSize: 13 }}>
               ← prev

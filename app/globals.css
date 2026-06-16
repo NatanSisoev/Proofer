@@ -750,6 +750,30 @@ details[open].practice-history > summary::before { transform: rotate(90deg); }
 .weak-prereq-title { font-size: 14px; font-weight: 600; }
 .weak-prereq-blocks { margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
+/* history page: filter bar */
+.filter-bar { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+.filter-group { display: flex; gap: 4px; align-items: center; }
+.filter-clear { align-self: center; font-size: 11px; text-decoration: underline; }
+
+/* history page: attempt card layout */
+.attempt-row-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 6px; }
+.attempt-row-left { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.attempt-row-right { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
+.verdict-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; }
+.concept-link { font-weight: 600; font-size: 14px; }
+.problem-text { margin: 0 0 4px; font-size: 13px; color: var(--text); line-height: 1.5; }
+.gap-text { margin: 0; font-style: italic; font-size: 12px; }
+.pagination { display: flex; gap: 8px; justify-content: center; align-items: center; margin-top: 24px; }
+
+/* browse page */
+.area-header { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px; margin-bottom: 20px; }
+.mastery-summary { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.mastery-bar-row { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.node-list { display: flex; flex-direction: column; gap: 2px; margin-top: 16px; }
+.browse-row-left { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1; }
+.browse-node-link { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.browse-row-right { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+
 /* session setup */
 .mode-list { display: flex; flex-direction: column; gap: 8px; }
 .mode-body { flex: 1; }

@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 
 function MasteryBar({ p }: { p: number }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+    <div className="mastery-bar-row">
       <div className="bar" style={{ flex: 1, maxWidth: 120 }}>
         <span style={{ width: `${Math.round(p * 100)}%` }} />
       </div>
@@ -39,14 +39,11 @@ export default async function BrowsePage({
         </div>
 
         {/* Area header: mastery summary + actions */}
-        <div style={{
-          display: "flex", justifyContent: "space-between", alignItems: "flex-start",
-          flexWrap: "wrap", gap: 16, marginBottom: 20,
-        }}>
+        <div className="area-header">
           <div>
             <h1 style={{ marginBottom: 6 }}>{area}</h1>
-            <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <div className="mastery-summary">
+              <div className="mastery-bar-row">
                 <div className="bar" style={{ width: 100 }}>
                   <span style={{ width: `${Math.round(avgMastery * 100)}%` }} />
                 </div>
@@ -75,7 +72,7 @@ export default async function BrowsePage({
 
         <BrowseFilters area={area} activeType={type} activeSort={sort || "mastery_asc"} types={types} />
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 2, marginTop: 16 }}>
+        <div className="node-list">
           {nodes.map((n) => (
             <NodeRow key={n.id} node={n} />
           ))}
@@ -119,17 +116,17 @@ export default async function BrowsePage({
 function NodeRow({ node }: { node: BrowseNode }) {
   return (
     <div className="browse-row">
-      <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0, flex: 1 }}>
+      <div className="browse-row-left">
         {node.type && (
-          <span className={`type-badge t-${node.type}`} style={{ flexShrink: 0 }}>{node.type}</span>
+          <span className={`type-badge t-${node.type}`}>{node.type}</span>
         )}
-        <Link href={`/node/${encodeURIComponent(node.id)}`} style={{ fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+        <Link href={`/node/${encodeURIComponent(node.id)}`} className="browse-node-link">
           {node.title}
         </Link>
       </div>
-      <div style={{ display: "flex", alignItems: "center", gap: 12, flexShrink: 0 }}>
+      <div className="browse-row-right">
         <MasteryBar p={node.mastery_p} />
-        <Link href={`/learn?node=${encodeURIComponent(node.id)}`} className="pill" style={{ color: "var(--accent)", borderColor: "var(--accent-soft)", flexShrink: 0 }}>
+        <Link href={`/learn?node=${encodeURIComponent(node.id)}`} className="pill pill-accent" style={{ flexShrink: 0 }}>
           practice →
         </Link>
       </div>
