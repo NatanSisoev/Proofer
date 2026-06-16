@@ -59,7 +59,7 @@ export default async function HistoryPage({
 
   return (
     <div className="wrap">
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 20 }}>
+      <div className="page-top" style={{ marginBottom: 20 }}>
         <div>
           <h1>Practice history</h1>
           <p className="muted small" style={{ marginTop: 4 }}>
@@ -78,10 +78,8 @@ export default async function HistoryPage({
             <Link
               key={v || "all"}
               href={filterLink("verdict", v)}
-              className={verdict === v ? "btn-primary" : "btn-ghost"}
-              style={{ fontSize: 12, padding: "3px 10px", borderRadius: 6, textDecoration: "none",
-                color: !v ? undefined : VERDICT[v as Verdict]?.color,
-              }}
+              className={verdict === v ? "btn-primary btn-xs" : "btn-ghost btn-xs"}
+              style={{ color: !v ? undefined : VERDICT[v as Verdict]?.color }}
             >
               {v ? VERDICT[v as Verdict]?.short : "all"}
             </Link>
@@ -94,8 +92,7 @@ export default async function HistoryPage({
             <span className="muted small" style={{ fontSize: 11 }}>kind:</span>
             <Link
               href={filterLink("kind", "")}
-              className={!kind ? "btn-primary" : "btn-ghost"}
-              style={{ fontSize: 12, padding: "3px 10px", borderRadius: 6, textDecoration: "none" }}
+              className={!kind ? "btn-primary btn-xs" : "btn-ghost btn-xs"}
             >
               all
             </Link>
@@ -103,8 +100,7 @@ export default async function HistoryPage({
               <Link
                 key={k}
                 href={filterLink("kind", k)}
-                className={kind === k ? "btn-primary" : "btn-ghost"}
-                style={{ fontSize: 12, padding: "3px 10px", borderRadius: 6, textDecoration: "none" }}
+                className={kind === k ? "btn-primary btn-xs" : "btn-ghost btn-xs"}
               >
                 {k}
               </Link>

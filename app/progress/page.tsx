@@ -36,7 +36,7 @@ export default function ProgressPage() {
 
   return (
     <div className="wrap">
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 24 }}>
+      <div className="page-top">
         <div>
           <h1>Progress</h1>
           <p className="muted small" style={{ marginTop: 4 }}>Your mastery across {s.real} concepts</p>
@@ -294,13 +294,7 @@ export default function ProgressPage() {
                 {weakPrereqs.map((w) => {
                   const concepts = w.concepts.split(",").filter(Boolean);
                   return (
-                    <div
-                      key={w.prereq}
-                      style={{
-                        padding: "10px 12px", borderRadius: 8,
-                        border: "1px solid var(--border)", background: "var(--bg-soft)",
-                      }}
-                    >
+                    <div key={w.prereq} className="cycle-card">
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 4 }}>
                         <div style={{ minWidth: 0, display: "flex", alignItems: "center", gap: 8 }}>
                           {w.exists_ === 1 ? (
