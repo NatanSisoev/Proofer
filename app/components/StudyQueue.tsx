@@ -257,7 +257,7 @@ export default function StudyQueue({ queue, preferKind }: { queue: QueueNode[]; 
       <div className="session-summary">
         <div style={{ marginBottom: 6 }}>
           <h2>{isPerfect ? "Perfect session!" : "Session complete"}</h2>
-          <p className="muted" style={{ margin: "0 0 20px", fontSize: 13 }}>
+          <p className="muted session-subtitle">
             {activeQueue.length} concept{activeQueue.length !== 1 ? "s" : ""} ·{" "}
             {Math.floor(sessionElapsed / 60)}m {sessionElapsed % 60}s ·{" "}
             {accuracy}% accuracy
@@ -291,7 +291,7 @@ export default function StudyQueue({ queue, preferKind }: { queue: QueueNode[]; 
         {results.some((r) => r.justMastered) && (
           <div className="mastered-banner">
             <div className="mastered-banner-title">Newly mastered this session</div>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+            <div className="chips-row">
               {results.filter((r) => r.justMastered).map((r, i) => (
                 <Link key={i} href={`/node/${encodeURIComponent(r.node.id)}`} className="mastered-node-chip">
                   {r.node.title}
@@ -311,12 +311,12 @@ export default function StudyQueue({ queue, preferKind }: { queue: QueueNode[]; 
               >
                 {VERDICT[r.verdict]?.icon}
               </span>
-              <Link href={`/node/${encodeURIComponent(r.node.id)}`} style={{ color: "var(--text)" }}>
+              <Link href={`/node/${encodeURIComponent(r.node.id)}`} className="text-link">
                 {r.node.title}
               </Link>
               {r.node.area && <span className="muted small"> · {r.node.area}</span>}
               {r.justMastered && <span className="mastered-badge">mastered</span>}
-              <span className="muted small" style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8 }}>
+              <span className="muted small result-mastery">
                 {r.elapsedSec !== undefined && (
                   <span style={{ fontSize: 10, opacity: 0.6 }}>{r.elapsedSec}s</span>
                 )}
@@ -326,7 +326,7 @@ export default function StudyQueue({ queue, preferKind }: { queue: QueueNode[]; 
           ))}
         </div>
 
-        <div style={{ display: "flex", gap: 12, marginTop: 20, flexWrap: "wrap" }}>
+        <div className="session-actions">
           {incorrect + partial > 0 && (
             <button
               className="btn-ghost"
@@ -363,14 +363,14 @@ export default function StudyQueue({ queue, preferKind }: { queue: QueueNode[]; 
       <div className="session-progress">
         <div className="session-progress-bar" style={{ width: `${(index / activeQueue.length) * 100}%` }} />
       </div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+      <div className="session-progress-header">
+        <div className="session-progress-left">
           <span className="muted small">Concept {index + 1} of {activeQueue.length}</span>
           <span className="muted small" style={{ fontVariantNumeric: "tabular-nums" }}>
             {Math.floor(sessionElapsed / 60)}:{String(sessionElapsed % 60).padStart(2, "0")}
           </span>
         </div>
-        <div style={{ display: "flex", gap: 6 }}>
+        <div className="dots-row">
           {results.map((r, i) => (
             <span
               key={i}
@@ -387,9 +387,9 @@ export default function StudyQueue({ queue, preferKind }: { queue: QueueNode[]; 
 
       {busy && !problem && <div className="panel muted">Generating a problem…</div>}
       {error && (
-        <div className="panel" style={{ color: "var(--red)" }}>
+        <div className="panel error-notice">
           <div style={{ marginBottom: 8 }}>{error}</div>
-          <div style={{ display: "flex", gap: 8 }}>
+          <div className="btn-row">
             <button className="btn-ghost" onClick={() => generate(currentNode.id, undefined)} disabled={busy} style={{ fontSize: 13 }}>
               Retry
             </button>
@@ -462,7 +462,7 @@ export default function StudyQueue({ queue, preferKind }: { queue: QueueNode[]; 
               <button className="btn-ghost" onClick={reveal} disabled={busy} style={{ color: "var(--muted)", fontSize: 13 }}>
                 I don't know
               </button>
-              <span className="muted small" style={{ marginLeft: "auto", alignSelf: "center" }}>Ctrl+Enter</span>
+              <span className="muted small keyboard-hint" style={{ marginLeft: "auto" }}>Ctrl+Enter</span>
             </div>
           )}
 
@@ -484,7 +484,7 @@ export default function StudyQueue({ queue, preferKind }: { queue: QueueNode[]; 
                 <button className="btn-primary" onClick={advance} disabled={busy}>
                   {index + 1 >= activeQueue.length ? "Finish session →" : "Next concept →"}
                 </button>
-                <span className="muted small" style={{ alignSelf: "center" }}>Ctrl+Enter</span>
+                <span className="muted small keyboard-hint">Ctrl+Enter</span>
               </div>
             </div>
           )}

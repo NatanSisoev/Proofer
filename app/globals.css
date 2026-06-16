@@ -750,6 +750,10 @@ details[open].practice-history > summary::before { transform: rotate(90deg); }
 .weak-prereq-title { font-size: 14px; font-weight: 600; }
 .weak-prereq-blocks { margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
+/* reusable utility: link colored like body text (overrides accent default) */
+.text-link { color: var(--text); }
+.text-link:hover { color: var(--text); }
+
 /* history page: filter bar */
 .filter-bar { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
 .filter-group { display: flex; gap: 4px; align-items: center; }
@@ -773,6 +777,15 @@ details[open].practice-history > summary::before { transform: rotate(90deg); }
 .browse-row-left { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1; }
 .browse-node-link { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .browse-row-right { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+
+/* study queue */
+.session-subtitle { margin: 0 0 20px; font-size: 13px; }
+.result-mastery { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+.session-actions { display: flex; gap: 12px; margin-top: 20px; flex-wrap: wrap; }
+.session-progress-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.session-progress-left { display: flex; align-items: center; gap: 12px; }
+.dots-row { display: flex; gap: 6px; }
+.keyboard-hint { align-self: center; }
 
 /* session setup */
 .mode-list { display: flex; flex-direction: column; gap: 8px; }
