@@ -25,17 +25,17 @@ export default function GhostCreate({ nodeId, nodeTitle, nodeArea }: Props) {
 
   if (state === "done" && result?.obsidianHref) {
     return (
-      <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "flex-end" }}>
-        <p style={{ color: "var(--green)", fontSize: 13, margin: 0 }}>✓ Note created</p>
-        <a href={result.obsidianHref} className="btn-ghost" style={{ fontSize: 13 }}>Open in Obsidian ↗</a>
+      <div className="ghost-actions">
+        <p className="action-success">✓ Note created</p>
+        <a href={result.obsidianHref} className="btn-ghost btn-sm">Open in Obsidian ↗</a>
         <p className="muted small" style={{ margin: 0 }}>Sync vault after editing to refresh the graph.</p>
       </div>
     );
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "flex-end" }}>
-      <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+    <div className="ghost-actions">
+      <div className="action-row" style={{ alignItems: "center" }}>
         <select
           value={type}
           onChange={(e) => setType(e.target.value)}
@@ -47,14 +47,13 @@ export default function GhostCreate({ nodeId, nodeTitle, nodeArea }: Props) {
         <button
           onClick={handleCreate}
           disabled={state === "busy"}
-          className="btn-ghost"
-          style={{ fontSize: 13 }}
+          className="btn-ghost btn-sm"
         >
           {state === "busy" ? "Creating…" : "Create note in Obsidian"}
         </button>
       </div>
       {state === "error" && result?.error && (
-        <p style={{ color: "var(--red)", fontSize: 12, margin: 0 }}>{result.error}</p>
+        <p className="error-inline" style={{ margin: 0 }}>{result.error}</p>
       )}
     </div>
   );

@@ -14,16 +14,10 @@ type Props = {
   autoFocus?: boolean;
 };
 
-/** Detect if the answer contains any LaTeX so we can show a preview. */
 function hasMath(s: string): boolean {
   return /\$|\\\[|\\\(/.test(s);
 }
 
-/**
- * LaTeX quick-insert snippets. Each entry has:
- *   label   — the text shown on the button
- *   insert  — text to insert (| marks cursor position)
- */
 const LATEX_SNIPPETS = [
   { label: "$·$",    insert: "$ | $" },
   { label: "$$·$$",  insert: "$$\n|\n$$" },
@@ -42,10 +36,6 @@ const LATEX_SNIPPETS = [
   { label: "lim",    insert: "\\lim_{| \\to }" },
 ];
 
-/**
- * Insert a snippet into a textarea, placing the cursor where | appears.
- * Returns the new string value; also updates the textarea selection.
- */
 function insertSnippet(el: HTMLTextAreaElement, snippet: string): string {
   const cursorPos = el.selectionStart ?? 0;
   const before = el.value.slice(0, cursorPos);
@@ -53,7 +43,6 @@ function insertSnippet(el: HTMLTextAreaElement, snippet: string): string {
   const cursorInSnippet = snippet.indexOf("|");
   const text = snippet.replace("|", "");
   const newVal = before + text + after;
-  // Schedule cursor placement after React re-render
   const newCursor = cursorPos + (cursorInSnippet >= 0 ? cursorInSnippet : text.length);
   requestAnimationFrame(() => {
     el.focus();
@@ -62,12 +51,6 @@ function insertSnippet(el: HTMLTextAreaElement, snippet: string): string {
   return newVal;
 }
 
-/**
- * Auto-growing textarea with:
- *  - Live KaTeX preview panel (appears when value contains LaTeX)
- *  - LaTeX quick-insert toolbar (always shown when not disabled)
- * Drop-in replacement for <textarea>.
- */
 export default function AnswerBox({
   value,
   onChange,
@@ -80,7 +63,6 @@ export default function AnswerBox({
 }: Props) {
   const ref = useRef<HTMLTextAreaElement>(null);
 
-  // Auto-grow: match height to content each time value changes.
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
@@ -108,18 +90,8 @@ export default function AnswerBox({
         autoFocus={autoFocus}
       />
 
-      {/* LaTeX quick-insert toolbar */}
       {!disabled && (
-        <div
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            gap: 4,
-            marginTop: 5,
-            paddingBottom: 2,
-          }}
-          onMouseDown={(e) => e.preventDefault()} // keep textarea focused
-        >
+        <div className="latex-toolbar" onMouseDown={(e) => e.preventDefault()}>
           {LATEX_SNIPPETS.map(({ label, insert }) => (
             <button
               key={label}
@@ -129,18 +101,7 @@ export default function AnswerBox({
                 if (!ref.current) return;
                 onChange(insertSnippet(ref.current, insert));
               }}
-              style={{
-                padding: "2px 7px",
-                fontSize: 12,
-                fontFamily: "monospace",
-                background: "var(--bg-soft)",
-                border: "1px solid var(--border)",
-                borderRadius: 5,
-                color: "var(--muted)",
-                cursor: "pointer",
-                lineHeight: 1.6,
-                userSelect: "none",
-              }}
+              className="latex-snippet-btn"
             >
               {label}
             </button>
@@ -149,26 +110,14 @@ export default function AnswerBox({
       )}
 
       {wordCount > 0 && (
-        <div style={{ textAlign: "right", marginTop: 3 }}>
+        <div className="word-count">
           <span className="muted small">{wordCount} word{wordCount !== 1 ? "s" : ""}</span>
         </div>
       )}
 
       {showPreview && (
-        <div
-          style={{
-            marginTop: 4,
-            padding: "10px 14px",
-            background: "var(--bg-soft)",
-            border: "1px solid var(--border)",
-            borderRadius: 8,
-            fontSize: 13.5,
-          }}
-        >
-          <div
-            className="muted small"
-            style={{ marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.07em", fontSize: 10, fontWeight: 700 }}
-          >
+        <div className="notes-preview" style={{ marginTop: 4 }}>
+          <div className="panel-label label-xs" style={{ marginBottom: 6 }}>
             Math preview
           </div>
           <Markdown>{value}</Markdown>
