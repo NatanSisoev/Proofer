@@ -121,8 +121,8 @@ header.top {
   display: flex; align-items: flex-start; gap: 14px;
   border-bottom: 1px solid var(--border); padding-bottom: 20px; margin-bottom: 24px;
 }
-header.top h1 { font-size: 24px; margin: 0; letter-spacing: -0.02em; font-weight: 700; }
-header.top .tag { color: var(--muted); font-size: 14px; }
+header.top h1 { font-size: 26px; margin: 0; letter-spacing: -0.03em; font-weight: 700; }
+header.top .tag { color: var(--muted); font-size: 14px; margin-top: 4px; }
 
 /* minmax(0, 1fr) — not 1fr — so the main column can shrink below its
    content's min-content. Without it, a nowrap line (e.g. a long attempt

@@ -36,10 +36,8 @@ export default function Home() {
     <div className="wrap">
       <header className="top" style={{ borderBottom: "none", paddingBottom: 20 }}>
         <div>
-          <h1 style={{ fontSize: 28, margin: 0, letterSpacing: "-0.03em" }}>
-            Proofer
-          </h1>
-          <p className="tag" style={{ marginTop: 4, fontSize: 14 }}>
+          <h1>Proofer</h1>
+          <p className="tag">
             AI tutor that models your understanding of mathematics
           </p>
         </div>

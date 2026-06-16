@@ -18,8 +18,8 @@ export default function StudyPlanPage() {
       </div>
       <header className="top" style={{ borderBottom: "none" }}>
         <div>
-          <h1 style={{ margin: 0, fontSize: 26, letterSpacing: "-0.02em" }}>Study Plan</h1>
-          <p className="tag" style={{ marginTop: 4, fontSize: 14 }}>
+          <h1>Study Plan</h1>
+          <p className="tag">
             AI-generated schedule tailored to your current mastery
           </p>
         </div>
