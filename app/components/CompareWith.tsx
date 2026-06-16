@@ -73,9 +73,8 @@ export default function CompareWith({ nodeId, nodeTitle }: { nodeId: string; nod
           ⚖ Compare {nodeTitle} with…
         </span>
         <button
-          className="btn-ghost"
-          onClick={() => { setOpen(false); setSelected(null); setComparison(null); setError(null); }}
           className="btn-ghost close-btn"
+          onClick={() => { setOpen(false); setSelected(null); setComparison(null); setError(null); }}
         >
           ✕
         </button>

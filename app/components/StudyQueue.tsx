@@ -318,7 +318,7 @@ export default function StudyQueue({ queue, preferKind }: { queue: QueueNode[]; 
               {r.justMastered && <span className="mastered-badge">mastered</span>}
               <span className="muted small result-mastery">
                 {r.elapsedSec !== undefined && (
-                  <span style={{ fontSize: 10, opacity: 0.6 }}>{r.elapsedSec}s</span>
+                  <span className="label-xs" style={{ opacity: 0.6 }}>{r.elapsedSec}s</span>
                 )}
                 {Math.round(r.masteryBefore * 100)}% → <strong>{Math.round(r.masteryAfter * 100)}%</strong>
               </span>
@@ -329,7 +329,7 @@ export default function StudyQueue({ queue, preferKind }: { queue: QueueNode[]; 
         <div className="session-actions">
           {incorrect + partial > 0 && (
             <button
-              className="btn-ghost"
+              className="btn-ghost btn-sm btn-warn"
               onClick={() => {
                 const retryNodes = results
                   .filter((r) => r.verdict === "incorrect" || r.verdict === "partial")
@@ -342,7 +342,6 @@ export default function StudyQueue({ queue, preferKind }: { queue: QueueNode[]; 
                   setSessionElapsed(0);
                 }
               }}
-              style={{ fontSize: 13, color: "var(--amber)" }}
             >
               Retry {incorrect + partial} missed
             </button>
@@ -390,10 +389,10 @@ export default function StudyQueue({ queue, preferKind }: { queue: QueueNode[]; 
         <div className="panel error-notice">
           <div style={{ marginBottom: 8 }}>{error}</div>
           <div className="btn-row">
-            <button className="btn-ghost" onClick={() => generate(currentNode.id, undefined)} disabled={busy} style={{ fontSize: 13 }}>
+            <button className="btn-ghost btn-sm" onClick={() => generate(currentNode.id, undefined)} disabled={busy}>
               Retry
             </button>
-            <button className="btn-ghost" onClick={advance} disabled={busy} style={{ fontSize: 13 }}>
+            <button className="btn-ghost btn-sm" onClick={advance} disabled={busy}>
               Skip this concept
             </button>
           </div>
@@ -431,7 +430,7 @@ export default function StudyQueue({ queue, preferKind }: { queue: QueueNode[]; 
             onDismissHint={() => setHint(null)}
             revealed={revealed}
             revealedFooter={
-              <button className="btn-ghost" onClick={advance} disabled={busy} style={{ marginTop: 10, fontSize: 13 }}>
+              <button className="btn-ghost btn-sm" onClick={advance} disabled={busy} style={{ marginTop: 10 }}>
                 {index + 1 >= activeQueue.length ? "Finish session →" : "Next concept →"}
               </button>
             }
@@ -448,10 +447,9 @@ export default function StudyQueue({ queue, preferKind }: { queue: QueueNode[]; 
               />
               {problem.mode !== "demo" && !hint && (
                 <button
-                  className="btn-ghost"
+                  className="btn-ghost btn-sm btn-warn"
                   onClick={getHint}
                   disabled={busy || hintBusy}
-                  style={{ fontSize: 13, color: "var(--amber)" }}
                 >
                   {hintBusy ? "…" : "Hint"}
                 </button>
@@ -459,7 +457,7 @@ export default function StudyQueue({ queue, preferKind }: { queue: QueueNode[]; 
               <button className="btn-ghost" onClick={advance} disabled={busy}>
                 Skip →
               </button>
-              <button className="btn-ghost" onClick={reveal} disabled={busy} style={{ color: "var(--muted)", fontSize: 13 }}>
+              <button className="btn-ghost btn-sm" onClick={reveal} disabled={busy} style={{ color: "var(--muted)" }}>
                 I don't know
               </button>
               <span className="muted small keyboard-hint" style={{ marginLeft: "auto" }}>Ctrl+Enter</span>
