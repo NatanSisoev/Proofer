@@ -93,7 +93,7 @@ export default function RelatedEdges({ initial, hasKey }: { initial: RelatedEdge
   return (
     <div>
       {/* Header / actions */}
-      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16, flexWrap: "wrap" }}>
+      <div className="edge-header">
         <div>
           <span style={{ fontWeight: 600 }}>{visible.length}</span>
           <span className="muted"> unclassified edge{visible.length !== 1 ? "s" : ""}</span>
@@ -101,7 +101,7 @@ export default function RelatedEdges({ initial, hasKey }: { initial: RelatedEdge
         </div>
 
         {hasKey && notYetClassified.length > 0 && (
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginLeft: "auto" }}>
+          <div className="edge-actions">
             <label style={{ fontSize: 13, color: "var(--muted)" }}>
               Batch size:
               <select
@@ -113,8 +113,7 @@ export default function RelatedEdges({ initial, hasKey }: { initial: RelatedEdge
               </select>
             </label>
             <button
-              className="pill"
-              style={{ color: "var(--accent)", borderColor: "var(--accent-soft)", cursor: "pointer" }}
+              className="pill pill-accent" style={{ cursor: "pointer" }}
               disabled={classifyingAll}
               onClick={() => classifyBatch(notYetClassified.slice(0, batchSize))}
             >
@@ -130,16 +129,16 @@ export default function RelatedEdges({ initial, hasKey }: { initial: RelatedEdge
       </div>
 
       {classifyAllError && (
-        <p className="muted small" style={{ color: "var(--red)", marginBottom: 12 }}>{classifyAllError}</p>
+        <p className="muted small error-text">{classifyAllError}</p>
       )}
 
       {visible.length === 0 && (
-        <p className="muted" style={{ textAlign: "center", padding: "32px 0" }}>
+        <p className="muted empty-state">
           All related edges have been reclassified. ✓
         </p>
       )}
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      <div className="flex-col" style={{ gap: 10 }}>
         {visible.map((e) => (
           <EdgeRow
             key={`${e.src_id}|${e.tgt_id}`}
@@ -172,13 +171,13 @@ function EdgeRow({
   return (
     <div className="edge-card">
       {/* Concept pair */}
-      <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", fontSize: 14 }}>
-        <Link href={`/node/${encodeURIComponent(edge.src_id)}`} style={{ fontWeight: 600, color: "var(--text)" }}>
+      <div className="edge-pair">
+        <Link href={`/node/${encodeURIComponent(edge.src_id)}`} className="concept-link text-link">
           {edge.src_title}
         </Link>
         {edge.src_type && <span className={`type-badge t-${edge.src_type}`}>{edge.src_type}</span>}
         <span className="muted" style={{ fontSize: 12 }}>→ related →</span>
-        <Link href={`/node/${encodeURIComponent(edge.tgt_id)}`} style={{ fontWeight: 600, color: "var(--text)" }}>
+        <Link href={`/node/${encodeURIComponent(edge.tgt_id)}`} className="concept-link text-link">
           {edge.tgt_title}
         </Link>
         {edge.tgt_type && <span className={`type-badge t-${edge.tgt_type}`}>{edge.tgt_type}</span>}
@@ -192,7 +191,7 @@ function EdgeRow({
 
       {/* Context snippet */}
       {edge.context && (
-        <p className="muted small" style={{ margin: 0, fontStyle: "italic" }}>"{edge.context}"</p>
+        <p className="muted small italic-note">"{edge.context}"</p>
       )}
 
       {/* AI suggestion */}
@@ -200,9 +199,9 @@ function EdgeRow({
         <p className="muted small" style={{ margin: 0 }}>Classifying…</p>
       )}
       {edge.suggestion && (
-        <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13 }}>
-          <span style={{ color: "var(--muted)" }}>AI suggests:</span>
-          <span style={{ fontWeight: 600, color: "var(--accent)" }}>
+        <div className="ai-suggestion">
+          <span className="muted">AI suggests:</span>
+          <span className="ai-suggest-type">
             {edge.suggestion.suggested_type.replace(/_/g, " ")}
           </span>
           <span style={{ color: CONFIDENCE_COLOR(edge.suggestion.confidence) }}>
@@ -213,7 +212,7 @@ function EdgeRow({
       )}
 
       {/* Action row */}
-      <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+      <div className="edge-action-row">
         <select
           value={selected}
           onChange={(e) => setSelected(e.target.value)}

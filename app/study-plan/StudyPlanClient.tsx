@@ -50,7 +50,7 @@ export default function StudyPlanClient({
           <h2>Configure your plan</h2>
 
           <div style={{ marginBottom: 16 }}>
-            <label className="muted small" style={{ display: "block", marginBottom: 6 }}>
+            <label className="muted small field-label">
               Target date (exam / deadline)
             </label>
             <input
@@ -58,11 +58,8 @@ export default function StudyPlanClient({
               value={targetDate}
               onChange={e => setTargetDate(e.target.value)}
               min={new Date(Date.now() + 86400000).toISOString().slice(0, 10)}
-              style={{
-                background: "var(--bg-soft)", border: "1px solid var(--border)",
-                color: "var(--text)", borderRadius: 8, padding: "8px 12px",
-                fontSize: 14, width: "100%", colorScheme: "dark",
-              }}
+              className="form-input"
+              style={{ colorScheme: "dark" }}
             />
             {daysLeft > 0 && (
               <p className="muted small" style={{ marginTop: 6, marginBottom: 0 }}>
@@ -72,17 +69,13 @@ export default function StudyPlanClient({
           </div>
 
           <div style={{ marginBottom: 20 }}>
-            <label className="muted small" style={{ display: "block", marginBottom: 6 }}>
+            <label className="muted small field-label">
               Focus area (optional)
             </label>
             <select
               value={focusArea}
               onChange={e => setFocusArea(e.target.value)}
-              style={{
-                background: "var(--bg-soft)", border: "1px solid var(--border)",
-                color: "var(--text)", borderRadius: 8, padding: "8px 12px",
-                fontSize: 14, width: "100%",
-              }}
+              className="form-input"
             >
               <option value="">All areas</option>
               {areas.map(a => <option key={a} value={a}>{a}</option>)}
@@ -107,8 +100,8 @@ export default function StudyPlanClient({
             <h2>Current mastery by area</h2>
             {areaStats.map(a => (
               <div key={a.area} style={{ marginBottom: 8 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 3, fontSize: 13 }}>
-                  <span style={{ color: "var(--text)", fontWeight: 500 }}>{a.area}</span>
+                <div className="area-stat-row">
+                  <span style={{ fontWeight: 500 }}>{a.area}</span>
                   <span className="muted small">{a.mastered}/{a.total} · {Math.round(a.avg_p * 100)}%</span>
                 </div>
                 <div className="bar" style={{ height: 5 }}>
@@ -125,7 +118,7 @@ export default function StudyPlanClient({
 
       <div>
         {busy && (
-          <div className="panel" style={{ textAlign: "center", padding: 40 }}>
+          <div className="panel center-panel">
             <div className="muted">Generating your personalised study plan…</div>
             <div className="muted small" style={{ marginTop: 8 }}>This takes ~10–15 seconds</div>
           </div>
@@ -133,7 +126,7 @@ export default function StudyPlanClient({
 
         {plan && !busy && (
           <div className="panel">
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+            <div className="panel-header" style={{ marginBottom: 16 }}>
               <h2 style={{ margin: 0 }}>Your study plan</h2>
               <button
                 className="btn-ghost"
@@ -146,7 +139,7 @@ export default function StudyPlanClient({
             <div className="markdown">
               <Markdown>{plan}</Markdown>
             </div>
-            <div style={{ marginTop: 20, paddingTop: 14, borderTop: "1px solid var(--border)", display: "flex", gap: 10 }}>
+            <div className="regen-row">
               <button className="btn-ghost" onClick={generate} style={{ fontSize: 13 }}>
                 ↻ Regenerate
               </button>
@@ -155,7 +148,7 @@ export default function StudyPlanClient({
         )}
 
         {!plan && !busy && (
-          <div className="panel" style={{ background: "var(--bg-soft)", textAlign: "center", padding: 40 }}>
+          <div className="panel center-panel" style={{ background: "var(--bg-soft)" }}>
             <div className="muted" style={{ fontSize: 14 }}>
               Set your target date and click <strong>Generate study plan</strong> to get a personalised schedule.
             </div>

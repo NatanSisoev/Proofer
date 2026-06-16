@@ -778,6 +778,26 @@ details[open].practice-history > summary::before { transform: rotate(90deg); }
 .browse-node-link { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .browse-row-right { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
 
+/* study plan */
+.form-input {
+  background: var(--bg-soft); border: 1px solid var(--border);
+  color: var(--text); border-radius: 8px; padding: 8px 12px;
+  font-size: 14px; width: 100%;
+}
+.area-stat-row { display: flex; justify-content: space-between; margin-bottom: 3px; font-size: 13px; }
+.center-panel { text-align: center; padding: 40px; }
+.regen-row { margin-top: 20px; padding-top: 14px; border-top: 1px solid var(--border); display: flex; gap: 10px; }
+
+/* related edges (quality page) */
+.edge-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+.edge-actions { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+.empty-state { text-align: center; padding: 32px 0; }
+.edge-pair { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 14px; }
+.ai-suggestion { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.ai-suggest-type { font-weight: 600; color: var(--accent); }
+.edge-action-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.error-text { color: var(--red); margin-bottom: 12px; }
+
 /* problem card: concept reminder panel */
 .reminder-panel { font-size: 13.5px; background: var(--bg-soft); margin-bottom: 4px; }
 .reminder-header { display: flex; gap: 8px; align-items: baseline; margin-bottom: 6px; }
