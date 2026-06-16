@@ -183,7 +183,8 @@ header.top .tag { color: var(--muted); font-size: 14px; margin-top: 4px; }
 
 /* node page */
 .node-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; flex-wrap: wrap; margin-bottom: 8px; }
-.node-head h1 { margin: 0 0 6px; font-size: 28px; letter-spacing: -0.02em; }
+.node-head h1 { margin: 6px 0; font-size: 28px; letter-spacing: -0.02em; }
+.mastered-badge { font-size: 11px; font-weight: 700; color: var(--green); background: var(--green-soft); padding: 2px 8px; border-radius: 999px; border: 1px solid var(--border); }
 .breadcrumb { color: var(--muted); font-size: 13px; margin-bottom: 18px; }
 
 .readiness { margin: 18px 0; }
@@ -284,7 +285,11 @@ button.know.on { background: var(--green-soft); border-color: var(--green-border
 .cta.ghost { background: transparent; color: var(--text); border: 1px solid var(--border); }
 .cta.ghost:hover { background: var(--bg-soft); }
 
-.mastery-chip { display: inline-flex; align-items: center; gap: 10px; }
+.mastery-chip {
+  display: inline-flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  margin-top: 10px; padding: 10px 14px;
+  background: var(--bg-soft); border-radius: 10px; border: 1px solid var(--border);
+}
 .mastery-chip .bar { width: 120px; }
 
 /* nav */
@@ -328,7 +333,7 @@ button.know.on { background: var(--green-soft); border-color: var(--green-border
   border-radius: 10px; text-decoration: none; transition: border-color 0.15s, box-shadow 0.15s;
   box-shadow: var(--panel-shadow, 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04));
 }
-.area-card:hover { border-color: var(--accent); text-decoration: none; }
+.area-card:hover { border-color: var(--accent); text-decoration: none; box-shadow: 0 4px 12px rgba(0,0,0,0.1), 0 2px 6px rgba(0,0,0,0.06); }
 .area-name { font-weight: 700; font-size: 15px; color: var(--text); margin-bottom: 4px; }
 
 .browse-filters {
@@ -395,6 +400,7 @@ select.filter-btn { appearance: none; padding-right: 20px; }
   display: flex; flex-direction: column; align-items: center;
   border: 1px solid var(--border); border-radius: 10px; padding: 14px 24px; min-width: 100px;
   background: var(--panel);
+  box-shadow: var(--panel-shadow, 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04));
 }
 .score-n { font-size: 32px; font-weight: 700; line-height: 1; }
 .score-l { font-size: 12px; color: var(--muted); margin-top: 4px; }
@@ -447,4 +453,5 @@ select.filter-btn { appearance: none; padding-right: 20px; }
 .daily-goal-bar {
   background: var(--panel); border: 1px solid var(--border);
   border-radius: 10px; padding: 14px 16px;
+  box-shadow: var(--panel-shadow, 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04));
 }

@@ -123,21 +123,19 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
                   </span>
                 )}
                 {mastery >= 0.8 && (
-                  <span style={{ fontSize: 11, fontWeight: 700, color: "var(--green)", background: "var(--accent-soft)", padding: "2px 8px", borderRadius: 999, border: "1px solid var(--border)" }}>
-                    mastered
-                  </span>
+                  <span className="mastered-badge">mastered</span>
                 )}
                 {attempts > 0 && (
                   <span className="muted small">{attempts} attempt{attempts !== 1 ? "s" : ""}</span>
                 )}
               </div>
-              <h1 style={{ marginTop: 6 }}>{node.title}</h1>
+              <h1>{node.title}</h1>
               {node.overview && (
                 <MathText className="muted" style={{ display: "block", marginTop: -2, maxWidth: 640, lineHeight: 1.5 }}>
                   {node.overview}
                 </MathText>
               )}
-              <div className="mastery-chip" style={{ marginTop: 10, padding: "10px 14px", background: "var(--bg-soft)", borderRadius: 10, border: "1px solid var(--border)", flexWrap: "wrap", gap: 10 }}>
+              <div className="mastery-chip">
                 <span className="muted small">mastery</span>
                 <div className="bar" style={{ width: 120 }}><span style={{ width: `${Math.round(mastery * 100)}%` }} /></div>
                 <span style={{ fontWeight: 700, fontSize: 15, letterSpacing: "-0.02em" }}>{Math.round(mastery * 100)}%</span>
