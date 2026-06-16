@@ -118,7 +118,7 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
                 {node.type && <span className={`type-badge t-${node.type}`}>{node.type}</span>}
                 {node.area && <span className="muted small">{node.area}</span>}
                 {depth > 0 && (
-                  <span className="pill" style={{ fontSize: 10 }}>
+                  <span className="pill label-xs">
                     depth {depth}
                   </span>
                 )}
@@ -142,11 +142,8 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
                 <MasterySparkline nodeId={id} />
                 {reviewDays !== null && (
                   <span
-                    className="pill"
-                    style={{
-                      fontSize: 10,
-                      color: reviewDays < 0 ? "var(--amber)" : reviewDays === 0 ? "var(--amber)" : "var(--muted)",
-                    }}
+                    className="pill label-xs"
+                    style={{ color: reviewDays < 0 ? "var(--amber)" : reviewDays === 0 ? "var(--amber)" : "var(--muted)" }}
                   >
                     {reviewDays < 0
                       ? `review overdue ${Math.abs(reviewDays)}d`
@@ -253,7 +250,7 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
                           <div className="attempt-header">
                             <div className="node-actions-row">
                               <span className="verdict-label" style={{ color: verdictColor }}>{verdictLabel}</span>
-                              {a.kind && <span className="pill" style={{ fontSize: 10 }}>{a.kind}</span>}
+                              {a.kind && <span className="pill label-xs">{a.kind}</span>}
                             </div>
                             <span className="muted small">{new Date(a.created_at).toLocaleDateString()}</span>
                           </div>
@@ -268,7 +265,7 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
                         </div>
                       );
                     })}
-                    <Link href={`/learn?node=${encodeURIComponent(id)}`} className="btn-ghost" style={{ fontSize: 13, alignSelf: "flex-start" }}>
+                    <Link href={`/learn?node=${encodeURIComponent(id)}`} className="btn-ghost btn-sm" style={{ alignSelf: "flex-start" }}>
                       Practice again →
                     </Link>
                   </div>
