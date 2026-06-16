@@ -127,8 +127,8 @@ export default function NodeActions({ nodeId, nodePath, hasLLM }: Props) {
 
       {improveState === "preview" && preview && (
         <div className="panel" style={{ marginTop: 4 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-            <h2 style={{ margin: 0 }}>AI improvement preview</h2>
+          <div className="panel-header">
+            <h2>AI improvement preview</h2>
             <span className="muted small">Review before applying</span>
           </div>
           <pre style={{

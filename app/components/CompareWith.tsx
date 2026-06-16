@@ -68,7 +68,7 @@ export default function CompareWith({ nodeId, nodeTitle }: { nodeId: string; nod
 
   return (
     <div style={{ marginTop: 16, padding: "14px 16px", background: "var(--bg-soft)", borderRadius: 10, border: "1px solid var(--border)" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+      <div className="panel-header">
         <span style={{ fontSize: 12, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.08em" }}>
           ⚖ Compare {nodeTitle} with…
         </span>

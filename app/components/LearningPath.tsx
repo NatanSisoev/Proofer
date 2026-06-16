@@ -11,8 +11,8 @@ export default function LearningPath({ nodeId }: { nodeId: string }) {
 
   return (
     <div className="panel" style={{ marginTop: 16 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-        <h2 style={{ margin: 0 }}>Learning path — {path.length} unmastered prerequisite{path.length !== 1 ? "s" : ""}</h2>
+      <div className="panel-header">
+        <h2>Learning path — {path.length} unmastered prerequisite{path.length !== 1 ? "s" : ""}</h2>
         <span className="muted small">foundations first</span>
       </div>
       <p className="muted small" style={{ marginTop: -4, marginBottom: 10 }}>

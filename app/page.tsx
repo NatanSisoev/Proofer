@@ -142,8 +142,8 @@ export default function Home() {
       {/* Due for review — shown prominently when non-empty */}
       {due.length > 0 && (
         <div className="panel" style={{ marginBottom: 20 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-            <h2 style={{ margin: 0, color: "var(--amber)" }}>Due for review</h2>
+          <div className="panel-header">
+            <h2 style={{ color: "var(--amber)" }}>Due for review</h2>
             <Link
               href="/session?mode=due"
               className="cta"
@@ -179,8 +179,8 @@ export default function Home() {
           {/* Recently practiced — jump back in */}
           {recent.length > 0 && (
             <div className="panel" style={{ marginBottom: 16 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-                <h2 style={{ margin: 0 }}>Jump back in</h2>
+              <div className="panel-header">
+                <h2>Jump back in</h2>
                 <Link href="/progress" className="small" style={{ color: "var(--accent)" }}>All activity →</Link>
               </div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
@@ -260,8 +260,8 @@ export default function Home() {
           )}
 
           <div className="panel">
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-              <h2 style={{ margin: 0 }}>Areas</h2>
+            <div className="panel-header">
+              <h2>Areas</h2>
               <Link href="/browse" className="small" style={{ color: "var(--accent)" }}>Browse all →</Link>
             </div>
             {s.areas.slice(0, 12).map((a) => (
@@ -275,8 +275,8 @@ export default function Home() {
           </div>
 
           <div className="panel">
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-              <h2 style={{ margin: 0 }}>Navigate</h2>
+            <div className="panel-header">
+              <h2>Navigate</h2>
             </div>
             <div style={{ display: "flex", flexDirection: "column" }}>
               <Link href="/graph" className="nav-item">

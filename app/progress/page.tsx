@@ -182,8 +182,8 @@ export default function ProgressPage() {
 
           {/* Recent activity */}
           <div className="panel">
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-              <h2 style={{ margin: 0 }}>Recent attempts</h2>
+            <div className="panel-header">
+              <h2>Recent attempts</h2>
               <Link href="/history" className="small" style={{ color: "var(--accent)" }}>
                 Full history →
               </Link>
@@ -233,8 +233,8 @@ export default function ProgressPage() {
           {/* Per-area mastery breakdown */}
           {areas.length > 0 && (
             <div className="panel">
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-                <h2 style={{ margin: 0 }}>Mastery by area</h2>
+              <div className="panel-header">
+                <h2>Mastery by area</h2>
                 {areas.length > 0 && (
                   <Link
                     href={`/session?mode=area&area=${encodeURIComponent(areas[areas.length - 1].area)}`}
