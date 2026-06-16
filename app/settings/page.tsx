@@ -66,7 +66,7 @@ export default function SettingsPage() {
 
   return (
     <div className="wrap" style={{ maxWidth: 640 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 28 }}>
+      <div className="page-top" style={{ marginBottom: 28 }}>
         <div>
           <h1>Settings</h1>
           <p className="muted small" style={{ marginTop: 4 }}>Preferences for your study sessions</p>
@@ -81,7 +81,7 @@ export default function SettingsPage() {
 
           {/* Daily goal */}
           <div className="panel">
-            <h2 style={{ marginTop: 0 }}>Daily goal</h2>
+            <h2>Daily goal</h2>
             <p className="muted small" style={{ marginTop: -4, marginBottom: 16 }}>
               How many concepts you aim to practice each day. Shown in the progress bar on the home page.
             </p>
@@ -105,7 +105,7 @@ export default function SettingsPage() {
 
           {/* Voice language */}
           <div className="panel">
-            <h2 style={{ marginTop: 0 }}>Voice input language</h2>
+            <h2>Voice input language</h2>
             <p className="muted small" style={{ marginTop: -4, marginBottom: 16 }}>
               Language for the 🎤 Speak button. Used by the Web Speech API in your browser.
             </p>
@@ -113,11 +113,7 @@ export default function SettingsPage() {
               value={settings.voice_lang}
               onChange={(e) => save({ voice_lang: e.target.value })}
               disabled={saving}
-              style={{
-                background: "var(--bg-soft)", border: "1px solid var(--border)",
-                color: "var(--text)", borderRadius: 8, padding: "8px 12px",
-                fontSize: 14, width: "100%", maxWidth: 260,
-              }}
+              style={{ width: "100%", maxWidth: 260 }}
             >
               {VOICE_LANGS.map((l) => (
                 <option key={l.value} value={l.value}>{l.label}</option>
@@ -127,17 +123,12 @@ export default function SettingsPage() {
 
           {/* Saved indicator */}
           {saved && (
-            <div style={{
-              padding: "10px 14px", background: "var(--accent-soft)", border: "1px solid var(--border)",
-              borderRadius: 8, fontSize: 13, color: "var(--green)", fontWeight: 600,
-            }}>
-              Settings saved
-            </div>
+            <div className="save-notice">Settings saved</div>
           )}
 
           {/* Export personal notes */}
           <div className="panel">
-            <h2 style={{ marginTop: 0 }}>Export personal notes</h2>
+            <h2>Export personal notes</h2>
             <p className="muted small" style={{ marginTop: -4, marginBottom: 14 }}>
               Download all your personal annotations on concept pages as a Markdown file.
             </p>
@@ -145,7 +136,7 @@ export default function SettingsPage() {
               href="/api/notes/export"
               download="proofer-notes.md"
               className="btn-ghost"
-              style={{ display: "inline-block", textDecoration: "none", fontSize: 13 }}
+              style={{ display: "inline-block", fontSize: 13 }}
             >
               ⬇ Download notes.md
             </a>
@@ -153,7 +144,7 @@ export default function SettingsPage() {
 
           {/* Info: LLM provider */}
           <div className="panel">
-            <h2 style={{ marginTop: 0 }}>LLM provider</h2>
+            <h2>LLM provider</h2>
 
             {/* Active provider/model badge */}
             <div
@@ -165,10 +156,8 @@ export default function SettingsPage() {
               }}
             >
               <span
-                style={{
-                  width: 8, height: 8, borderRadius: "50%", flexShrink: 0,
-                  background: provider && !provider.hasKey ? "var(--amber)" : "var(--green)",
-                }}
+                className="verdict-dot-sm"
+                style={{ background: provider && !provider.hasKey ? "var(--amber)" : "var(--green)" }}
               />
               {!provider ? (
                 <span className="muted small">Checking…</span>

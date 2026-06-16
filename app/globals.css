@@ -556,6 +556,12 @@ details[open].practice-history > summary::before { transform: rotate(90deg); }
 .quality-row:last-child { border-bottom: none; }
 .quality-row:hover { background: var(--bg-soft); }
 
+/* settings: save confirmation */
+.save-notice {
+  padding: 10px 14px; background: var(--accent-soft); border: 1px solid var(--border);
+  border-radius: 8px; font-size: 13px; color: var(--green); font-weight: 600;
+}
+
 /* button size variants */
 .btn-full { width: 100%; padding: 11px 28px; font-size: 15px; }
 
