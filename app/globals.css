@@ -891,3 +891,14 @@ details[open].practice-history > summary::before { transform: rotate(90deg); }
 .spotlight-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 4px; }
 .due-actions { display: flex; gap: 8px; align-items: center; }
 .item-actions { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
+
+/* quality filters */
+.quality-list { display: flex; flex-direction: column; gap: 2px; }
+.flex-fill { flex: 1; min-width: 0; }
+.node-link { color: var(--text); font-weight: 500; }
+.issue-pills { display: flex; flex-wrap: wrap; gap: 4px; justify-content: flex-end; }
+.collapse-btn { display: flex; justify-content: space-between; align-items: center; width: 100%; background: none; border: none; cursor: pointer; color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; padding: 0; }
+
+/* compare-with component */
+.panel-label { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+.close-btn { font-size: 11px; padding: 2px 8px; color: var(--muted); }

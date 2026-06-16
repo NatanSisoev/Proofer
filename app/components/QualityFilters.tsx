@@ -43,7 +43,7 @@ export default function QualityFilters({
     <div>
       <div className="panel" style={{ marginBottom: 16 }}>
         <h2>Filter by issue</h2>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+        <div className="chips-row">
           <button
             onClick={() => setFilter(null)}
             style={{
@@ -82,17 +82,17 @@ export default function QualityFilters({
           {filter ? `"${filter}" — ${baseList.length}` : `Structural issues — ${structuralOnly.length}`}
         </h2>
         {baseList.length === 0 && <p className="muted">No structural issues found.</p>}
-        <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+        <div className="quality-list">
           {baseList.map((n) => (
             <div key={n.node_id} className="quality-row">
-              <div style={{ minWidth: 0, flex: 1 }}>
+              <div className="flex-fill">
                 {n.type && <span className={`type-badge t-${n.type}`} style={{ marginRight: 8 }}>{n.type}</span>}
-                <Link href={`/node/${encodeURIComponent(n.node_id)}`} style={{ color: "var(--text)", fontWeight: 500 }}>
+                <Link href={`/node/${encodeURIComponent(n.node_id)}`} className="node-link">
                   {n.title}
                 </Link>
                 {n.area && <span className="muted small"> · {n.area}</span>}
               </div>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 4, justifyContent: "flex-end" }}>
+              <div className="issue-pills">
                 {n.issues.filter((i) => i !== "never practiced").map((issue) => (
                   <span
                     key={issue}
@@ -120,12 +120,7 @@ export default function QualityFilters({
       <div className="panel">
         <button
           onClick={() => setShowPractice((s) => !s)}
-          style={{
-            display: "flex", justifyContent: "space-between", alignItems: "center",
-            width: "100%", background: "none", border: "none", cursor: "pointer",
-            color: "var(--muted)", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.08em",
-            fontWeight: 600, padding: 0,
-          }}
+          className="collapse-btn"
         >
           <span>Practice gaps — {practiceOnly.length} never-practiced notes</span>
           <span>{showPractice ? "▲" : "▼"}</span>
@@ -135,20 +130,20 @@ export default function QualityFilters({
             <p className="muted small" style={{ marginTop: 0, marginBottom: 10 }}>
               Notes with no structural issues but not yet practiced. Start a Smart session to work through these.
             </p>
-            <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+            <div className="quality-list">
               {practiceOnly.map((n) => (
                 <div key={n.node_id} className="quality-row">
-                  <div style={{ minWidth: 0, flex: 1 }}>
+                  <div className="flex-fill">
                     {n.type && <span className={`type-badge t-${n.type}`} style={{ marginRight: 8 }}>{n.type}</span>}
-                    <Link href={`/node/${encodeURIComponent(n.node_id)}`} style={{ color: "var(--text)", fontWeight: 500 }}>
+                    <Link href={`/node/${encodeURIComponent(n.node_id)}`} className="node-link">
                       {n.title}
                     </Link>
                     {n.area && <span className="muted small"> · {n.area}</span>}
                   </div>
                   <Link
                     href={`/learn?node=${encodeURIComponent(n.node_id)}`}
-                    className="pill"
-                    style={{ color: "var(--accent)", borderColor: "var(--accent-soft)", fontSize: 11 }}
+                    className="pill pill-accent"
+                    style={{ fontSize: 11 }}
                   >
                     practice →
                   </Link>

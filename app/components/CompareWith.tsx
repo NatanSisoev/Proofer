@@ -69,13 +69,13 @@ export default function CompareWith({ nodeId, nodeTitle }: { nodeId: string; nod
   return (
     <div className="inset-panel">
       <div className="panel-header">
-        <span style={{ fontSize: 12, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+        <span className="panel-label">
           ⚖ Compare {nodeTitle} with…
         </span>
         <button
           className="btn-ghost"
           onClick={() => { setOpen(false); setSelected(null); setComparison(null); setError(null); }}
-          style={{ fontSize: 11, padding: "2px 8px", color: "var(--muted)" }}
+          className="btn-ghost close-btn"
         >
           ✕
         </button>
@@ -104,7 +104,7 @@ export default function CompareWith({ nodeId, nodeTitle }: { nodeId: string; nod
                   {r.type && (
                     <span className={`type-badge t-${r.type}`} style={{ flexShrink: 0 }}>{r.type}</span>
                   )}
-                  <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  <span className="item-title">
                     {r.title}
                   </span>
                   {r.area && <span className="muted small">{r.area}</span>}
@@ -137,7 +137,7 @@ export default function CompareWith({ nodeId, nodeTitle }: { nodeId: string; nod
       )}
 
       {busy && <div className="muted small" style={{ padding: "8px 0" }}>Generating comparison…</div>}
-      {error && <div style={{ color: "var(--red)", fontSize: 13 }}>{error}</div>}
+      {error && <div className="action-error">{error}</div>}
 
       {comparison && !busy && (
         <div className="divider-top">
