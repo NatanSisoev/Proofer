@@ -129,10 +129,8 @@ export default async function HistoryPage({
           {rows.map((a) => (
             <div
               key={a.id}
-              className="panel"
+              className="panel attempt-card"
               style={{
-                padding: "12px 16px",
-                borderLeftWidth: 3,
                 borderLeftColor: VERDICT[a.verdict as Verdict]?.color || "var(--border)",
                 background: VERDICT[a.verdict as Verdict]?.bg || "var(--bg-soft)",
               }}
@@ -143,7 +141,7 @@ export default async function HistoryPage({
                     {VERDICT[a.verdict as Verdict]?.short || a.verdict}
                   </span>
                   {a.kind && (
-                    <span className="pill" style={{ fontSize: 10 }}>{a.kind}</span>
+                    <span className="pill label-xs">{a.kind}</span>
                   )}
                   {a.title ? (
                     <Link href={`/node/${encodeURIComponent(a.node_id)}`} className="concept-link">
@@ -162,8 +160,7 @@ export default async function HistoryPage({
                   <span className="muted small" style={{ fontSize: 11 }}>{timeAgo(a.created_at)}</span>
                   <Link
                     href={`/learn?node=${encodeURIComponent(a.node_id)}`}
-                    className="pill pill-accent"
-                    style={{ fontSize: 11 }}
+                    className="pill pill-accent label-xs"
                   >
                     practice →
                   </Link>
@@ -195,7 +192,7 @@ export default async function HistoryPage({
       {totalPages > 1 && (
         <div className="pagination">
           {page > 1 && (
-            <Link href={buildUrl({ page: page - 1 })} className="btn-ghost" style={{ fontSize: 13 }}>
+            <Link href={buildUrl({ page: page - 1 })} className="btn-ghost btn-sm">
               ← prev
             </Link>
           )}
@@ -203,7 +200,7 @@ export default async function HistoryPage({
             page {page} of {totalPages} · {total} total
           </span>
           {page < totalPages && (
-            <Link href={buildUrl({ page: page + 1 })} className="btn-ghost" style={{ fontSize: 13 }}>
+            <Link href={buildUrl({ page: page + 1 })} className="btn-ghost btn-sm">
               next →
             </Link>
           )}

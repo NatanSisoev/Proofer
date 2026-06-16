@@ -907,6 +907,7 @@ details[open].practice-history > summary::before { transform: rotate(90deg); }
 .error-inline { color: var(--red); font-size: 12px; }
 .reveal-heading { color: var(--green); margin: 0 0 8px; }
 .field-select { background: var(--bg); }
+.attempt-card { padding: 12px 16px; border-left-width: 3px; }
 
 /* link suggestions */
 .section-intro { margin-top: 0; margin-bottom: 16px; }
