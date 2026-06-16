@@ -42,7 +42,7 @@ export default function ProgressPage() {
           <p className="muted small" style={{ marginTop: 4 }}>Your mastery across {s.real} concepts</p>
         </div>
         <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-          <Link href="/session" className="pill" style={{ color: "var(--accent)", borderColor: "var(--accent-soft)" }}>
+          <Link href="/session" className="pill pill-accent">
             Start session →
           </Link>
           <a href="/api/export/mastery" download="proofer-mastery.csv" className="muted small" style={{ textDecoration: "none" }}>
@@ -101,7 +101,7 @@ export default function ProgressPage() {
 
       <div className="grid" style={{ gap: 20 }}>
         {/* Left column */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 20, minWidth: 0 }}>
+        <div className="progress-left-col">
           {/* Cumulative mastery chart */}
           {milestones.length >= 2 && (
             <div className="panel">
@@ -131,11 +131,9 @@ export default function ProgressPage() {
                       <path d={fill} fill="var(--accent-soft)" />
                       <path d={d} fill="none" stroke="var(--accent)" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
                     </svg>
-                    <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4 }}>
+                    <div className="chart-label-row">
                       <span className="muted small" style={{ fontSize: 10 }}>{milestones[0].day}</span>
-                      <span style={{ fontSize: 12, fontWeight: 600, color: "var(--accent)" }}>
-                        {maxVal} mastered
-                      </span>
+                      <span className="chart-label-accent">{maxVal} mastered</span>
                       <span className="muted small" style={{ fontSize: 10 }}>{milestones[milestones.length - 1].day}</span>
                     </div>
                   </div>
@@ -147,13 +145,13 @@ export default function ProgressPage() {
           {/* Histogram */}
           <div className="panel">
             <h2>Mastery distribution</h2>
-            <div style={{ display: "flex", gap: 4, height: 80, alignItems: "flex-end", marginBottom: 4 }}>
+            <div className="hist-bars">
               {hist.map((h) => {
                 const pct = h.count / maxBucket;
                 const label = h.bucket === 10 ? "100%" : `${h.bucket * 10}%`;
                 const isGood = h.bucket >= 8;
                 return (
-                  <div key={h.bucket} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
+                  <div key={h.bucket} className="hist-bar-col">
                     <div
                       style={{
                         width: "100%",
@@ -167,9 +165,9 @@ export default function ProgressPage() {
                 );
               })}
             </div>
-            <div style={{ display: "flex", gap: 4 }}>
+            <div className="hist-labels">
               {hist.map((h) => (
-                <div key={h.bucket} style={{ flex: 1, textAlign: "center", fontSize: 10, color: "var(--muted)" }}>
+                <div key={h.bucket} className="hist-label">
                   {h.bucket * 10}
                 </div>
               ))}
@@ -198,27 +196,27 @@ export default function ProgressPage() {
                   >
                     {VERDICT[a.verdict as Verdict]?.icon || "?"}
                   </span>
-                  <div style={{ flex: 1, minWidth: 0 }}>
+                  <div className="attempt-body">
                     <Link
                       href={`/node/${encodeURIComponent(a.node_id)}`}
-                      style={{ fontWeight: 500, fontSize: 13.5 }}
+                      className="attempt-link"
                     >
                       {(a as any).title || a.node_id}
                     </Link>
                     {a.gap && a.gap !== "none" && a.gap !== "(gave up — showed answer)" && (
-                      <p className="muted small" style={{ margin: "1px 0 0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      <p className="muted small attempt-gap">
                         {a.gap}
                       </p>
                     )}
                     {a.gap === "(gave up — showed answer)" && (
-                      <p className="muted small" style={{ margin: "1px 0 0", fontStyle: "italic" }}>
+                      <p className="muted small attempt-gap" style={{ fontStyle: "italic" }}>
                         viewed answer
                       </p>
                     )}
                   </div>
-                  <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 2, flexShrink: 0 }}>
+                  <div className="attempt-meta-col">
                     <span className="small muted">{timeAgo(a.created_at)}</span>
-                    <Link href={`/learn?node=${encodeURIComponent(a.node_id)}`} className="pill" style={{ color: "var(--accent)", borderColor: "var(--accent-soft)" }}>
+                    <Link href={`/learn?node=${encodeURIComponent(a.node_id)}`} className="pill pill-accent">
                       retry →
                     </Link>
                   </div>
@@ -229,7 +227,7 @@ export default function ProgressPage() {
         </div>
 
         {/* Right column */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        <div className="progress-right-col">
           {/* Per-area mastery breakdown */}
           {areas.length > 0 && (
             <div className="panel">
@@ -238,40 +236,35 @@ export default function ProgressPage() {
                 {areas.length > 0 && (
                   <Link
                     href={`/session?mode=area&area=${encodeURIComponent(areas[areas.length - 1].area)}`}
-                    className="pill"
-                    style={{ color: "var(--red)", fontSize: 11 }}
+                    className="pill pill-red"
+                    style={{ fontSize: 11 }}
                     title={`Weakest area: ${areas[areas.length - 1].area}`}
                   >
                     Drill weakest →
                   </Link>
                 )}
               </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              <div className="flex-col" style={{ gap: 6 }}>
                 {areas.map((a) => {
                   const pct = Math.round(a.avg_p * 100);
                   const masteredPct = a.total > 0 ? Math.round((a.mastered / a.total) * 100) : 0;
                   const color = pct >= 80 ? "var(--green)" : pct >= 40 ? "var(--amber)" : "var(--muted)";
                   return (
-                    <div key={a.area} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <Link
-                        href={`/browse?area=${encodeURIComponent(a.area)}`}
-                        style={{ fontSize: 13, color: "var(--text)", minWidth: 0, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
-                      >
+                    <div key={a.area} className="area-row">
+                      <Link href={`/browse?area=${encodeURIComponent(a.area)}`} className="area-name">
                         {a.area}
                       </Link>
                       <div className="bar" style={{ width: 60, flexShrink: 0 }}>
                         <span style={{ width: `${pct}%`, background: color }} />
                       </div>
-                      <span className="muted small" style={{ width: 30, textAlign: "right", flexShrink: 0, fontSize: 11 }}>
-                        {pct}%
-                      </span>
-                      <span className="muted small" style={{ fontSize: 10, width: 32, textAlign: "right", flexShrink: 0, color: masteredPct === 100 ? "var(--green)" : undefined }}>
+                      <span className="muted small area-pct">{pct}%</span>
+                      <span className="muted small area-count" style={{ color: masteredPct === 100 ? "var(--green)" : undefined }}>
                         {a.mastered}/{a.total}
                       </span>
                       <Link
                         href={`/session?mode=area&area=${encodeURIComponent(a.area)}`}
-                        className="pill"
-                        style={{ fontSize: 10, color: "var(--accent)", borderColor: "var(--accent-soft)", flexShrink: 0 }}
+                        className="pill pill-accent"
+                        style={{ fontSize: 10, flexShrink: 0 }}
                       >
                         drill
                       </Link>
@@ -290,33 +283,33 @@ export default function ProgressPage() {
                 Prerequisites the tutor blamed across multiple concepts. Fixing one
                 of these lifts everything that depends on it.
               </p>
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <div className="flex-col" style={{ gap: 8 }}>
                 {weakPrereqs.map((w) => {
                   const concepts = w.concepts.split(",").filter(Boolean);
                   return (
                     <div key={w.prereq} className="cycle-card">
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 4 }}>
-                        <div style={{ minWidth: 0, display: "flex", alignItems: "center", gap: 8 }}>
+                      <div className="weak-prereq-header">
+                        <div className="weak-prereq-name">
                           {w.exists_ === 1 ? (
-                            <Link href={`/node/${encodeURIComponent(w.prereq)}`} style={{ fontSize: 14, fontWeight: 600 }}>
+                            <Link href={`/node/${encodeURIComponent(w.prereq)}`} className="weak-prereq-title">
                               {w.prereq}
                             </Link>
                           ) : (
-                            <span style={{ fontSize: 14, fontWeight: 600, color: "var(--muted)" }} title="No note yet — a gap in your graph">
+                            <span className="weak-prereq-title muted" title="No note yet — a gap in your graph">
                               {w.prereq} <span className="pill" style={{ fontSize: 9 }}>gap</span>
                             </span>
                           )}
-                          <span className="pill" style={{ fontSize: 10, color: "var(--red)" }}>
+                          <span className="pill pill-red" style={{ fontSize: 10 }}>
                             {w.concept_count} concepts
                           </span>
                         </div>
                         {w.exists_ === 1 && (
-                          <Link href={`/learn?node=${encodeURIComponent(w.prereq)}`} className="pill" style={{ color: "var(--accent)", borderColor: "var(--accent-soft)", flexShrink: 0 }}>
+                          <Link href={`/learn?node=${encodeURIComponent(w.prereq)}`} className="pill pill-accent" style={{ flexShrink: 0 }}>
                             drill →
                           </Link>
                         )}
                       </div>
-                      <p className="muted small" style={{ margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      <p className="muted small weak-prereq-blocks">
                         Blocks:{" "}
                         {concepts.slice(0, 3).map((c, i) => (
                           <span key={c}>
@@ -344,13 +337,13 @@ export default function ProgressPage() {
                   const maxCount = Math.max(...forecast.map((d) => d.count), 1);
                   const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
                   return (
-                    <div style={{ display: "flex", gap: 6, alignItems: "flex-end", height: 64, marginBottom: 6 }}>
+                    <div className="forecast-chart">
                       {forecast.map((d, i) => {
                         const date = new Date(d.date + "T12:00:00");
                         const isToday = i === 0;
                         const barH = d.count > 0 ? Math.max(8, Math.round((d.count / maxCount) * 56)) : 3;
                         return (
-                          <div key={d.date} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+                          <div key={d.date} className="forecast-day">
                             <span className="muted small" style={{ fontSize: 10, lineHeight: 1 }}>
                               {d.count > 0 ? d.count : ""}
                             </span>
@@ -396,7 +389,7 @@ export default function ProgressPage() {
                     <span style={{ width: `${Math.round(n.mastery_p * 100)}%` }} />
                   </div>
                   <span className="small muted">{Math.round(n.mastery_p * 100)}%</span>
-                  <Link href={`/learn?node=${encodeURIComponent(n.id)}`} className="pill" style={{ color: "var(--accent)", borderColor: "var(--accent-soft)" }}>
+                  <Link href={`/learn?node=${encodeURIComponent(n.id)}`} className="pill pill-accent">
                     drill →
                   </Link>
                 </div>

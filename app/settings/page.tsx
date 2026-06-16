@@ -182,10 +182,10 @@ export default function SettingsPage() {
               <code>ANTHROPIC_API_KEY</code> selects Claude. Gemini wins if both are set.
             </p>
             <div style={{ display: "flex", gap: 10, marginTop: 12 }}>
-              <Link href="/quality" className="pill" style={{ color: "var(--accent)", borderColor: "var(--accent-soft)" }}>
+              <Link href="/quality" className="pill pill-accent">
                 Note quality →
               </Link>
-              <Link href="/progress" className="pill" style={{ color: "var(--accent)", borderColor: "var(--accent-soft)" }}>
+              <Link href="/progress" className="pill pill-accent">
                 Progress →
               </Link>
             </div>

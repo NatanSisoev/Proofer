@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 
 function DueBar({ decayed, original }: { decayed: number; original: number }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+    <div className="due-bar">
       <div className="bar" style={{ width: 60 }}>
         <span style={{ width: `${Math.round(decayed * 100)}%`, background: "var(--amber)" }} />
       </div>
@@ -59,19 +59,19 @@ export default function Home() {
 
       {/* Daily goal + streak */}
       <div className="daily-goal-bar" style={{ marginBottom: 20 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-          <span style={{ fontSize: 13, fontWeight: 600, color: today.today_concepts >= DAILY_GOAL ? "var(--green)" : undefined }}>
+        <div className="goal-header">
+          <span className="goal-label" style={{ color: today.today_concepts >= DAILY_GOAL ? "var(--green)" : undefined }}>
             {today.today_concepts >= DAILY_GOAL
               ? `Daily goal reached — ${today.today_concepts} concepts`
               : `Today: ${today.today_concepts} / ${DAILY_GOAL} concepts`}
           </span>
-          <span style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13 }}>
+          <span className="goal-right">
             {today.streak_days > 0 && (
               <span style={{ color: "var(--muted)", fontWeight: 600 }}>
                 {today.streak_days} day{today.streak_days !== 1 ? "s" : ""} streak
               </span>
             )}
-            <Link href="/session" className="pill" style={{ color: "var(--accent)", borderColor: "var(--accent-soft)" }}>
+            <Link href="/session" className="pill pill-accent">
               start session →
             </Link>
           </span>
@@ -84,8 +84,8 @@ export default function Home() {
         </div>
       </div>
 
-      <div style={{ marginBottom: 24, display: "flex", gap: 10, alignItems: "flex-start", flexWrap: "wrap" }}>
-        <div style={{ flex: 1, minWidth: 220 }}>
+      <div className="search-row">
+        <div className="search-flex">
           <SearchBox />
         </div>
         <RandomConceptButton />
@@ -94,8 +94,8 @@ export default function Home() {
       {/* Concept of the Day */}
       {spotlight && (
         <div className="panel" style={{ marginBottom: 20, position: "relative" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-            <div style={{ flex: 1, minWidth: 0 }}>
+          <div className="spotlight-inner">
+            <div className="spotlight-body">
               <h2 className="accent">Concept of the day</h2>
               <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 4 }}>
                 {spotlight.type && <span className={`type-badge t-${spotlight.type}`}>{spotlight.type}</span>}
@@ -103,17 +103,17 @@ export default function Home() {
               </div>
               <Link
                 href={`/node/${encodeURIComponent(spotlight.id)}`}
-                style={{ fontSize: 18, fontWeight: 700, letterSpacing: "-0.02em", color: "var(--text)" }}
+                className="spotlight-title"
               >
                 {spotlight.title}
               </Link>
               {spotlight.overview && (
-                <p className="muted" style={{ margin: "6px 0 0", fontSize: 13, lineHeight: 1.55, maxWidth: 480 }}>
+                <p className="muted spotlight-overview">
                   {spotlight.overview.length > 200 ? spotlight.overview.slice(0, 200) + "…" : spotlight.overview}
                 </p>
               )}
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 6, flexShrink: 0, marginLeft: 16 }}>
+            <div className="spotlight-actions">
               <Link
                 href={`/learn?node=${encodeURIComponent(spotlight.id)}`}
                 className="cta"
@@ -130,11 +130,11 @@ export default function Home() {
               </Link>
             </div>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 10 }}>
+          <div className="spotlight-mastery">
             <div className="bar" style={{ width: 60, height: 4 }}>
               <span style={{ width: `${Math.round(spotlight.mastery_p * 100)}%` }} />
             </div>
-            <span className="muted small" style={{ fontSize: 11 }}>{Math.round(spotlight.mastery_p * 100)}% mastery</span>
+            <span className="muted small">{Math.round(spotlight.mastery_p * 100)}% mastery</span>
           </div>
         </div>
       )}
@@ -143,7 +143,7 @@ export default function Home() {
       {due.length > 0 && (
         <div className="panel" style={{ marginBottom: 20 }}>
           <div className="panel-header">
-            <h2 style={{ color: "var(--amber)" }}>Due for review</h2>
+            <h2 className="amber">Due for review</h2>
             <Link
               href="/session?mode=due"
               className="cta"
@@ -163,8 +163,7 @@ export default function Home() {
                 <SnoozeButton nodeId={n.id} />
                 <Link
                   href={`/learn?node=${encodeURIComponent(n.id)}`}
-                  className="pill"
-                  style={{ color: "var(--amber)" }}
+                  className="pill pill-amber"
                 >
                   review →
                 </Link>
@@ -225,8 +224,7 @@ export default function Home() {
                 <QuickKnown nodeId={n.id} />
                 <Link
                   href={`/learn?node=${encodeURIComponent(n.id)}`}
-                  className="pill"
-                  style={{ color: "var(--accent)", borderColor: "var(--accent-soft)" }}
+                  className="pill pill-accent"
                 >
                   practice →
                 </Link>
@@ -236,7 +234,7 @@ export default function Home() {
           </div>{/* end frontier panel */}
         </div>{/* end left column */}
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        <div className="progress-right-col">
           {bookmarks.length > 0 && (
             <div className="panel">
               <h2>★ Bookmarked</h2>
@@ -250,7 +248,7 @@ export default function Home() {
                     <div className="bar" style={{ width: 50 }}>
                       <span style={{ width: `${Math.round(n.mastery_p * 100)}%` }} />
                     </div>
-                    <Link href={`/learn?node=${encodeURIComponent(n.id)}`} className="pill" style={{ color: "var(--accent)", borderColor: "var(--accent-soft)" }}>
+                    <Link href={`/learn?node=${encodeURIComponent(n.id)}`} className="pill pill-accent">
                       practice →
                     </Link>
                   </div>
@@ -262,7 +260,7 @@ export default function Home() {
           <div className="panel">
             <div className="panel-header">
               <h2>Areas</h2>
-              <Link href="/browse" className="small" style={{ color: "var(--accent)" }}>Browse all →</Link>
+              <Link href="/browse" className="small">Browse all →</Link>
             </div>
             {s.areas.slice(0, 12).map((a) => (
               <div className="frontier-item" key={a.area}>
@@ -278,29 +276,29 @@ export default function Home() {
             <div className="panel-header">
               <h2>Navigate</h2>
             </div>
-            <div style={{ display: "flex", flexDirection: "column" }}>
+            <div className="flex-col">
               <Link href="/graph" className="nav-item">
-                <div style={{ fontWeight: 500 }}>Knowledge map</div>
+                <div className="nav-label">Knowledge map</div>
                 <div className="muted small">Full graph, colored by mastery</div>
               </Link>
               <Link href="/progress" className="nav-item">
-                <div style={{ fontWeight: 500 }}>Progress</div>
+                <div className="nav-label">Progress</div>
                 <div className="muted small">Mastery histogram & recent activity</div>
               </Link>
               <Link href="/browse" className="nav-item">
-                <div style={{ fontWeight: 500 }}>Browse</div>
+                <div className="nav-label">Browse</div>
                 <div className="muted small">All concepts by area and type</div>
               </Link>
               <Link href="/quality" className="nav-item">
-                <div style={{ fontWeight: 500 }}>Note quality</div>
+                <div className="nav-label">Note quality</div>
                 <div className="muted small">Gaps, missing prereqs, isolated nodes</div>
               </Link>
               <Link href="/session" className="nav-item">
-                <div style={{ fontWeight: 500 }}>Practice</div>
+                <div className="nav-label">Practice</div>
                 <div className="muted small">AI-generated problems, Socratic grading</div>
               </Link>
               <Link href="/study-plan" className="nav-item">
-                <div style={{ fontWeight: 500 }}>Study plan</div>
+                <div className="nav-label">Study plan</div>
                 <div className="muted small">AI study schedule for your next exam</div>
               </Link>
             </div>

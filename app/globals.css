@@ -682,3 +682,70 @@ details[open].practice-history > summary::before { transform: rotate(90deg); }
 .attempt-list { margin-top: 10px; display: flex; flex-direction: column; gap: 10px; }
 .attempt-header { display: flex; justify-content: space-between; margin-bottom: 4px; gap: 8px; }
 .attempt-problem { margin: 0 0 4px; color: var(--text); line-height: 1.5; }
+
+/* pill color variants */
+.pill-accent { color: var(--accent); border-color: var(--accent-soft); }
+.pill-amber { color: var(--amber); }
+.pill-red { color: var(--red); }
+
+/* shared flex utility */
+.flex-col { display: flex; flex-direction: column; }
+
+/* concept of the day (home page spotlight) */
+.spotlight-inner { display: flex; justify-content: space-between; align-items: flex-start; }
+.spotlight-body { flex: 1; min-width: 0; }
+.spotlight-title { font-size: 18px; font-weight: 700; letter-spacing: -0.02em; color: var(--text); }
+.spotlight-overview { margin: 6px 0 0; font-size: 13px; line-height: 1.55; max-width: 480px; }
+.spotlight-actions { display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; margin-left: 16px; }
+.spotlight-mastery { display: flex; align-items: center; gap: 6px; margin-top: 10px; }
+
+/* daily goal bar */
+.goal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.goal-label { font-size: 13px; font-weight: 600; }
+.goal-right { display: flex; align-items: center; gap: 6px; font-size: 13px; }
+
+/* search / filter row */
+.search-row { margin-bottom: 24px; display: flex; gap: 10px; align-items: flex-start; flex-wrap: wrap; }
+.search-flex { flex: 1; min-width: 220px; }
+
+/* due bar (decayed mastery display) */
+.due-bar { display: flex; align-items: center; gap: 6px; }
+
+/* nav item title label */
+.nav-label { font-weight: 500; }
+
+/* progress page: column layouts */
+.progress-left-col { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+.progress-right-col { display: flex; flex-direction: column; gap: 16px; }
+
+/* chart label row below SVGs */
+.chart-label-row { display: flex; justify-content: space-between; margin-top: 4px; }
+.chart-label-accent { font-size: 12px; font-weight: 600; color: var(--accent); }
+
+/* mastery histogram */
+.hist-bars { display: flex; gap: 4px; height: 80px; align-items: flex-end; margin-bottom: 4px; }
+.hist-bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.hist-labels { display: flex; gap: 4px; }
+.hist-label { flex: 1; text-align: center; font-size: 10px; color: var(--muted); }
+
+/* area mastery rows */
+.area-row { display: flex; align-items: center; gap: 8px; }
+.area-name { font-size: 13px; color: var(--text); min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.area-pct { width: 30px; text-align: right; flex-shrink: 0; font-size: 11px; }
+.area-count { font-size: 10px; width: 32px; text-align: right; flex-shrink: 0; }
+
+/* review forecast chart */
+.forecast-chart { display: flex; gap: 6px; align-items: flex-end; height: 64px; margin-bottom: 6px; }
+.forecast-day { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+
+/* progress: recent attempts layout */
+.attempt-body { flex: 1; min-width: 0; }
+.attempt-link { font-weight: 500; font-size: 13.5px; }
+.attempt-gap { margin: 1px 0 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.attempt-meta-col { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; flex-shrink: 0; }
+
+/* progress: recurring weak prerequisites */
+.weak-prereq-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 4px; }
+.weak-prereq-name { min-width: 0; display: flex; align-items: center; gap: 8px; }
+.weak-prereq-title { font-size: 14px; font-weight: 600; }
+.weak-prereq-blocks { margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
