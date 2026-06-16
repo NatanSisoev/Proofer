@@ -76,7 +76,8 @@ export async function GET(req: NextRequest) {
       LIMIT 5
     `).all(P_INIT) as QueueNode[];
 
-    // frontier concepts you've already started (mastery > 0 but not yet mastered)
+    // frontier concepts you've already started (mastery > 0 but not yet mastered).
+    // Ghost prereqs (exists_=0) are excluded — matches frontier() semantics in lib/queries.ts.
     const inProgress = db().prepare(`
       SELECT n.id, n.title, n.type, n.area
       FROM nodes n
@@ -87,7 +88,8 @@ export async function GET(req: NextRequest) {
           SELECT 1 FROM edges e
           LEFT JOIN mastery m2 ON m2.node_id = e.dst
           WHERE e.src = n.id AND e.type = 'depends_on'
-          AND COALESCE(m2.p, 0) < ?
+            AND e.dst IN (SELECT id FROM nodes WHERE exists_ = 1)
+            AND COALESCE(m2.p, 0) < ?
         )
       ORDER BY m.p DESC
       LIMIT 5
@@ -104,7 +106,8 @@ export async function GET(req: NextRequest) {
           SELECT 1 FROM edges e
           LEFT JOIN mastery m2 ON m2.node_id = e.dst
           WHERE e.src = n.id AND e.type = 'depends_on'
-          AND COALESCE(m2.p, 0) < ?
+            AND e.dst IN (SELECT id FROM nodes WHERE exists_ = 1)
+            AND COALESCE(m2.p, 0) < ?
         )
       ORDER BY (SELECT COUNT(*) FROM edges e3 WHERE e3.dst = n.id AND e3.type='depends_on') DESC
       LIMIT 8
@@ -152,11 +155,4 @@ export async function GET(req: NextRequest) {
   if (rows.length > 0) {
     const placeholders = rows.map(() => "?").join(",");
     const masteryMap = new Map(
-      (db().prepare(`SELECT node_id, p FROM mastery WHERE node_id IN (${placeholders})`).all(...rows.map(r => r.id)) as { node_id: string; p: number }[])
-        .map(r => [r.node_id, r.p])
-    );
-    rows = rows.map(r => ({ ...r, mastery_p: masteryMap.get(r.id) ?? 0 }));
-  }
-
-  return NextResponse.json({ queue: rows });
-}
+      (db().prepare(`SELECT node_id, p FROM mastery WHERE node_id IN (${placeholders})`).a

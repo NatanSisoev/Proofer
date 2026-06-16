@@ -167,7 +167,7 @@ export async function explainConcept(
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 0.7, thinkingConfig: { thinkingBudget: 0 } },
+          generationConfig: { temperature: 0.7, maxOutputTokens: 1800, thinkingConfig: { thinkingBudget: 0 } },
         }),
       }
     );
@@ -267,7 +267,10 @@ export async function diagnoseWeakness(
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }),
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { temperature: 0.5, maxOutputTokens: 600, thinkingConfig: { thinkingBudget: 0 } },
+        }),
       }
     );
     if (!resp.ok) return "";
@@ -401,16 +404,16 @@ function aGradeSchema(prereqs: string[]) {
 function firstJson<T>(msg: Anthropic.Message): T {
   const block = msg.content.find((b) => b.type === "text");
   if (!block || block.type !== "text") throw new Error("no text block in response");
-  return JSON.parse(block.text) as T;
+  // Strip optional markdown code fences (```json … ``` or ``` … ```)
+  const raw = block.text.replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/, "").trim();
+  return JSON.parse(raw) as T;
 }
 
 async function anthropicGenerate(node: NodeRow, prereqs: string[], recentGaps: string[] = [], preferKind?: ProblemKind): Promise<GeneratedProblem> {
   const msg = await anthropic!.messages.create({
     model: ANTHROPIC_PROBLEM_MODEL,
-    max_tokens: 16000,
-    thinking: { type: "adaptive" },
-    output_config: { effort: "medium", format: { type: "json_schema", schema: A_PROBLEM_SCHEMA } },
-    system: [{ type: "text", text: AUTHOR_SYSTEM, cache_control: { type: "ephemeral" } }],
+    max_tokens: 4096,
+    system: [{ type: "text", text: AUTHOR_SYSTEM + "\n\nIMPORTANT: Respond ONLY with a single valid JSON object — no markdown fences, no preamble.", cache_control: { type: "ephemeral" } }],
     messages: [{ role: "user", content: problemUserText(node, prereqs, recentGaps, preferKind) }],
   });
   return firstJson<GeneratedProblem>(msg);
@@ -419,10 +422,8 @@ async function anthropicGenerate(node: NodeRow, prereqs: string[], recentGaps: s
 async function anthropicGrade(a: Parameters<typeof gradeAnswer>[0]): Promise<GradeResult> {
   const msg = await anthropic!.messages.create({
     model: ANTHROPIC_GRADE_MODEL,
-    max_tokens: 16000,
-    thinking: { type: "adaptive" },
-    output_config: { effort: "high", format: { type: "json_schema", schema: aGradeSchema(a.prereqs) } },
-    system: [{ type: "text", text: GRADER_SYSTEM, cache_control: { type: "ephemeral" } }],
+    max_tokens: 2048,
+    system: [{ type: "text", text: GRADER_SYSTEM + "\n\nIMPORTANT: Respond ONLY with a single valid JSON object — no markdown fences, no preamble.", cache_control: { type: "ephemeral" } }],
     messages: [{ role: "user", content: gradeUserText(a) }],
   });
   return firstJson<GradeResult>(msg);
@@ -705,8 +706,4 @@ function stubGrade(answer: string): GradeResult {
     verdict: words > 8 ? "partial" : "incorrect",
     mastery_evidence: evidence,
     understood: words > 8 ? ["You attempted an explanation."] : [],
-    gap: "Demo mode: real diagnosis needs an API key. This placeholder scores by answer length only.",
-    blamed_prerequisite: "",
-    socratic_hint: "Set GEMINI_API_KEY (free at aistudio.google.com) to get a real Socratic hint that pinpoints your specific gap.",
-  };
-}
+    gap: "Demo mode: real diagnosis n
