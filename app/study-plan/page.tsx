@@ -16,7 +16,7 @@ export default function StudyPlanPage() {
       <div className="breadcrumb">
         <Link href="/">← home</Link>
       </div>
-      <header className="top" style={{ borderBottom: "none" }}>
+      <header className="top borderless">
         <div>
           <h1>Study Plan</h1>
           <p className="tag">

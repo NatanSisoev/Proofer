@@ -34,7 +34,7 @@ export default function Home() {
 
   return (
     <div className="wrap">
-      <header className="top" style={{ borderBottom: "none", paddingBottom: 20 }}>
+      <header className="top borderless">
         <div>
           <h1>Proofer</h1>
           <p className="tag">
@@ -96,16 +96,14 @@ export default function Home() {
         <div className="panel" style={{ marginBottom: 20, position: "relative" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--accent)", marginBottom: 6 }}>
-                Concept of the day
-              </div>
+              <h2 className="accent">Concept of the day</h2>
               <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 4 }}>
                 {spotlight.type && <span className={`type-badge t-${spotlight.type}`}>{spotlight.type}</span>}
                 {spotlight.area && <span className="muted small">{spotlight.area}</span>}
               </div>
               <Link
                 href={`/node/${encodeURIComponent(spotlight.id)}`}
-                style={{ fontSize: 18, fontWeight: 700, letterSpacing: "-0.02em", color: "var(--text)", textDecoration: "none" }}
+                style={{ fontSize: 18, fontWeight: 700, letterSpacing: "-0.02em", color: "var(--text)" }}
               >
                 {spotlight.title}
               </Link>
