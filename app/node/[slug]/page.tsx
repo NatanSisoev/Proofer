@@ -114,7 +114,7 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
         <>
           <div className="node-head">
             <div>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+              <div className="node-meta-row">
                 {node.type && <span className={`type-badge t-${node.type}`}>{node.type}</span>}
                 {node.area && <span className="muted small">{node.area}</span>}
                 {depth > 0 && (
@@ -156,7 +156,7 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
                   </span>
                 )}
                 {history.length > 0 && (
-                  <div style={{ display: "flex", gap: 4, alignItems: "center", marginLeft: 4 }}>
+                  <div className="history-dots">
                     {history.slice().reverse().map((a, i) => (
                       <span
                         key={i}
@@ -181,8 +181,7 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
               {node.area && (
                 <Link
                   href={`/session?mode=area&area=${encodeURIComponent(node.area)}`}
-                  className="pill"
-                  style={{ color: "var(--accent)", borderColor: "var(--accent-soft)" }}
+                  className="pill pill-accent"
                 >
                   Session: {node.area}
                 </Link>
@@ -194,7 +193,7 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
 
           {ready.total > 0 && (
             <div className="readiness panel">
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+              <div className="readiness-header">
                 <strong>Readiness {Math.round(ready.score * 100)}%</strong>
                 <span className="muted small">
                   {ready.known}/{ready.total} prerequisites known · dependency depth {depth}
@@ -252,8 +251,8 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
                       return (
                         <div key={a.id} className="practice-attempt">
                           <div className="attempt-header">
-                            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                              <span style={{ fontWeight: 600, color: verdictColor, fontSize: 11, textTransform: "uppercase", letterSpacing: "0.04em" }}>{verdictLabel}</span>
+                            <div className="node-actions-row">
+                              <span className="verdict-label" style={{ color: verdictColor }}>{verdictLabel}</span>
                               {a.kind && <span className="pill" style={{ fontSize: 10 }}>{a.kind}</span>}
                             </div>
                             <span className="muted small">{new Date(a.created_at).toLocaleDateString()}</span>
@@ -262,7 +261,7 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
                             <MathText>{truncateMath(a.problem, 200)}</MathText>
                           </p>
                           {a.gap && a.gap !== "none" && a.gap !== "(gave up — showed answer)" && (
-                            <p className="muted small" style={{ margin: 0, fontStyle: "italic" }}>
+                            <p className="muted small italic-note">
                               Gap: <MathText>{truncateMath(a.gap, 120)}</MathText>
                             </p>
                           )}
@@ -300,11 +299,11 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
                           {s.title}
                         </Link>
                       </div>
-                      <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+                      <div className="preview-mastery">
                         <div className="bar" style={{ width: 40 }}>
                           <span style={{ width: `${Math.round(s.mastery_p * 100)}%` }} />
                         </div>
-                        <span className="muted small" style={{ fontSize: 11, width: 28, textAlign: "right" }}>
+                        <span className="muted small preview-pct">
                           {Math.round(s.mastery_p * 100)}%
                         </span>
                       </div>

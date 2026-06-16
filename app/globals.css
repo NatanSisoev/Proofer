@@ -778,6 +778,18 @@ details[open].practice-history > summary::before { transform: rotate(90deg); }
 .browse-node-link { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .browse-row-right { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
 
+/* quality page */
+.hotspot-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--border); }
+.section-desc { margin-top: 0; margin-bottom: 16px; max-width: 680px; }
+.cycle-nodes { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 13.5px; }
+.cycle-node-pair { display: inline-flex; align-items: center; gap: 6px; }
+
+/* node page */
+.node-meta-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.history-dots { display: flex; gap: 4px; align-items: center; margin-left: 4px; }
+.readiness-header { display: flex; justify-content: space-between; margin-bottom: 8px; }
+.node-actions-row { display: flex; align-items: center; gap: 6px; }
+
 /* study plan */
 .form-input {
   background: var(--bg-soft); border: 1px solid var(--border);

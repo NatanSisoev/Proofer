@@ -131,9 +131,9 @@ export default async function QualityPage({
           <div className="panel">
             <h2>Issue hotspots by area</h2>
             {topAreas.map(([area, count]) => (
-              <div key={area} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 0", borderBottom: "1px solid var(--border)" }}>
-                <Link href={`/browse?area=${encodeURIComponent(area)}`} style={{ color: "var(--text)", fontSize: 14 }}>{area}</Link>
-                <span className="pill" style={{ color: "var(--amber)" }}>{count} issues</span>
+              <div key={area} className="hotspot-row">
+                <Link href={`/browse?area=${encodeURIComponent(area)}`} className="text-link" style={{ fontSize: 14 }}>{area}</Link>
+                <span className="pill pill-amber">{count} issues</span>
               </div>
             ))}
           </div>
@@ -147,7 +147,7 @@ export default async function QualityPage({
       {tab === "edges" && (
         <div className="panel">
           <h2 style={{ marginBottom: 4 }}>Unclassified edges</h2>
-          <p className="muted small" style={{ marginTop: 0, marginBottom: 16, maxWidth: 680 }}>
+          <p className="muted small section-desc">
             These <code>related</code> edges are untyped — they link two concepts but say nothing about
             the relationship. Reclassifying them as <code>depends_on</code>, <code>generalizes</code>, etc.
             directly improves the prerequisite graph that the mastery model depends on.
@@ -162,7 +162,7 @@ export default async function QualityPage({
       {tab === "cycles" && (
         <div className="panel">
           <h2 style={{ marginBottom: 4 }}>Dependency cycles</h2>
-          <p className="muted small" style={{ marginTop: 0, marginBottom: 16, maxWidth: 680 }}>
+          <p className="muted small section-desc">
             These concepts list each other as prerequisites, directly or transitively.
             A cycle is a contradiction — you can never be &ldquo;ready&rdquo; for any concept
             in the loop, so it distorts the frontier and learning-path logic. Break each
@@ -172,7 +172,7 @@ export default async function QualityPage({
           {cycles.length === 0 ? (
             <p className="muted">No dependency cycles — your prerequisite graph is a clean DAG. ✓</p>
           ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <div className="flex-col" style={{ gap: 8 }}>
               {cycles.map((c, i) => (
                 <div key={i} className="cycle-card">
                   <span
@@ -181,16 +181,16 @@ export default async function QualityPage({
                   >
                     {c.mutual ? "mutual" : `${c.nodes.length}-cycle`}
                   </span>
-                  <span style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap", fontSize: 13.5 }}>
+                  <span className="cycle-nodes">
                     {c.nodes.map((n, j) => (
-                      <span key={j} style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                      <span key={j} className="cycle-node-pair">
                         {j > 0 && <span className="muted" style={{ fontSize: 12 }}>{c.mutual ? "⇄" : "→"}</span>}
                         <Link href={`/node/${encodeURIComponent(n)}`}>{n}</Link>
                       </span>
                     ))}
                     {/* close the loop for cycles longer than a mutual pair */}
                     {!c.mutual && (
-                      <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                      <span className="cycle-node-pair">
                         <span className="muted" style={{ fontSize: 12 }}>→</span>
                         <Link href={`/node/${encodeURIComponent(c.nodes[0])}`} className="muted">{c.nodes[0]}</Link>
                       </span>
