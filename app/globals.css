@@ -778,6 +778,19 @@ details[open].practice-history > summary::before { transform: rotate(90deg); }
 .browse-node-link { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .browse-row-right { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
 
+/* problem card: concept reminder panel */
+.reminder-panel { font-size: 13.5px; background: var(--bg-soft); margin-bottom: 4px; }
+.reminder-header { display: flex; gap: 8px; align-items: baseline; margin-bottom: 6px; }
+.italic-note { margin: 0; font-style: italic; }
+
+/* problem card: hint + reveal panels */
+.hint-panel { background: var(--accent-soft); margin-bottom: 4px; }
+.reveal-panel { background: var(--accent-soft); margin-top: 4px; }
+
+/* problem card: grade feedback */
+.review-hint { margin-left: auto; white-space: nowrap; }
+.follow-up-section { margin-top: 4px; border-top: 1px solid var(--border); padding-top: 14px; }
+
 /* study queue */
 .session-subtitle { margin: 0 0 20px; font-size: 13px; }
 .result-mastery { margin-left: auto; display: flex; align-items: center; gap: 8px; }

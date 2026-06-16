@@ -85,15 +85,15 @@ export function ProblemPanel({
             {reminderOpen ? "Hide reminder ↑" : "Concept reminder ↓"}
           </button>
           {reminderOpen && (
-            <div className="panel" style={{ fontSize: 13.5, background: "var(--bg-soft)", marginBottom: 4 }}>
-              <div style={{ display: "flex", gap: 8, alignItems: "baseline", marginBottom: 6 }}>
+            <div className="panel reminder-panel">
+              <div className="reminder-header">
                 {problem.node.type && <span className={`type-badge t-${problem.node.type}`}>{problem.node.type}</span>}
-                <Link href={`/node/${encodeURIComponent(problem.node.id)}`} target={reminderLinkTarget} style={{ fontWeight: 600, fontSize: 14 }}>
+                <Link href={`/node/${encodeURIComponent(problem.node.id)}`} target={reminderLinkTarget} className="concept-link">
                   {problem.node.title}
                 </Link>
                 {problem.node.area && <span className="muted small">{problem.node.area}</span>}
               </div>
-              <p className="muted small" style={{ margin: 0, fontStyle: "italic" }}>
+              <p className="muted small italic-note">
                 {reminderCaption}
               </p>
             </div>
@@ -102,7 +102,7 @@ export function ProblemPanel({
       )}
 
       {hint && (
-        <div className="panel" style={{ background: "var(--accent-soft)", marginBottom: 4 }}>
+        <div className="panel hint-panel">
           <div className="panel-header" style={{ marginBottom: 6 }}>
             <h2 className="amber">Hint</h2>
             <button className="btn-ghost" onClick={onDismissHint} style={{ fontSize: 11, padding: "2px 6px", color: "var(--muted)" }}>
@@ -122,7 +122,7 @@ export function ProblemPanel({
       />
 
       {revealed && (
-        <div className="panel" style={{ background: "var(--accent-soft)", marginTop: 4 }}>
+        <div className="panel reveal-panel">
           <h4 style={{ color: "var(--green)", margin: "0 0 8px" }}>Ideal solution</h4>
           <div className="markdown"><Markdown>{revealed}</Markdown></div>
           {revealedFooter}
@@ -167,7 +167,7 @@ export function GradeFeedback({
           {Math.round(grade.masteryBefore * 100)}% → <strong>{Math.round(grade.masteryAfter * 100)}%</strong>
         </span>
         {grade.halfLife && (
-          <span className="muted small" style={{ marginLeft: "auto", whiteSpace: "nowrap" }}>
+          <span className="muted small review-hint">
             review in ~{grade.halfLife}d
           </span>
         )}
@@ -200,7 +200,7 @@ export function GradeFeedback({
       </div>
 
       {grade.verdict !== "correct" && (
-        <div style={{ marginTop: 4, borderTop: "1px solid var(--border)", paddingTop: 14 }}>
+        <div className="follow-up-section">
           <p className="muted small" style={{ margin: "0 0 8px" }}>
             {followUpLeadText}
           </p>
@@ -222,7 +222,7 @@ export function GradeFeedback({
               {followUpBusy ? "Checking…" : "Submit follow-up"}
             </button>
             <VoiceInput onTranscript={(t) => onFollowUpChange(followUp ? followUp + " " + t : t)} disabled={followUpBusy} />
-            <span className="muted small" style={{ alignSelf: "center" }}>Ctrl+Enter</span>
+            <span className="muted small keyboard-hint">Ctrl+Enter</span>
           </div>
         </div>
       )}
@@ -232,7 +232,7 @@ export function GradeFeedback({
           <div className="mastered-banner-title">
             Mastered! You just unlocked {grade.unlocked.length} new concept{grade.unlocked.length !== 1 ? "s" : ""}
           </div>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+          <div className="chips-row">
             {grade.unlocked.map((n) => (
               <Link key={n.id} href={`/node/${encodeURIComponent(n.id)}`} target={unlockTarget} className="mastered-node-chip">
                 {n.type && <span style={{ fontSize: 10, opacity: 0.7 }}>{n.type}</span>}
