@@ -13,7 +13,6 @@ function cellColor(count: number): string {
 }
 
 export default function ActivityCalendar({ data }: { data: Day[] }) {
-  // Group into 12 weeks of 7 days
   const weeks: Day[][] = [];
   for (let w = 0; w < 12; w++) {
     weeks.push(data.slice(w * 7, w * 7 + 7));
@@ -24,36 +23,29 @@ export default function ActivityCalendar({ data }: { data: Day[] }) {
 
   return (
     <div>
-      <div style={{ display: "flex", gap: 3, alignItems: "flex-start" }}>
-        {/* Day labels */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 3, paddingTop: 16 }}>
+      <div className="cal-grid">
+        <div className="cal-day-labels">
           {DAYS.map((d, i) => (
-            <div key={i} style={{ height: 12, fontSize: 9, color: "var(--muted)", lineHeight: "12px", width: 20, textAlign: "right" }}>
-              {d}
-            </div>
+            <div key={i} className="cal-day-label">{d}</div>
           ))}
         </div>
-        {/* Weeks */}
-        <div style={{ display: "flex", gap: 3, flex: 1, overflow: "hidden" }}>
+        <div className="cal-weeks">
           {weeks.map((week, wi) => {
             const firstDay = week[0];
             const month = firstDay ? new Date(firstDay.date + "T12:00:00").toLocaleString("default", { month: "short" }) : "";
             const isFirstOfMonth = firstDay && new Date(firstDay.date + "T12:00:00").getDate() <= 7;
             return (
-              <div key={wi} style={{ display: "flex", flexDirection: "column", gap: 3 }}>
-                <div style={{ height: 14, fontSize: 9, color: "var(--muted)", lineHeight: "14px", whiteSpace: "nowrap" }}>
+              <div key={wi} className="cal-week">
+                <div className="cal-month-label">
                   {isFirstOfMonth ? month : ""}
                 </div>
                 {week.map((day, di) => (
                   <div
                     key={di}
                     title={`${day.date}: ${day.count} attempt${day.count !== 1 ? "s" : ""}`}
+                    className="cal-cell"
                     style={{
-                      width: 12, height: 12,
-                      borderRadius: 2,
                       background: cellColor(day.count),
-                      border: "1px solid var(--border)",
-                      transition: "transform 0.1s",
                       cursor: day.count > 0 ? "default" : undefined,
                     }}
                   />
@@ -63,12 +55,12 @@ export default function ActivityCalendar({ data }: { data: Day[] }) {
           })}
         </div>
       </div>
-      <div style={{ display: "flex", gap: 16, marginTop: 8, alignItems: "center" }}>
+      <div className="cal-footer">
         <span className="muted small">{total} attempts over {activeDays} active days in the last 12 weeks</span>
-        <div style={{ display: "flex", gap: 3, alignItems: "center", marginLeft: "auto" }}>
+        <div className="cal-legend">
           <span className="muted small">less</span>
           {[0, 2, 5, 8, 12].map((n) => (
-            <div key={n} style={{ width: 10, height: 10, borderRadius: 2, background: cellColor(n) }} />
+            <div key={n} className="cal-legend-cell" style={{ background: cellColor(n) }} />
           ))}
           <span className="muted small">more</span>
         </div>
