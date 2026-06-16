@@ -69,12 +69,7 @@ export function ProblemPanel({
     <>
       <div className="panel" style={{ position: "relative" }}>
         <Markdown>{problem.problem}</Markdown>
-        <button
-          type="button"
-          onClick={onCopy}
-          title="Copy problem"
-          style={{ position: "absolute", top: 10, right: 10, background: "none", border: "1px solid var(--border)", cursor: "pointer", fontSize: 12, color: "var(--muted)", padding: "3px 7px", borderRadius: 5 }}
-        >
+        <button type="button" onClick={onCopy} title="Copy problem" className="copy-btn">
           {copied ? "✓" : "⎘"}
         </button>
       </div>
@@ -108,10 +103,8 @@ export function ProblemPanel({
 
       {hint && (
         <div className="panel" style={{ background: "var(--accent-soft)", marginBottom: 4 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-            <span style={{ fontSize: 11, fontWeight: 700, color: "var(--amber)", textTransform: "uppercase", letterSpacing: "0.1em" }}>
-              Hint
-            </span>
+          <div className="panel-header" style={{ marginBottom: 6 }}>
+            <h2 className="amber">Hint</h2>
             <button className="btn-ghost" onClick={onDismissHint} style={{ fontSize: 11, padding: "2px 6px", color: "var(--muted)" }}>
               ✕
             </button>
@@ -182,13 +175,13 @@ export function GradeFeedback({
 
       {grade.understood?.length > 0 && (
         <div className="fb-block">
-          <h4 style={{ color: "var(--green)" }}>What you got</h4>
+          <h4 className="green">What you got</h4>
           <ul>{grade.understood.map((u, i) => <li key={i}>{u}</li>)}</ul>
         </div>
       )}
 
       <div className="fb-block">
-        <h4 style={{ color: "var(--amber)" }}>The gap</h4>
+        <h4 className="amber">The gap</h4>
         <div className="markdown"><Markdown>{grade.gap}</Markdown></div>
         {grade.blamed_prerequisite && (
           <p className="small" style={{ marginTop: 8 }}>
@@ -202,7 +195,7 @@ export function GradeFeedback({
       </div>
 
       <div className="fb-block">
-        <h4 style={{ color: "var(--accent)" }}>Hint (not the answer)</h4>
+        <h4 className="accent">Hint (not the answer)</h4>
         <div className="markdown"><Markdown>{grade.socratic_hint}</Markdown></div>
       </div>
 
@@ -235,23 +228,13 @@ export function GradeFeedback({
       )}
 
       {grade.justMastered && grade.unlocked && grade.unlocked.length > 0 && (
-        <div style={{ marginTop: 4, padding: "12px 14px", background: "var(--accent-soft)", border: "1px solid var(--border)", borderRadius: 10 }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: "var(--green)", marginBottom: 8 }}>
+        <div className="mastered-banner" style={{ marginTop: 4 }}>
+          <div className="mastered-banner-title">
             Mastered! You just unlocked {grade.unlocked.length} new concept{grade.unlocked.length !== 1 ? "s" : ""}
           </div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
             {grade.unlocked.map((n) => (
-              <Link
-                key={n.id}
-                href={`/node/${encodeURIComponent(n.id)}`}
-                target={unlockTarget}
-                style={{
-                  display: "inline-flex", alignItems: "center", gap: 5,
-                  padding: "4px 10px", borderRadius: 7,
-                  border: "1px solid var(--border)", background: "var(--panel)",
-                  color: "var(--green)", fontSize: 13, textDecoration: "none",
-                }}
-              >
+              <Link key={n.id} href={`/node/${encodeURIComponent(n.id)}`} target={unlockTarget} className="mastered-node-chip">
                 {n.type && <span style={{ fontSize: 10, opacity: 0.7 }}>{n.type}</span>}
                 {n.title}
               </Link>
