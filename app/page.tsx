@@ -67,7 +67,7 @@ export default function Home() {
           </span>
           <span className="goal-right">
             {today.streak_days > 0 && (
-              <span style={{ color: "var(--muted)", fontWeight: 600 }}>
+              <span className="streak-label">
                 {today.streak_days} day{today.streak_days !== 1 ? "s" : ""} streak
               </span>
             )}
@@ -93,11 +93,11 @@ export default function Home() {
 
       {/* Concept of the Day */}
       {spotlight && (
-        <div className="panel" style={{ marginBottom: 20, position: "relative" }}>
+        <div className="panel panel-spotlight">
           <div className="spotlight-inner">
             <div className="spotlight-body">
               <h2 className="accent">Concept of the day</h2>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 4 }}>
+              <div className="spotlight-meta">
                 {spotlight.type && <span className={`type-badge t-${spotlight.type}`}>{spotlight.type}</span>}
                 {spotlight.area && <span className="muted small">{spotlight.area}</span>}
               </div>
@@ -158,7 +158,7 @@ export default function Home() {
                 <Link href={`/node/${encodeURIComponent(n.id)}`}>{n.title}</Link>
                 {n.area && <span className="muted small"> · {n.area}</span>}
               </div>
-              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <div className="due-actions">
                 <DueBar decayed={(n as any).p_decayed} original={n.mastery_p} />
                 <SnoozeButton nodeId={n.id} />
                 <Link
@@ -180,9 +180,9 @@ export default function Home() {
             <div className="panel" style={{ marginBottom: 16 }}>
               <div className="panel-header">
                 <h2>Jump back in</h2>
-                <Link href="/progress" className="small" style={{ color: "var(--accent)" }}>All activity →</Link>
+                <Link href="/progress" className="small accent-link">All activity →</Link>
               </div>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+              <div className="action-row">
                 {recent.map((n) => (
                   <Link key={n.id} href={`/learn?node=${encodeURIComponent(n.id)}`} className="recent-chip">
                     <span
@@ -219,7 +219,7 @@ export default function Home() {
                 <Link href={`/node/${encodeURIComponent(n.id)}`}>{n.title}</Link>
                 {n.area && <span className="meta"> · {n.area}</span>}
               </div>
-              <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+              <div className="item-actions">
                 {n.unlocks > 0 && <span className="pill unlock">unlocks {n.unlocks}</span>}
                 <QuickKnown nodeId={n.id} />
                 <Link
@@ -240,11 +240,11 @@ export default function Home() {
               <h2>★ Bookmarked</h2>
               {bookmarks.map((n) => (
                 <div className="frontier-item" key={n.id}>
-                  <div style={{ minWidth: 0 }}>
+                  <div>
                     {n.type && <span className={`type-badge t-${n.type}`} style={{ marginRight: 6 }}>{n.type}</span>}
-                    <Link href={`/node/${encodeURIComponent(n.id)}`} style={{ color: "var(--text)" }}>{n.title}</Link>
+                    <Link href={`/node/${encodeURIComponent(n.id)}`} className="text-link">{n.title}</Link>
                   </div>
-                  <div style={{ display: "flex", gap: 6, alignItems: "center", flexShrink: 0 }}>
+                  <div className="item-actions">
                     <div className="bar" style={{ width: 50 }}>
                       <span style={{ width: `${Math.round(n.mastery_p * 100)}%` }} />
                     </div>
@@ -264,7 +264,7 @@ export default function Home() {
             </div>
             {s.areas.slice(0, 12).map((a) => (
               <div className="frontier-item" key={a.area}>
-                <Link href={`/browse?area=${encodeURIComponent(a.area)}`} style={{ color: "var(--text)" }}>
+                <Link href={`/browse?area=${encodeURIComponent(a.area)}`} className="text-link">
                   {a.area}
                 </Link>
                 <span className="pill">{a.c}</span>

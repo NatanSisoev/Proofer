@@ -884,3 +884,10 @@ details[open].practice-history > summary::before { transform: rotate(90deg); }
 .accent-link { color: var(--accent); }
 .recent-list { display: flex; flex-direction: column; gap: 1px; }
 .weak-spot-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+
+/* home page */
+.streak-label { color: var(--muted); font-weight: 600; }
+.panel-spotlight { margin-bottom: 20px; position: relative; }
+.spotlight-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 4px; }
+.due-actions { display: flex; gap: 8px; align-items: center; }
+.item-actions { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
