@@ -187,22 +187,15 @@ export default function Home() {
               </div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                 {recent.map((n) => (
-                  <Link
-                    key={n.id}
-                    href={`/learn?node=${encodeURIComponent(n.id)}`}
-                    style={{
-                      display: "flex", alignItems: "center", gap: 7,
-                      padding: "6px 10px", borderRadius: 8,
-                      border: "1px solid var(--border)", background: "var(--bg-soft)",
-                      color: "var(--text)", fontSize: 13, textDecoration: "none",
-                    }}
-                  >
-                    <span style={{
-                      width: 8, height: 8, borderRadius: "50%", flexShrink: 0,
-                      background: n.last_verdict === "correct" ? "var(--green)"
-                        : n.last_verdict === "partial" ? "var(--amber)"
-                        : "var(--red)",
-                    }} />
+                  <Link key={n.id} href={`/learn?node=${encodeURIComponent(n.id)}`} className="recent-chip">
+                    <span
+                      className="verdict-dot-sm"
+                      style={{
+                        background: n.last_verdict === "correct" ? "var(--green)"
+                          : n.last_verdict === "partial" ? "var(--amber)"
+                          : "var(--red)",
+                      }}
+                    />
                     {n.title}
                   </Link>
                 ))}
@@ -287,28 +280,28 @@ export default function Home() {
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
               <h2 style={{ margin: 0 }}>Navigate</h2>
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              <Link href="/graph" style={{ display: "flex", flexDirection: "column", gap: 2, padding: "8px 0", borderBottom: "1px solid var(--border)", color: "var(--text)" }}>
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              <Link href="/graph" className="nav-item">
                 <div style={{ fontWeight: 500 }}>Knowledge map</div>
                 <div className="muted small">Full graph, colored by mastery</div>
               </Link>
-              <Link href="/progress" style={{ display: "flex", flexDirection: "column", gap: 2, padding: "8px 0", borderBottom: "1px solid var(--border)", color: "var(--text)" }}>
+              <Link href="/progress" className="nav-item">
                 <div style={{ fontWeight: 500 }}>Progress</div>
                 <div className="muted small">Mastery histogram & recent activity</div>
               </Link>
-              <Link href="/browse" style={{ display: "flex", flexDirection: "column", gap: 2, padding: "8px 0", borderBottom: "1px solid var(--border)", color: "var(--text)" }}>
+              <Link href="/browse" className="nav-item">
                 <div style={{ fontWeight: 500 }}>Browse</div>
                 <div className="muted small">All concepts by area and type</div>
               </Link>
-              <Link href="/quality" style={{ display: "flex", flexDirection: "column", gap: 2, padding: "8px 0", borderBottom: "1px solid var(--border)", color: "var(--text)" }}>
+              <Link href="/quality" className="nav-item">
                 <div style={{ fontWeight: 500 }}>Note quality</div>
                 <div className="muted small">Gaps, missing prereqs, isolated nodes</div>
               </Link>
-              <Link href="/session" style={{ display: "flex", flexDirection: "column", gap: 2, padding: "8px 0", borderBottom: "1px solid var(--border)", color: "var(--text)" }}>
+              <Link href="/session" className="nav-item">
                 <div style={{ fontWeight: 500 }}>Practice</div>
                 <div className="muted small">AI-generated problems, Socratic grading</div>
               </Link>
-              <Link href="/study-plan" style={{ display: "flex", flexDirection: "column", gap: 2, padding: "8px 0", color: "var(--text)" }}>
+              <Link href="/study-plan" className="nav-item">
                 <div style={{ fontWeight: 500 }}>Study plan</div>
                 <div className="muted small">AI study schedule for your next exam</div>
               </Link>

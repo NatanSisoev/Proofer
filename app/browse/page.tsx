@@ -88,7 +88,7 @@ export default async function BrowsePage({
   const areas = browseAreas();
   return (
     <div className="wrap">
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 24 }}>
+      <div className="page-top">
         <div>
           <h1>Browse by Topic</h1>
           <p className="muted small" style={{ marginTop: 4 }}>

@@ -498,6 +498,25 @@ details[open].practice-history > summary::before { transform: rotate(90deg); }
 .tab-link:hover { color: var(--text); text-decoration: none; }
 .tab-link.active { background: var(--panel); border-color: var(--border); border-bottom-color: var(--panel); color: var(--text); font-weight: 600; }
 
+/* home: "jump back in" recent practice chips */
+.recent-chip {
+  display: flex; align-items: center; gap: 7px;
+  padding: 6px 10px; border-radius: 8px;
+  border: 1px solid var(--border); background: var(--bg-soft);
+  color: var(--text); font-size: 13px; transition: border-color 0.15s;
+}
+.recent-chip:hover { border-color: var(--accent); text-decoration: none; }
+.verdict-dot-sm { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; display: inline-block; }
+
+/* home: navigate panel link list */
+.nav-item {
+  display: flex; flex-direction: column; gap: 2px;
+  padding: 8px 0; border-bottom: 1px solid var(--border);
+  color: var(--text);
+}
+.nav-item:hover { color: var(--text); text-decoration: none; }
+.nav-item:last-child { border-bottom: none; }
+
 /* quality dashboard */
 .quality-row {
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
