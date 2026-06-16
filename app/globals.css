@@ -457,6 +457,22 @@ details[open].practice-history > summary::before { transform: rotate(90deg); }
   border: 1px solid var(--border); background: var(--bg-soft); font-size: 13px;
 }
 
+/* session summary: newly mastered banner */
+.mastered-banner {
+  margin-top: 20px; padding: 12px 14px;
+  background: var(--accent-soft); border: 1px solid var(--border); border-radius: 10px;
+}
+.mastered-banner-title { font-size: 13px; font-weight: 700; color: var(--green); margin-bottom: 8px; }
+.mastered-node-chip {
+  padding: 4px 10px; border-radius: 7px;
+  border: 1px solid var(--border); background: var(--panel);
+  color: var(--green); font-size: 13px;
+}
+.mastered-node-chip:hover { text-decoration: none; border-color: var(--green); }
+
+/* session: progress indicator dots */
+.progress-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+
 /* session setup: selectable option cards */
 .mode-option {
   display: flex; align-items: flex-start; gap: 12px;

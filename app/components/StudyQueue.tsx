@@ -289,21 +289,11 @@ export default function StudyQueue({ queue, preferKind }: { queue: QueueNode[]; 
         </div>
 
         {results.some((r) => r.justMastered) && (
-          <div style={{ marginTop: 20, padding: "12px 14px", background: "var(--accent-soft)", border: "1px solid var(--border)", borderRadius: 10 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: "var(--green)", marginBottom: 8 }}>
-              Newly mastered this session
-            </div>
+          <div className="mastered-banner">
+            <div className="mastered-banner-title">Newly mastered this session</div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
               {results.filter((r) => r.justMastered).map((r, i) => (
-                <Link
-                  key={i}
-                  href={`/node/${encodeURIComponent(r.node.id)}`}
-                  style={{
-                    padding: "4px 10px", borderRadius: 7,
-                    border: "1px solid var(--border)", background: "var(--panel)",
-                    color: "var(--green)", fontSize: 13, textDecoration: "none",
-                  }}
-                >
+                <Link key={i} href={`/node/${encodeURIComponent(r.node.id)}`} className="mastered-node-chip">
                   {r.node.title}
                 </Link>
               ))}
@@ -357,15 +347,9 @@ export default function StudyQueue({ queue, preferKind }: { queue: QueueNode[]; 
               Retry {incorrect + partial} missed
             </button>
           )}
-          <Link href="/session" className="btn-primary" style={{ textDecoration: "none", padding: "8px 18px", borderRadius: 8, background: "var(--accent)", color: "#FFFFFF", fontSize: 14, fontWeight: 600 }}>
-            New session
-          </Link>
-          <Link href="/history" className="btn-ghost" style={{ textDecoration: "none", padding: "8px 18px", borderRadius: 8, border: "1px solid var(--border)", color: "var(--text)", fontSize: 14 }}>
-            History
-          </Link>
-          <Link href="/" className="btn-ghost" style={{ textDecoration: "none", padding: "8px 18px", borderRadius: 8, border: "1px solid var(--border)", color: "var(--text)", fontSize: 14 }}>
-            Home
-          </Link>
+          <Link href="/session" className="btn-primary">New session</Link>
+          <Link href="/history" className="btn-ghost">History</Link>
+          <Link href="/" className="btn-ghost">Home</Link>
         </div>
       </div>
     );
@@ -391,22 +375,12 @@ export default function StudyQueue({ queue, preferKind }: { queue: QueueNode[]; 
             <span
               key={i}
               title={r.node.title}
-              style={{
-                width: 10, height: 10, borderRadius: "50%",
-                background: VERDICT[r.verdict]?.color,
-                display: "inline-block",
-              }}
+              className="progress-dot"
+              style={{ background: VERDICT[r.verdict]?.color }}
             />
           ))}
           {Array.from({ length: activeQueue.length - results.length }).map((_, i) => (
-            <span
-              key={`empty-${i}`}
-              style={{
-                width: 10, height: 10, borderRadius: "50%",
-                background: "var(--border)",
-                display: "inline-block",
-              }}
-            />
+            <span key={`empty-${i}`} className="progress-dot" style={{ background: "var(--border)" }} />
           ))}
         </div>
       </div>
