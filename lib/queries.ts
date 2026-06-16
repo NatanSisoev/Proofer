@@ -610,6 +610,49 @@ export function search(q: string, limit = 25): NodeRow[] {
     .all(like, like, `${q.replace(/[%_]/g, "")}%`, limit) as NodeRow[];
 }
 
+export type RelatedEdge = {
+  src_id: string;   src_title: string;  src_type: string | null; src_area: string | null; src_overview: string | null;
+  tgt_id: string;   tgt_title: string;  tgt_type: string | null; tgt_area: string | null; tgt_overview: string | null;
+  context: string | null;
+};
+
+/**
+ * All `related` edges between existing nodes, with both node's titles and overviews
+ * so an LLM (or user) can classify them into more specific types.
+ * Sorted by shared area first (same-area pairs are the easiest to reclassify).
+ */
+export function relatedEdgesWithNodes(limit = 100): RelatedEdge[] {
+  return db()
+    .prepare(
+      `SELECT
+         e.src AS src_id, sn.title AS src_title, sn.type AS src_type, sn.area AS src_area, sn.overview AS src_overview,
+         e.dst AS tgt_id, tn.title AS tgt_title, tn.type AS tgt_type, tn.area AS tgt_area, tn.overview AS tgt_overview,
+         e.context
+       FROM edges e
+       JOIN nodes sn ON sn.id = e.src AND sn.exists_ = 1
+       JOIN nodes tn ON tn.id = e.dst AND tn.exists_ = 1
+       WHERE e.type = 'related'
+       ORDER BY (sn.area = tn.area) DESC, sn.area ASC, sn.title ASC
+       LIMIT ?`
+    )
+    .all(limit) as RelatedEdge[];
+}
+
+/**
+ * Count of unclassified `related` edges between existing nodes — used for the /quality badge.
+ */
+export function relatedEdgeCount(): number {
+  const row = db()
+    .prepare(
+      `SELECT COUNT(*) AS n FROM edges e
+        JOIN nodes sn ON sn.id = e.src AND sn.exists_ = 1
+        JOIN nodes tn ON tn.id = e.dst AND tn.exists_ = 1
+       WHERE e.type = 'related'`
+    )
+    .get() as { n: number };
+  return row.n;
+}
+
 export type LinkSuggestion = {
   src_id: string; src_title: string; src_area: string | null;
   tgt_id: string; tgt_title: string; tgt_area: string | null;
@@ -972,52 +1015,4 @@ export function nextReviewDays(nodeId: string): number | null {
 /**
  * Cumulative mastery milestones: for each day in the last 60 days,
  * how many concepts were first mastered on or before that day.
- * Used to render a "concepts mastered over time" chart.
- */
-export function masteryMilestones(): { day: string; cumulative: number }[] {
-  // Find the date each concept first crossed the mastery threshold
-  const firstMastered = db()
-    .prepare(
-      `SELECT DATE(MIN(recorded_at)) AS day, COUNT(*) AS count
-         FROM (
-           SELECT node_id, MIN(recorded_at) AS recorded_at
-             FROM mastery_history
-            WHERE p >= 0.8
-            GROUP BY node_id
-         )
-        GROUP BY DATE(recorded_at)
-        ORDER BY day ASC`
-    )
-    .all() as { day: string; count: number }[];
-
-  if (firstMastered.length === 0) return [];
-
-  // Build cumulative sum
-  let cum = 0;
-  return firstMastered.map((r) => {
-    cum += r.count;
-    return { day: r.day, cumulative: cum };
-  });
-}
-
-/**
- * Per-area mastery breakdown: total concepts, mastered count, and average mastery p.
- * Used on the progress page to show subject-by-subject health.
- */
-export function areaMastery(): { area: string; total: number; mastered: number; avg_p: number; practiced: number }[] {
-  return db()
-    .prepare(
-      `SELECT
-         n.area,
-         COUNT(*) AS total,
-         COUNT(CASE WHEN COALESCE(m.p, 0) >= 0.8 THEN 1 END) AS mastered,
-         AVG(COALESCE(m.p, 0)) AS avg_p,
-         COUNT(CASE WHEN COALESCE(m.attempts, 0) > 0 THEN 1 END) AS practiced
-       FROM nodes n
-       LEFT JOIN mastery m ON m.node_id = n.id
-       WHERE n.exists_ = 1 AND n.area IS NOT NULL
-       GROUP BY n.area
-       ORDER BY avg_p DESC, total DESC`
-    )
-    .all() as { area: string; total: number; mastered: number; avg_p: number; practiced: number }[];
-}
+ * Used to render a "

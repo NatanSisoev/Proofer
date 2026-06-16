@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { unstable_cache } from "next/cache";
-import { noteQuality, linkSuggestions, dependencyCycles } from "@/lib/queries";
+import { noteQuality, linkSuggestions, dependencyCycles, relatedEdgesWithNodes, relatedEdgeCount } from "@/lib/queries";
 import QualityFilters from "@/app/components/QualityFilters";
 import LinkSuggestions from "@/app/components/LinkSuggestions";
+import RelatedEdges from "@/app/components/RelatedEdges";
+import { HAS_KEY } from "@/lib/llm";
 
 export const dynamic = "force-dynamic";
 
@@ -36,7 +38,7 @@ export default async function QualityPage({
   searchParams: Promise<{ tab?: string }>;
 }) {
   const { tab: tabParam } = await searchParams;
-  const tab = tabParam === "links" ? "links" : tabParam === "cycles" ? "cycles" : "issues";
+  const tab = tabParam === "links" ? "links" : tabParam === "cycles" ? "cycles" : tabParam === "edges" ? "edges" : "issues";
 
   const issues = await getNoteQuality();
   const allIssueTypes = Array.from(new Set(issues.flatMap((n) => n.issues))).sort();
@@ -54,6 +56,8 @@ export default async function QualityPage({
 
   const suggestions = tab === "links" ? await getLinkSuggestions(60) : [];
   const cycles = await getDependencyCycles(40);
+  const relatedEdges = tab === "edges" ? relatedEdgesWithNodes(150) : [];
+  const relatedCount = relatedEdgeCount();
 
   // Generate an actionable summary
   const topIssue = Object.entries(byIssue).sort((a, b) => b[1] - a[1])[0];
@@ -93,6 +97,12 @@ export default async function QualityPage({
             <div className="l">dep cycles</div>
           </div>
         )}
+        {relatedCount > 0 && (
+          <div className="stat">
+            <div className="n" style={{ color: "var(--amber)" }}>{relatedCount}</div>
+            <div className="l">unclassified edges</div>
+          </div>
+        )}
       </div>
 
       {/* Tab bar */}
@@ -101,6 +111,7 @@ export default async function QualityPage({
           { key: "issues", label: "Note issues" },
           { key: "links", label: "Link suggestions" },
           { key: "cycles", label: `Dependency cycles${cycles.length > 0 ? ` (${cycles.length})` : ""}` },
+          { key: "edges", label: `Unclassified edges${relatedCount > 0 ? ` (${relatedCount})` : ""}` },
         ].map((t) => (
           <Link
             key={t.key}
@@ -141,6 +152,21 @@ export default async function QualityPage({
         <LinkSuggestions initial={suggestions} />
       )}
 
+      {tab === "edges" && (
+        <div className="panel">
+          <h2 style={{ marginBottom: 4 }}>Unclassified edges</h2>
+          <p className="muted small" style={{ marginTop: 0, marginBottom: 16, maxWidth: 680 }}>
+            These <code>related</code> edges are untyped — they link two concepts but say nothing about
+            the relationship. Reclassifying them as <code>depends_on</code>, <code>generalizes</code>, etc.
+            directly improves the prerequisite graph that the mastery model depends on.
+            {HAS_KEY
+              ? " Click \"AI classify\" to get a suggestion, then apply it or choose a different type."
+              : " Add GEMINI_API_KEY or ANTHROPIC_API_KEY to enable AI suggestions."}
+          </p>
+          <RelatedEdges initial={relatedEdges} hasKey={HAS_KEY} />
+        </div>
+      )}
+
       {tab === "cycles" && (
         <div className="panel">
           <h2 style={{ marginBottom: 4 }}>Dependency cycles</h2>
@@ -157,28 +183,3 @@ export default async function QualityPage({
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {cycles.map((c, i) => (
                 <div
-                  key={i}
-                  style={{
-                    padding: "10px 12px", borderRadius: 8,
-                    border: "1px solid var(--border)", background: "var(--bg-soft)",
-                    display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap",
-                  }}
-                >
-                  <span
-                    className="pill"
-                    style={{ fontSize: 10, color: c.mutual ? "var(--red)" : "var(--amber)", flexShrink: 0 }}
-                  >
-                    {c.mutual ? "mutual" : `${c.nodes.length}-cycle`}
-                  </span>
-                  <span style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap", fontSize: 13.5 }}>
-                    {c.nodes.map((n, j) => (
-                      <span key={j} style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-                        {j > 0 && <span className="muted" style={{ fontSize: 12 }}>{c.mutual ? "⇄" : "→"}</span>}
-                        <Link href={`/node/${encodeURIComponent(n)}`}>{n}</Link>
-                      </span>
-                    ))}
-                    {/* close the loop for cycles longer than a mutual pair */}
-                    {!c.mutual && (
-                      <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-                        <span className="muted" style={{ fontSize: 12 }}>→</span>
-                        <Link href={`/node/${en
