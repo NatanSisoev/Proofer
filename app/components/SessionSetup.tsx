@@ -142,18 +142,7 @@ export default function SessionSetup({
               return (
               <label
                 key={m.key}
-                style={{
-                  display: "flex",
-                  alignItems: "flex-start",
-                  gap: 12,
-                  padding: "10px 12px",
-                  borderRadius: 8,
-                  border: `1px solid ${mode === m.key ? "var(--accent)" : "var(--border)"}`,
-                  background: mode === m.key ? "var(--accent-soft)" : "transparent",
-                  cursor: "pointer",
-                  opacity: isEmpty ? 0.5 : 1,
-                  transition: "border-color 0.15s",
-                }}
+                className={`mode-option${mode === m.key ? " active" : ""}${isEmpty ? " empty" : ""}`}
               >
                 <input
                   type="radio"
@@ -161,7 +150,6 @@ export default function SessionSetup({
                   value={m.key}
                   checked={mode === m.key}
                   onChange={() => setMode(m.key)}
-                  style={{ marginTop: 3, accentColor: "var(--accent)" }}
                 />
                 <div style={{ flex: 1 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -214,27 +202,16 @@ export default function SessionSetup({
                   style={{ fontSize: 13, padding: "7px 12px" }}
                 />
                 {customResults.length > 0 && (
-                  <div style={{
-                    position: "absolute", top: "100%", left: 0, right: 0, zIndex: 50,
-                    background: "var(--panel)", border: "1px solid var(--border)",
-                    borderRadius: 8, marginTop: 4, maxHeight: 200, overflowY: "auto",
-                  }}>
+                  <div className="search-dropdown">
                     {customResults.map(r => (
                       <button
                         key={r.id}
+                        className="search-dropdown-item"
                         onClick={() => {
                           setCustomPicked(p => [...p, r]);
                           setCustomResults(prev => prev.filter(x => x.id !== r.id));
                           setCustomSearch("");
                         }}
-                        style={{
-                          display: "flex", alignItems: "center", gap: 8, width: "100%",
-                          padding: "7px 12px", background: "none", border: "none",
-                          cursor: "pointer", color: "var(--text)", textAlign: "left",
-                          borderBottom: "1px solid var(--border)", fontSize: 13,
-                        }}
-                        onMouseOver={e => (e.currentTarget.style.background = "var(--bg-soft)")}
-                        onMouseOut={e => (e.currentTarget.style.background = "none")}
                       >
                         {r.type && <span className={`type-badge t-${r.type}`} style={{ flexShrink: 0 }}>{r.type}</span>}
                         <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.title}</span>
@@ -301,13 +278,7 @@ export default function SessionSetup({
             {KIND_OPTIONS.map((k) => (
               <label
                 key={k.key}
-                style={{
-                  display: "flex", alignItems: "center", gap: 10, padding: "7px 10px",
-                  borderRadius: 8,
-                  border: `1px solid ${preferKind === k.key ? "var(--accent)" : "var(--border)"}`,
-                  background: preferKind === k.key ? "var(--accent-soft)" : "transparent",
-                  cursor: "pointer",
-                }}
+                className={`mode-option-sm${preferKind === k.key ? " active" : ""}`}
               >
                 <input
                   type="radio"
@@ -315,7 +286,6 @@ export default function SessionSetup({
                   value={k.key}
                   checked={preferKind === k.key}
                   onChange={() => setPreferKind(k.key)}
-                  style={{ accentColor: "var(--accent)" }}
                 />
                 <div>
                   <span style={{ fontWeight: 600, fontSize: 13 }}>{k.label}</span>
