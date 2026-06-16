@@ -97,7 +97,7 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
           <div className="node-head">
             <div>
               <span className="type-badge t-ghost">gap</span>
-              <h1 style={{ marginTop: 8 }}>{node.title}</h1>
+              <h1>{node.title}</h1>
             </div>
             <GhostCreate nodeId={id} nodeTitle={node.title} nodeArea={node.area} />
           </div>

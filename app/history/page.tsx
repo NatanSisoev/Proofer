@@ -61,7 +61,7 @@ export default async function HistoryPage({
     <div className="wrap">
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 20 }}>
         <div>
-          <h1 style={{ margin: 0, fontSize: 24, letterSpacing: "-0.02em" }}>Practice history</h1>
+          <h1>Practice history</h1>
           <p className="muted small" style={{ marginTop: 4 }}>
             {total.toLocaleString()} attempt{total !== 1 ? "s" : ""} total
           </p>

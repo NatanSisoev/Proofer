@@ -68,7 +68,7 @@ export default function SettingsPage() {
     <div className="wrap" style={{ maxWidth: 640 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 28 }}>
         <div>
-          <h1 style={{ margin: 0, fontSize: 24, letterSpacing: "-0.02em" }}>Settings</h1>
+          <h1>Settings</h1>
           <p className="muted small" style={{ marginTop: 4 }}>Preferences for your study sessions</p>
         </div>
         <Link href="/" className="muted small">← home</Link>
