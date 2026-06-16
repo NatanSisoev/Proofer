@@ -201,7 +201,16 @@ input.search-box:focus { outline: none; border-color: var(--accent); }
 .node-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; flex-wrap: wrap; margin-bottom: 8px; }
 .node-head h1 { margin: 6px 0; font-size: 28px; letter-spacing: -0.02em; }
 .mastered-badge { font-size: 11px; font-weight: 700; color: var(--green); background: var(--green-soft); padding: 2px 8px; border-radius: 999px; border: 1px solid var(--border); }
-.breadcrumb { color: var(--muted); font-size: 13px; margin-bottom: 18px; }
+.breadcrumb { color: var(--muted); font-size: 13px; margin-bottom: 18px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.breadcrumb a { color: var(--muted); }
+.breadcrumb a:hover { color: var(--text); text-decoration: none; }
+.selected-chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 8px 3px 10px; border-radius: 20px;
+  background: var(--accent-soft); border: 1px solid var(--accent);
+  font-size: 12px;
+}
+.selected-chip button { background: none; border: none; cursor: pointer; color: var(--muted); padding: 0 2px; font-size: 13px; line-height: 1; }
 
 .readiness { margin: 18px 0; }
 .bar { height: 6px; background: var(--bg-soft); border-radius: 999px; overflow: hidden; }
@@ -471,6 +480,17 @@ details[open].practice-history > summary::before { transform: rotate(90deg); }
   cursor: pointer; color: var(--text); text-align: left; font-size: 13px;
 }
 .search-dropdown-item:hover { background: var(--bg-soft); }
+
+/* tab bar */
+.tab-bar { display: flex; gap: 4px; margin-bottom: 20px; border-bottom: 1px solid var(--border); }
+.tab-link {
+  padding: 8px 16px; font-size: 14px; font-weight: 400; text-decoration: none;
+  border-radius: 8px 8px 0 0; border: 1px solid transparent;
+  border-bottom-color: transparent; color: var(--muted);
+  margin-bottom: -1px; transition: color 0.15s;
+}
+.tab-link:hover { color: var(--text); text-decoration: none; }
+.tab-link.active { background: var(--panel); border-color: var(--border); border-bottom-color: var(--panel); color: var(--text); font-weight: 600; }
 
 /* quality dashboard */
 .quality-row {

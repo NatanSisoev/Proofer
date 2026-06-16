@@ -106,7 +106,7 @@ export default async function QualityPage({
       </div>
 
       {/* Tab bar */}
-      <div style={{ display: "flex", gap: 4, marginBottom: 20, borderBottom: "1px solid var(--border)", paddingBottom: 0 }}>
+      <div className="tab-bar">
         {[
           { key: "issues", label: "Note issues" },
           { key: "links", label: "Link suggestions" },
@@ -116,15 +116,7 @@ export default async function QualityPage({
           <Link
             key={t.key}
             href={`/quality${t.key === "issues" ? "" : `?tab=${t.key}`}`}
-            style={{
-              padding: "8px 16px", fontSize: 14, borderRadius: "8px 8px 0 0",
-              background: tab === t.key ? "var(--panel)" : "transparent",
-              border: tab === t.key ? "1px solid var(--border)" : "1px solid transparent",
-              borderBottom: tab === t.key ? "1px solid var(--panel)" : "1px solid transparent",
-              color: tab === t.key ? "var(--text)" : "var(--muted)",
-              textDecoration: "none", fontWeight: tab === t.key ? 600 : 400,
-              marginBottom: -1,
-            }}
+            className={`tab-link${tab === t.key ? " active" : ""}`}
           >
             {t.label}
           </Link>

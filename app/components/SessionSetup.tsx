@@ -220,22 +220,9 @@ export default function SessionSetup({
               {customPicked.length > 0 && (
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                   {customPicked.map(c => (
-                    <div
-                      key={c.id}
-                      style={{
-                        display: "flex", alignItems: "center", gap: 5,
-                        padding: "3px 8px 3px 10px", borderRadius: 20,
-                        background: "var(--accent-soft)", border: "1px solid var(--accent)",
-                        fontSize: 12,
-                      }}
-                    >
-                      <span style={{ color: "var(--text)" }}>{c.title}</span>
-                      <button
-                        onClick={() => setCustomPicked(p => p.filter(x => x.id !== c.id))}
-                        style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted)", padding: "0 2px", fontSize: 13, lineHeight: 1 }}
-                      >
-                        ×
-                      </button>
+                    <div key={c.id} className="selected-chip">
+                      <span>{c.title}</span>
+                      <button onClick={() => setCustomPicked(p => p.filter(x => x.id !== c.id))}>×</button>
                     </div>
                   ))}
                 </div>
