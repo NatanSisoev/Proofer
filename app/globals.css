@@ -506,6 +506,16 @@ details[open].practice-history > summary::before { transform: rotate(90deg); }
 .quality-row:last-child { border-bottom: none; }
 .quality-row:hover { background: var(--bg-soft); }
 
+/* full-width primary button variant */
+.btn-full { width: 100%; padding: 11px 28px; font-size: 15px; }
+
+/* quality: dependency cycle card */
+.cycle-card {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  padding: 10px 12px; border-radius: 8px;
+  border: 1px solid var(--border); background: var(--bg-soft);
+}
+
 /* daily goal */
 .daily-goal-bar {
   background: var(--panel); border: 1px solid var(--border);

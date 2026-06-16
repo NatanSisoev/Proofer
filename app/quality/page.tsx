@@ -174,14 +174,7 @@ export default async function QualityPage({
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {cycles.map((c, i) => (
-                <div
-                  key={i}
-                  style={{
-                    padding: "10px 12px", borderRadius: 8,
-                    border: "1px solid var(--border)", background: "var(--bg-soft)",
-                    display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap",
-                  }}
-                >
+                <div key={i} className="cycle-card">
                   <span
                     className="pill"
                     style={{ fontSize: 10, color: c.mutual ? "var(--red)" : "var(--amber)", flexShrink: 0 }}

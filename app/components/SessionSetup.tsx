@@ -286,10 +286,9 @@ export default function SessionSetup({
         )}
 
         <button
-          className="btn-primary"
+          className="btn-primary btn-full"
           onClick={start}
           disabled={loading || (mode === "custom" ? customPicked.length === 0 : preview.length === 0)}
-          style={{ padding: "10px 28px", fontSize: 15, width: "100%" }}
         >
           {loading ? "Building queue…" : mode === "custom"
             ? `Start with ${customPicked.length} concept${customPicked.length !== 1 ? "s" : ""} →`
@@ -310,10 +309,7 @@ export default function SessionSetup({
           <p className="muted small">Use the search on the left to pick concepts.</p>
         )}
         {preview.map((n, i) => (
-          <div key={n.id} style={{
-            display: "flex", alignItems: "center", gap: 10,
-            padding: "7px 4px", borderBottom: "1px solid var(--border)",
-          }}>
+          <div key={n.id} className="session-result-row">
             <span className="muted small" style={{ width: 18, textAlign: "right", flexShrink: 0 }}>{i + 1}</span>
             {n.type && <span className={`type-badge t-${n.type}`}>{n.type}</span>}
             <Link
