@@ -18,7 +18,7 @@ export default function LearningPath({ nodeId }: { nodeId: string }) {
       <p className="muted small" style={{ marginTop: -4, marginBottom: 10 }}>
         Master these in order to be fully ready for this concept.
       </p>
-      <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+      <div className="path-list">
         {show.map((n, i) => (
           <div key={n.id} className="path-row">
             <span className="path-num muted small">{i + 1}</span>
@@ -29,13 +29,13 @@ export default function LearningPath({ nodeId }: { nodeId: string }) {
             <div className="bar" style={{ width: 56 }}>
               <span style={{ width: `${Math.round((n as any).mastery_p * 100)}%` }} />
             </div>
-            <span className="small muted" style={{ width: 32, textAlign: "right" }}>
+            <span className="small muted pct-label">
               {Math.round((n as any).mastery_p * 100)}%
             </span>
             <Link
               href={`/learn?node=${encodeURIComponent(n.id)}`}
-              className="pill"
-              style={{ color: "var(--accent)", borderColor: "var(--accent-soft)", flexShrink: 0 }}
+              className="pill pill-accent"
+              style={{ flexShrink: 0 }}
             >
               drill →
             </Link>
