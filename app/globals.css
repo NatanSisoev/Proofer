@@ -749,3 +749,24 @@ details[open].practice-history > summary::before { transform: rotate(90deg); }
 .weak-prereq-name { min-width: 0; display: flex; align-items: center; gap: 8px; }
 .weak-prereq-title { font-size: 14px; font-weight: 600; }
 .weak-prereq-blocks { margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* session setup */
+.mode-list { display: flex; flex-direction: column; gap: 8px; }
+.mode-body { flex: 1; }
+.mode-label-row { display: flex; align-items: center; gap: 8px; }
+.mode-label-text { font-weight: 600; font-size: 14px; }
+.kind-label { font-weight: 600; font-size: 13px; }
+.kind-desc { margin-left: 8px; }
+.field-label { display: block; margin-bottom: 6px; }
+.search-wrapper { position: relative; margin-bottom: 8px; }
+.chips-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.btn-row { display: flex; gap: 8px; }
+.item-title { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.error-notice { color: var(--red); }
+
+/* session queue preview rows */
+.row-index { width: 18px; text-align: right; flex-shrink: 0; }
+.preview-link { color: var(--text); font-size: 13.5px; flex: 1; min-width: 0; }
+.preview-link:hover { color: var(--text); }
+.preview-mastery { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+.preview-pct { font-size: 11px; width: 28px; text-align: right; }

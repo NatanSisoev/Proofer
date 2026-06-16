@@ -129,7 +129,7 @@ export default function SessionSetup({
       <div>
         <div className="panel" style={{ marginBottom: 16 }}>
           <h2>Session mode</h2>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <div className="mode-list">
             {MODES.map((m) => {
               const modeCount = counts
                 ? m.key === "due" ? counts.due
@@ -151,9 +151,9 @@ export default function SessionSetup({
                   checked={mode === m.key}
                   onChange={() => setMode(m.key)}
                 />
-                <div style={{ flex: 1 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <span style={{ fontWeight: 600, fontSize: 14 }}>{m.label}</span>
+                <div className="mode-body">
+                  <div className="mode-label-row">
+                    <span className="mode-label-text">{m.label}</span>
                     {modeCount !== null && (
                       <span className="pill" style={{
                         fontSize: 11,
@@ -172,7 +172,7 @@ export default function SessionSetup({
 
           {mode === "area" && (
             <div style={{ marginTop: 14 }}>
-              <label className="muted small" style={{ display: "block", marginBottom: 6 }}>Area</label>
+              <label className="muted small field-label">Area</label>
               <select
                 value={area}
                 onChange={(e) => setArea(e.target.value)}
@@ -185,10 +185,10 @@ export default function SessionSetup({
 
           {mode === "custom" && (
             <div style={{ marginTop: 14 }}>
-              <label className="muted small" style={{ display: "block", marginBottom: 6 }}>
+              <label className="muted small field-label">
                 Add concepts ({customPicked.length} selected)
               </label>
-              <div style={{ position: "relative", marginBottom: 8 }}>
+              <div className="search-wrapper">
                 <input
                   type="text"
                   value={customSearch}
@@ -209,8 +209,8 @@ export default function SessionSetup({
                           setCustomSearch("");
                         }}
                       >
-                        {r.type && <span className={`type-badge t-${r.type}`} style={{ flexShrink: 0 }}>{r.type}</span>}
-                        <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.title}</span>
+                        {r.type && <span className={`type-badge t-${r.type}`}>{r.type}</span>}
+                        <span className="item-title">{r.title}</span>
                         {r.area && <span className="muted small" style={{ fontSize: 11 }}>{r.area}</span>}
                       </button>
                     ))}
@@ -218,7 +218,7 @@ export default function SessionSetup({
                 )}
               </div>
               {customPicked.length > 0 && (
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                <div className="chips-row">
                   {customPicked.map(c => (
                     <div key={c.id} className="selected-chip">
                       <span>{c.title}</span>
@@ -237,7 +237,7 @@ export default function SessionSetup({
         {mode !== "custom" && (
         <div className="panel" style={{ marginBottom: 16 }}>
           <h2>Session length</h2>
-          <div style={{ display: "flex", gap: 8 }}>
+          <div className="btn-row">
             {[3, 5, 8, 10, 15, 20].map((n) => (
               <button
                 key={n}
@@ -257,7 +257,7 @@ export default function SessionSetup({
 
         <div className="panel" style={{ marginBottom: 16 }}>
           <h2>Problem type</h2>
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          <div className="mode-list" style={{ gap: 6 }}>
             {KIND_OPTIONS.map((k) => (
               <label
                 key={k.key}
@@ -271,8 +271,8 @@ export default function SessionSetup({
                   onChange={() => setPreferKind(k.key)}
                 />
                 <div>
-                  <span style={{ fontWeight: 600, fontSize: 13 }}>{k.label}</span>
-                  <span className="muted small" style={{ marginLeft: 8 }}>{k.desc}</span>
+                  <span className="kind-label">{k.label}</span>
+                  <span className="muted small kind-desc">{k.desc}</span>
                 </div>
               </label>
             ))}
@@ -280,7 +280,7 @@ export default function SessionSetup({
         </div>
 
         {error && (
-          <div className="panel" style={{ color: "var(--red)", marginBottom: 16 }}>
+          <div className="panel error-notice" style={{ marginBottom: 16 }}>
             {error}
           </div>
         )}
@@ -310,21 +310,21 @@ export default function SessionSetup({
         )}
         {preview.map((n, i) => (
           <div key={n.id} className="session-result-row">
-            <span className="muted small" style={{ width: 18, textAlign: "right", flexShrink: 0 }}>{i + 1}</span>
+            <span className="muted small row-index">{i + 1}</span>
             {n.type && <span className={`type-badge t-${n.type}`}>{n.type}</span>}
             <Link
               href={`/node/${encodeURIComponent(n.id)}`}
               target="_blank"
-              style={{ color: "var(--text)", fontSize: 13.5, flex: 1, minWidth: 0 }}
+              className="preview-link"
             >
               {n.title}
             </Link>
             {n.area && <span className="muted small" style={{ flexShrink: 0 }}>{n.area}</span>}
-            <div style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}>
+            <div className="preview-mastery">
               <div className="bar" style={{ width: 36, height: 5 }}>
                 <span style={{ width: `${Math.round((n.mastery_p ?? 0) * 100)}%` }} />
               </div>
-              <span className="muted small" style={{ fontSize: 11, width: 28, textAlign: "right" }}>
+              <span className="muted small preview-pct">
                 {Math.round((n.mastery_p ?? 0) * 100)}%
               </span>
             </div>
