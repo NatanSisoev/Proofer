@@ -76,27 +76,9 @@ export default function GlobalSearch() {
   if (!open) return null;
 
   return (
-    <div
-      style={{
-        position: "fixed", inset: 0, zIndex: 2000,
-        background: "rgba(0,0,0,0.55)", backdropFilter: "blur(2px)",
-        display: "flex", alignItems: "flex-start", justifyContent: "center",
-        paddingTop: "10vh",
-      }}
-      onClick={close}
-    >
-      <div
-        style={{
-          width: "min(640px, 90vw)",
-          background: "var(--bg)",
-          border: "1px solid var(--border)",
-          borderRadius: 14,
-          boxShadow: "0 20px 60px rgba(0,0,0,0.5)",
-          overflow: "hidden",
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div style={{ display: "flex", alignItems: "center", padding: "12px 16px", borderBottom: "1px solid var(--border)", gap: 10 }}>
+    <div className="global-search-overlay" onClick={close}>
+      <div className="global-search-panel" onClick={(e) => e.stopPropagation()}>
+        <div className="global-search-header">
           <span style={{ color: "var(--muted)", fontSize: 16 }}>🔍</span>
           <input
             ref={inputRef}
@@ -105,56 +87,38 @@ export default function GlobalSearch() {
             onKeyDown={onKey}
             placeholder="Search concepts… (e.g. compact, Hilbert, group)"
             autoComplete="off"
-            style={{
-              flex: 1, background: "none", border: "none", outline: "none",
-              fontSize: 16, color: "var(--text)",
-            }}
+            className="global-search-input"
           />
-          <kbd
-            onClick={close}
-            style={{
-              background: "var(--bg-soft)", border: "1px solid var(--border)",
-              borderRadius: 5, padding: "2px 7px", fontSize: 12,
-              color: "var(--muted)", cursor: "pointer",
-            }}
-          >
-            Esc
-          </kbd>
+          <kbd className="kbd" onClick={close}>Esc</kbd>
         </div>
 
         {hits.length > 0 && (
-          <div style={{ maxHeight: "60vh", overflowY: "auto" }}>
+          <div className="global-search-results">
             {hits.map((h, i) => (
               <Link
                 key={h.id}
                 href={`/node/${encodeURIComponent(h.id)}`}
                 onClick={close}
-                style={{
-                  display: "flex", alignItems: "center", gap: 10,
-                  padding: "10px 16px", textDecoration: "none",
-                  background: i === cursor ? "var(--accent-soft)" : "transparent",
-                  borderBottom: "1px solid var(--border)",
-                }}
+                className="global-search-hit"
+                style={{ background: i === cursor ? "var(--accent-soft)" : "transparent" }}
               >
-                <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, minWidth: 0 }}>
+                <div className="global-search-hit-inner">
                   {h.type && <span className={`type-badge t-${h.type}`}>{h.type}</span>}
-                  <div style={{ minWidth: 0 }}>
-                    <div style={{ fontWeight: 500, fontSize: 14, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: "var(--text)" }}>
-                      {h.title}
-                    </div>
+                  <div className="global-search-hit-text">
+                    <div className="global-search-hit-title">{h.title}</div>
                     {h.overview && (
-                      <div className="muted small" style={{ fontSize: 11, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      <div className="global-search-hit-overview muted small">
                         {h.overview.slice(0, 80)}
                       </div>
                     )}
                   </div>
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
-                  {h.area && <span className="muted small" style={{ fontSize: 11 }}>{h.area}</span>}
+                <div className="global-search-hit-meta">
+                  {h.area && <span className="muted small">{h.area}</span>}
                   <div className="bar" style={{ width: 40 }}>
                     <span style={{ width: `${Math.round(h.mastery_p * 100)}%` }} />
                   </div>
-                  <span className="muted small" style={{ fontSize: 11, width: 26, textAlign: "right" }}>
+                  <span className="muted small global-search-hit-pct">
                     {Math.round(h.mastery_p * 100)}%
                   </span>
                 </div>
@@ -164,13 +128,13 @@ export default function GlobalSearch() {
         )}
 
         {q.trim().length >= 2 && hits.length === 0 && (
-          <div className="muted" style={{ padding: "16px", textAlign: "center", fontSize: 14 }}>
+          <div className="global-search-empty muted">
             No results for &ldquo;{q}&rdquo;
           </div>
         )}
 
         {q.trim().length < 2 && (
-          <div className="muted small" style={{ padding: "12px 16px", fontSize: 12 }}>
+          <div className="global-search-hint muted small">
             Type at least 2 characters · ↑↓ navigate · Enter to open
           </div>
         )}

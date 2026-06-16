@@ -56,7 +56,7 @@ export default function ReExplain({ nodeId }: { nodeId: string }) {
   }
 
   return (
-    <div style={{ marginTop: 16, padding: "14px 16px", background: "var(--bg-soft)", borderRadius: 10, border: "1px solid var(--border)" }}>
+    <div className="inset-panel">
       <div className="panel-header">
         <span style={{ fontSize: 12, fontWeight: 700, color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.08em" }}>
           ✨ Explain differently
@@ -78,15 +78,7 @@ export default function ReExplain({ nodeId }: { nodeId: string }) {
             onClick={() => { setAngle(a.value); generate(a.value); }}
             disabled={busy}
             title={a.desc}
-            style={{
-              padding: "5px 12px",
-              borderRadius: 7,
-              border: `1px solid ${angle === a.value ? "var(--accent)" : "var(--border)"}`,
-              background: angle === a.value ? "var(--accent-soft)" : "var(--bg)",
-              color: angle === a.value ? "var(--accent)" : "var(--muted)",
-              fontSize: 12, cursor: "pointer", fontWeight: angle === a.value ? 600 : 400,
-              transition: "all 0.15s",
-            }}
+            className={`angle-btn${angle === a.value ? " active" : ""}`}
           >
             {a.emoji} {a.label}
           </button>
@@ -105,7 +97,7 @@ export default function ReExplain({ nodeId }: { nodeId: string }) {
         </div>
       )}
       {explanation && !busy && (
-        <div style={{ borderTop: "1px solid var(--border)", paddingTop: 12 }}>
+        <div className="divider-top">
           <div
             className="muted small"
             style={{ marginBottom: 8, fontSize: 10, textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 700 }}

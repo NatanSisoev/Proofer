@@ -161,8 +161,8 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
                       <span
                         key={i}
                         title={`${a.verdict} · ${a.kind}`}
+                        className="verdict-dot-sm"
                         style={{
-                          width: 8, height: 8, borderRadius: "50%",
                           background: a.verdict === "correct" ? "var(--green)" : a.verdict === "partial" ? "var(--amber)" : "var(--red)",
                           opacity: 0.6 + i / history.length * 0.4,
                         }}
@@ -173,7 +173,7 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
               </div>
               {HAS_KEY && <WeaknessDiagnosis nodeId={id} attemptCount={attempts} />}
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "flex-end" }}>
+            <div className="node-side-col">
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                 <Link href={`/learn?node=${encodeURIComponent(id)}`} className="cta">Practice this →</Link>
                 <BookmarkButton nodeId={id} initial={bookmarked} />
@@ -245,22 +245,20 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
                     <span>Past practice</span>
                     <span style={{ fontWeight: 400 }}>({attemptDetails.length} attempt{attemptDetails.length !== 1 ? "s" : ""})</span>
                   </summary>
-                  <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 10 }}>
+                  <div className="attempt-list">
                     {attemptDetails.map((a) => {
                       const verdictColor = a.verdict === "correct" ? "var(--green)" : a.verdict === "partial" ? "var(--amber)" : "var(--red)";
                       const verdictLabel = a.verdict === "correct" ? "correct" : a.verdict === "partial" ? "partial" : "incorrect";
                       return (
                         <div key={a.id} className="practice-attempt">
-                          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4, gap: 8 }}>
+                          <div className="attempt-header">
                             <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                               <span style={{ fontWeight: 600, color: verdictColor, fontSize: 11, textTransform: "uppercase", letterSpacing: "0.04em" }}>{verdictLabel}</span>
                               {a.kind && <span className="pill" style={{ fontSize: 10 }}>{a.kind}</span>}
                             </div>
-                            <span className="muted small" style={{ fontSize: 11, flexShrink: 0 }}>
-                              {new Date(a.created_at).toLocaleDateString()}
-                            </span>
+                            <span className="muted small">{new Date(a.created_at).toLocaleDateString()}</span>
                           </div>
-                          <p style={{ margin: "0 0 4px", color: "var(--text)", lineHeight: 1.5 }}>
+                          <p className="attempt-problem">
                             <MathText>{truncateMath(a.problem, 200)}</MathText>
                           </p>
                           {a.gap && a.gap !== "none" && a.gap !== "(gave up — showed answer)" && (

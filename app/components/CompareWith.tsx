@@ -67,7 +67,7 @@ export default function CompareWith({ nodeId, nodeTitle }: { nodeId: string; nod
   }
 
   return (
-    <div style={{ marginTop: 16, padding: "14px 16px", background: "var(--bg-soft)", borderRadius: 10, border: "1px solid var(--border)" }}>
+    <div className="inset-panel">
       <div className="panel-header">
         <span style={{ fontSize: 12, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.08em" }}>
           ⚖ Compare {nodeTitle} with…
@@ -94,31 +94,20 @@ export default function CompareWith({ nodeId, nodeTitle }: { nodeId: string; nod
             style={{ fontSize: 13, padding: "8px 12px" }}
           />
           {results.length > 0 && (
-            <div style={{
-              position: "absolute", top: "100%", left: 0, right: 0, zIndex: 50,
-              background: "var(--panel)", border: "1px solid var(--border)",
-              borderRadius: 8, marginTop: 4, maxHeight: 240, overflowY: "auto",
-            }}>
+            <div className="search-dropdown">
               {results.map((r) => (
                 <button
                   key={r.id}
                   onClick={() => compare(r)}
-                  style={{
-                    display: "flex", alignItems: "center", gap: 8, width: "100%",
-                    padding: "8px 12px", background: "none", border: "none",
-                    cursor: "pointer", textAlign: "left", color: "var(--text)",
-                    borderBottom: "1px solid var(--border)",
-                  }}
-                  onMouseOver={(e) => (e.currentTarget.style.background = "var(--bg-soft)")}
-                  onMouseOut={(e) => (e.currentTarget.style.background = "none")}
+                  className="search-dropdown-item"
                 >
                   {r.type && (
                     <span className={`type-badge t-${r.type}`} style={{ flexShrink: 0 }}>{r.type}</span>
                   )}
-                  <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: 13 }}>
+                  <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                     {r.title}
                   </span>
-                  {r.area && <span className="muted small" style={{ flexShrink: 0, fontSize: 11 }}>{r.area}</span>}
+                  {r.area && <span className="muted small">{r.area}</span>}
                 </button>
               ))}
             </div>
@@ -151,7 +140,7 @@ export default function CompareWith({ nodeId, nodeTitle }: { nodeId: string; nod
       {error && <div style={{ color: "var(--red)", fontSize: 13 }}>{error}</div>}
 
       {comparison && !busy && (
-        <div style={{ borderTop: "1px solid var(--border)", paddingTop: 12 }}>
+        <div className="divider-top">
           <div className="markdown" style={{ fontSize: 13.5 }}>
             <Markdown>{comparison}</Markdown>
           </div>
