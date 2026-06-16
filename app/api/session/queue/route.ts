@@ -155,4 +155,11 @@ export async function GET(req: NextRequest) {
   if (rows.length > 0) {
     const placeholders = rows.map(() => "?").join(",");
     const masteryMap = new Map(
-      (db().prepare(`SELECT node_id, p FROM mastery WHERE node_id IN (${placeholders})`).a
+      (db().prepare(`SELECT node_id, p FROM mastery WHERE node_id IN (${placeholders})`).all(...rows.map(r => r.id)) as { node_id: string; p: number }[])
+        .map(r => [r.node_id, r.p])
+    );
+    rows = rows.map(r => ({ ...r, mastery_p: masteryMap.get(r.id) ?? 0 }));
+  }
+
+  return NextResponse.json({ queue: rows });
+}

@@ -183,3 +183,40 @@ export default async function QualityPage({
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {cycles.map((c, i) => (
                 <div
+                  key={i}
+                  style={{
+                    padding: "10px 12px", borderRadius: 8,
+                    border: "1px solid var(--border)", background: "var(--bg-soft)",
+                    display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap",
+                  }}
+                >
+                  <span
+                    className="pill"
+                    style={{ fontSize: 10, color: c.mutual ? "var(--red)" : "var(--amber)", flexShrink: 0 }}
+                  >
+                    {c.mutual ? "mutual" : `${c.nodes.length}-cycle`}
+                  </span>
+                  <span style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap", fontSize: 13.5 }}>
+                    {c.nodes.map((n, j) => (
+                      <span key={j} style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                        {j > 0 && <span className="muted" style={{ fontSize: 12 }}>{c.mutual ? "⇄" : "→"}</span>}
+                        <Link href={`/node/${encodeURIComponent(n)}`}>{n}</Link>
+                      </span>
+                    ))}
+                    {/* close the loop for cycles longer than a mutual pair */}
+                    {!c.mutual && (
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                        <span className="muted" style={{ fontSize: 12 }}>→</span>
+                        <Link href={`/node/${encodeURIComponent(c.nodes[0])}`} className="muted">{c.nodes[0]}</Link>
+                      </span>
+                    )}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}

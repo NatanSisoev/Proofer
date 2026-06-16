@@ -1015,4 +1015,52 @@ export function nextReviewDays(nodeId: string): number | null {
 /**
  * Cumulative mastery milestones: for each day in the last 60 days,
  * how many concepts were first mastered on or before that day.
- * Used to render a "
+ * Used to render a "concepts mastered over time" chart.
+ */
+export function masteryMilestones(): { day: string; cumulative: number }[] {
+  // Find the date each concept first crossed the mastery threshold
+  const firstMastered = db()
+    .prepare(
+      `SELECT DATE(MIN(recorded_at)) AS day, COUNT(*) AS count
+         FROM (
+           SELECT node_id, MIN(recorded_at) AS recorded_at
+             FROM mastery_history
+            WHERE p >= 0.8
+            GROUP BY node_id
+         )
+        GROUP BY DATE(recorded_at)
+        ORDER BY day ASC`
+    )
+    .all() as { day: string; count: number }[];
+
+  if (firstMastered.length === 0) return [];
+
+  // Build cumulative sum
+  let cum = 0;
+  return firstMastered.map((r) => {
+    cum += r.count;
+    return { day: r.day, cumulative: cum };
+  });
+}
+
+/**
+ * Per-area mastery breakdown: total concepts, mastered count, and average mastery p.
+ * Used on the progress page to show subject-by-subject health.
+ */
+export function areaMastery(): { area: string; total: number; mastered: number; avg_p: number; practiced: number }[] {
+  return db()
+    .prepare(
+      `SELECT
+         n.area,
+         COUNT(*) AS total,
+         COUNT(CASE WHEN COALESCE(m.p, 0) >= 0.8 THEN 1 END) AS mastered,
+         AVG(COALESCE(m.p, 0)) AS avg_p,
+         COUNT(CASE WHEN COALESCE(m.attempts, 0) > 0 THEN 1 END) AS practiced
+       FROM nodes n
+       LEFT JOIN mastery m ON m.node_id = n.id
+       WHERE n.exists_ = 1 AND n.area IS NOT NULL
+       GROUP BY n.area
+       ORDER BY avg_p DESC, total DESC`
+    )
+    .all() as { area: string; total: number; mastered: number; avg_p: number; practiced: number }[];
+}

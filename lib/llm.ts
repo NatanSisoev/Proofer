@@ -709,4 +709,72 @@ export async function generateStudyPlan(input: StudyPlanInput): Promise<string> 
     return data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ?? "";
   }
 
-  if
+  if (PROVIDER === "anthropic" && anthropic) {
+    const msg = await anthropic.messages.create({
+      model: ANTHROPIC_GRADE_MODEL,
+      max_tokens: 2000,
+      messages: [{ role: "user", content: prompt }],
+    });
+    return (msg.content[0] as any)?.text?.trim() ?? "";
+  }
+
+  return "";
+}
+
+// ===========================================================================
+// Error surfacing
+// ===========================================================================
+export function friendlyLLMError(e: unknown): { status: number; message: string } {
+  if (e instanceof ProviderError) {
+    if (e.status === 400 && /api[_ ]?key/i.test(e.message))
+      return { status: 401, message: "Invalid GEMINI_API_KEY. Check the key in .env.local and restart the dev server." };
+    if (e.status === 429)
+      return { status: 429, message: "Gemini free-tier rate limit hit (~15 requests/min, or the daily cap). Wait a minute and try again." };
+    if (e.status === 403)
+      return { status: 403, message: "Gemini rejected the key (403). Make sure the Generative Language API is enabled for it at aistudio.google.com." };
+    return { status: e.status || 502, message: `Gemini error: ${e.message}` };
+  }
+  if (e instanceof Anthropic.APIError) {
+    const raw = (e as any)?.error?.error?.message || e.message || "API error";
+    if (e.status === 400 && /credit balance/i.test(raw))
+      return {
+        status: 402,
+        message:
+          "Your Anthropic API account is out of credits. Either add credits at console.anthropic.com → Plans & Billing, or use the free Gemini path (set GEMINI_API_KEY in .env.local).",
+      };
+    if (e.status === 401) return { status: 401, message: "Invalid ANTHROPIC_API_KEY." };
+    if (e.status === 429) return { status: 429, message: "Rate limited by the Anthropic API. Wait a moment." };
+    return { status: e.status ?? 502, message: raw };
+  }
+  return { status: 500, message: e instanceof Error ? e.message : "Unexpected error" };
+}
+
+// ===========================================================================
+// Demo stub (no key)
+// ===========================================================================
+function stubProblem(node: NodeRow): GeneratedProblem {
+  const verb =
+    node.type === "Definition"
+      ? `State the definition of **${node.title}** precisely, then give one example and one non-example, justifying each.`
+      : `State **${node.title}** precisely and sketch why it holds (or give the key idea of its proof).`;
+  return {
+    problem: `${verb}\n\n_(Demo problem — set GEMINI_API_KEY (free) or ANTHROPIC_API_KEY for AI-authored problems.)_`,
+    kind: node.type === "Definition" ? "explain" : "prove",
+    ideal_solution: node.content?.slice(0, 1200) || node.overview || "",
+    rubric: ["States the concept correctly", "Justifies with a correct example or argument"],
+    prerequisites_used: [],
+  };
+}
+
+function stubGrade(answer: string): GradeResult {
+  const words = answer.trim().split(/\s+/).filter(Boolean).length;
+  const evidence = Math.max(0.1, Math.min(0.85, words / 60));
+  return {
+    verdict: words > 8 ? "partial" : "incorrect",
+    mastery_evidence: evidence,
+    understood: words > 8 ? ["You attempted an explanation."] : [],
+    gap: "Demo mode: real diagnosis needs an API key. This placeholder scores by answer length only.",
+    blamed_prerequisite: "",
+    socratic_hint: "Set GEMINI_API_KEY (free at aistudio.google.com) to get a real Socratic hint that pinpoints your specific gap.",
+  };
+}
