@@ -38,7 +38,7 @@ export default function ProgressPage() {
     <div className="wrap">
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 24 }}>
         <div>
-          <h1 style={{ margin: 0, fontSize: 24, letterSpacing: "-0.02em" }}>Progress</h1>
+          <h1>Progress</h1>
           <p className="muted small" style={{ marginTop: 4 }}>Your mastery across {s.real} concepts</p>
         </div>
         <div style={{ display: "flex", gap: 12, alignItems: "center" }}>

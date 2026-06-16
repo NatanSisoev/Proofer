@@ -136,6 +136,7 @@ header.top {
   display: flex; align-items: flex-start; gap: 14px;
   border-bottom: 1px solid var(--border); padding-bottom: 20px; margin-bottom: 24px;
 }
+h1 { font-size: 26px; font-weight: 700; letter-spacing: -0.03em; margin: 0; }
 header.top h1 { font-size: 26px; margin: 0; letter-spacing: -0.03em; font-weight: 700; }
 header.top .tag { color: var(--muted); font-size: 14px; margin-top: 4px; }
 

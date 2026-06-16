@@ -44,7 +44,7 @@ export default async function BrowsePage({
           flexWrap: "wrap", gap: 16, marginBottom: 20,
         }}>
           <div>
-            <h1 style={{ margin: "0 0 6px", fontSize: 24, letterSpacing: "-0.02em" }}>{area}</h1>
+            <h1 style={{ marginBottom: 6 }}>{area}</h1>
             <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <div className="bar" style={{ width: 100 }}>
@@ -90,7 +90,7 @@ export default async function BrowsePage({
     <div className="wrap">
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 24 }}>
         <div>
-          <h1 style={{ margin: 0, fontSize: 24, letterSpacing: "-0.02em" }}>Browse by Topic</h1>
+          <h1>Browse by Topic</h1>
           <p className="muted small" style={{ marginTop: 4 }}>
             {areas.length} topics · click any to see concepts sorted by your mastery
           </p>
