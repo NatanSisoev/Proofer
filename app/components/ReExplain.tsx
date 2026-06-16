@@ -46,9 +46,9 @@ export default function ReExplain({ nodeId }: { nodeId: string }) {
   if (!open) {
     return (
       <button
-        className="btn-ghost"
+        className="btn-ghost btn-sm"
         onClick={() => { setOpen(true); generate("intuitive"); }}
-        style={{ fontSize: 13, color: "var(--accent)", marginTop: 12 }}
+        style={{ color: "var(--accent)", marginTop: 12 }}
       >
         ✨ Explain differently
       </button>
@@ -58,20 +58,19 @@ export default function ReExplain({ nodeId }: { nodeId: string }) {
   return (
     <div className="inset-panel">
       <div className="panel-header">
-        <span style={{ fontSize: 12, fontWeight: 700, color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+        <span className="panel-label" style={{ color: "var(--accent)" }}>
           ✨ Explain differently
         </span>
         <button
-          className="btn-ghost"
+          className="btn-ghost close-btn"
           onClick={() => setOpen(false)}
-          style={{ fontSize: 11, padding: "2px 8px", color: "var(--muted)" }}
         >
           ✕
         </button>
       </div>
 
       {/* Angle selector */}
-      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 12 }}>
+      <div className="angle-selector">
         {ANGLES.map((a) => (
           <button
             key={a.value}
@@ -92,16 +91,13 @@ export default function ReExplain({ nodeId }: { nodeId: string }) {
         </div>
       )}
       {error && (
-        <div style={{ color: "var(--red)", fontSize: 13, padding: "8px 0" }}>
+        <div className="action-error" style={{ padding: "8px 0" }}>
           {error}
         </div>
       )}
       {explanation && !busy && (
         <div className="divider-top">
-          <div
-            className="muted small"
-            style={{ marginBottom: 8, fontSize: 10, textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 700 }}
-          >
+          <div className="panel-label label-xs" style={{ marginBottom: 8 }}>
             {ANGLES.find((a) => a.value === lastAngle)?.emoji}{" "}
             {ANGLES.find((a) => a.value === lastAngle)?.label} angle
           </div>
@@ -109,10 +105,10 @@ export default function ReExplain({ nodeId }: { nodeId: string }) {
             <Markdown>{explanation}</Markdown>
           </div>
           <button
-            className="btn-ghost"
+            className="btn-ghost btn-sm"
             onClick={() => generate(angle)}
             disabled={busy}
-            style={{ marginTop: 10, fontSize: 12 }}
+            style={{ marginTop: 10 }}
           >
             ↻ Regenerate
           </button>

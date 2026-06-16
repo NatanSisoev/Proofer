@@ -50,7 +50,7 @@ export default function SearchBox() {
         autoComplete="off"
       />
       {hits.length > 0 && (
-        <div className="search-results panel" style={{ marginTop: 6, position: "absolute", width: "100%", zIndex: 50 }}>
+        <div className="search-results panel search-panel">
           {hits.map((h, i) => (
             <Link
               key={h.id}
@@ -58,14 +58,12 @@ export default function SearchBox() {
               className={i === cursor ? "search-hit active" : "search-hit"}
               onClick={() => { setQ(""); setHits([]); }}
             >
-              <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, minWidth: 0 }}>
+              <div className="search-hit-left">
                 <span className={`type-badge t-${h.type || "ghost"}`}>{h.type || "?"}</span>
-                <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                  {h.title}
-                </span>
+                <span className="truncate">{h.title}</span>
                 {h.area && <span className="muted small" style={{ flexShrink: 0 }}>{h.area}</span>}
               </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+              <div className="search-hit-right">
                 <div className="bar" style={{ width: 48 }}>
                   <span style={{ width: `${Math.round(h.mastery_p * 100)}%` }} />
                 </div>
@@ -73,7 +71,7 @@ export default function SearchBox() {
               </div>
             </Link>
           ))}
-          <p className="muted small" style={{ padding: "6px 10px 4px", margin: 0 }}>
+          <p className="muted small search-hint">
             ↑↓ navigate · Enter to open · Esc to close
           </p>
         </div>

@@ -208,6 +208,12 @@ header.top .tag { color: var(--muted); font-size: 14px; margin-top: 4px; }
 input.search-box { width: 100%; padding: 11px 14px; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-size: 15px; transition: border-color 0.15s, box-shadow 0.15s; }
 input.search-box:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--focus-ring); }
 .search-results { margin-top: 8px; }
+.search-panel { margin-top: 6px; position: absolute; width: 100%; z-index: 50; }
+.search-hint { padding: 6px 10px 4px; margin: 0; }
+.search-hit-left { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; }
+.search-hit-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.angle-selector { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
 .search-results a { display: block; padding: 8px 10px; border-radius: 8px; color: var(--text); }
 .search-results a:hover { background: var(--bg-soft); text-decoration: none; }
 
