@@ -30,10 +30,6 @@ function insertAt(el: HTMLTextAreaElement, snippet: string): string {
   return before + text + after;
 }
 
-/**
- * Personal annotation panel with LaTeX toolbar and live math preview.
- * Auto-saves on blur and after an 800 ms debounce.
- */
 export default function PersonalNotes({ nodeId }: Props) {
   const [content, setContent]       = useState("");
   const [loaded, setLoaded]         = useState(false);
@@ -91,16 +87,15 @@ export default function PersonalNotes({ nodeId }: Props) {
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
+        className="notes-toggle"
         style={{
-          background: "none", border: "none", cursor: "pointer",
           color: content ? "var(--text)" : "var(--muted)",
-          fontSize: 13, fontWeight: content ? 600 : 400,
-          padding: "4px 0", display: "flex", alignItems: "center", gap: 6,
+          fontWeight: content ? 600 : 400,
         }}
       >
         <span style={{ fontSize: 15 }}>📝</span>
         {content ? "My notes" : "Add personal notes"}
-        <span style={{ fontSize: 11, color: "var(--muted)" }}>{open ? "↑" : "↓"}</span>
+        <span className="muted" style={{ fontSize: 11 }}>{open ? "↑" : "↓"}</span>
       </button>
 
       {open && (
@@ -111,18 +106,12 @@ export default function PersonalNotes({ nodeId }: Props) {
             onChange={(e) => handleChange(e.target.value)}
             onBlur={() => { if (saveTimer.current) clearTimeout(saveTimer.current); save(content); }}
             placeholder="Jot down your own understanding, mnemonics, confusions, insights… Supports LaTeX with $…$. Only you see this."
-            style={{
-              width: "100%", minHeight: 80, padding: "12px 14px",
-              background: "var(--bg-soft)", border: "1px solid var(--border)",
-              borderRadius: 10, color: "var(--text)", fontSize: 14,
-              lineHeight: 1.65, fontFamily: "inherit", resize: "none",
-              overflow: "hidden",
-            }}
+            className="notes-textarea"
           />
 
           {/* LaTeX snippet toolbar */}
           <div
-            style={{ display: "flex", gap: 4, flexWrap: "wrap", marginTop: 4 }}
+            className="notes-toolbar"
             onMouseDown={(e) => e.preventDefault()}
           >
             {SNIPPETS.map(({ label, insert }) => (
@@ -134,11 +123,7 @@ export default function PersonalNotes({ nodeId }: Props) {
                   if (!textareaRef.current) return;
                   handleChange(insertAt(textareaRef.current, insert));
                 }}
-                style={{
-                  padding: "2px 6px", fontSize: 11, fontFamily: "monospace",
-                  background: "var(--bg-soft)", border: "1px solid var(--border)",
-                  borderRadius: 4, color: "var(--muted)", cursor: "pointer",
-                }}
+                className="snippet-btn"
               >
                 {label}
               </button>
@@ -148,13 +133,7 @@ export default function PersonalNotes({ nodeId }: Props) {
                 type="button"
                 tabIndex={-1}
                 onClick={() => setPreview((p) => !p)}
-                style={{
-                  marginLeft: "auto", padding: "2px 8px", fontSize: 11,
-                  background: preview ? "var(--accent-soft)" : "var(--bg-soft)",
-                  border: `1px solid ${preview ? "var(--accent)" : "var(--border)"}`,
-                  borderRadius: 4, color: preview ? "var(--accent)" : "var(--muted)",
-                  cursor: "pointer",
-                }}
+                className={`snippet-btn-preview${preview ? " active" : ""}`}
               >
                 {preview ? "Hide preview" : "Math preview"}
               </button>
@@ -162,16 +141,12 @@ export default function PersonalNotes({ nodeId }: Props) {
           </div>
 
           {preview && hasMath && content.trim() && (
-            <div style={{
-              marginTop: 6, padding: "10px 14px",
-              background: "var(--bg-soft)", border: "1px solid var(--border)",
-              borderRadius: 8, fontSize: 13.5,
-            }}>
+            <div className="notes-preview">
               <Markdown>{content}</Markdown>
             </div>
           )}
 
-          <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 3 }}>
+          <div className="notes-footer">
             <span className="muted small" style={{ fontSize: 11 }}>
               {saving ? "Saving…" : savedAt ? `Saved ${savedAt.toLocaleTimeString()}` : "Type to add notes · auto-saves"}
             </span>

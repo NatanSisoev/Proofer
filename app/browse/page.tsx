@@ -47,7 +47,7 @@ export default async function BrowsePage({
                 <div className="bar" style={{ width: 100 }}>
                   <span style={{ width: `${Math.round(avgMastery * 100)}%` }} />
                 </div>
-                <span style={{ fontWeight: 700, fontSize: 15 }}>{Math.round(avgMastery * 100)}%</span>
+                <span className="mastery-pct">{Math.round(avgMastery * 100)}%</span>
                 <span className="muted small">avg mastery</span>
               </div>
               <span className="pill" style={{

@@ -176,8 +176,8 @@ export default async function QualityPage({
               {cycles.map((c, i) => (
                 <div key={i} className="cycle-card">
                   <span
-                    className="pill"
-                    style={{ fontSize: 10, color: c.mutual ? "var(--red)" : "var(--amber)", flexShrink: 0 }}
+                    className="pill label-xs"
+                    style={{ color: c.mutual ? "var(--red)" : "var(--amber)", flexShrink: 0 }}
                   >
                     {c.mutual ? "mutual" : `${c.nodes.length}-cycle`}
                   </span>
