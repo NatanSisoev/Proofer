@@ -107,7 +107,7 @@ export default function RelatedEdges({ initial, hasKey }: { initial: RelatedEdge
               <select
                 value={batchSize}
                 onChange={(e) => setBatchSize(Number(e.target.value))}
-                style={{ marginLeft: 6, fontSize: 13, padding: "2px 4px", background: "var(--bg)", border: "1px solid var(--border)", borderRadius: 4, color: "var(--text)" }}
+                style={{ marginLeft: 6, background: "var(--bg)" }}
               >
                 {[5, 10, 20].map((n) => <option key={n} value={n}>{n}</option>)}
               </select>
@@ -170,17 +170,7 @@ function EdgeRow({
   }
 
   return (
-    <div
-      style={{
-        padding: "12px 14px",
-        borderRadius: 8,
-        border: "1px solid var(--border)",
-        background: "var(--bg-soft)",
-        display: "flex",
-        flexDirection: "column",
-        gap: 8,
-      }}
-    >
+    <div className="edge-card">
       {/* Concept pair */}
       <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", fontSize: 14 }}>
         <Link href={`/node/${encodeURIComponent(edge.src_id)}`} style={{ fontWeight: 600, color: "var(--text)" }}>
@@ -227,11 +217,7 @@ function EdgeRow({
         <select
           value={selected}
           onChange={(e) => setSelected(e.target.value)}
-          style={{
-            fontSize: 13, padding: "4px 8px",
-            background: "var(--bg)", border: "1px solid var(--border)",
-            borderRadius: 6, color: "var(--text)", cursor: "pointer",
-          }}
+          style={{ background: "var(--bg)" }}
           disabled={edge.retying}
         >
           {TYPE_OPTIONS.map((t) => (

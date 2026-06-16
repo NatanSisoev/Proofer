@@ -588,6 +588,13 @@ details[open].practice-history > summary::before { transform: rotate(90deg); }
   border: 1px solid var(--border); background: var(--bg-soft);
 }
 
+/* quality: unclassified edge row */
+.edge-card {
+  display: flex; flex-direction: column; gap: 8px;
+  padding: 12px 14px; border-radius: 8px;
+  border: 1px solid var(--border); background: var(--bg-soft);
+}
+
 /* daily goal */
 .daily-goal-bar {
   background: var(--panel); border: 1px solid var(--border);
