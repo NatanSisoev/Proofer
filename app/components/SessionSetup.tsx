@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
-import StudyQueue from "./StudyQueue";
+import StudyQueue, { SESSION_KEY, type SavedSession } from "./StudyQueue";
 
 type QueueNode = { id: string; title: string; type: string | null; area: string | null; mastery_p?: number };
 
@@ -46,6 +46,8 @@ export default function SessionSetup({
   const [preview, setPreview] = useState<QueueNode[]>([]);
   const [previewLoading, setPreviewLoading] = useState(false);
   const [counts, setCounts] = useState<ModeCounts | null>(null);
+  const [savedSession, setSavedSession] = useState<SavedSession | null>(null);
+  const [resumeData, setResumeData] = useState<SavedSession | null>(null);
   // Custom mode
   const [customSearch, setCustomSearch] = useState("");
   const [customResults, setCustomResults] = useState<QueueNode[]>([]);
@@ -54,6 +56,10 @@ export default function SessionSetup({
 
   useEffect(() => {
     fetch("/api/session/stats").then((r) => r.json()).then(setCounts).catch(() => {});
+    try {
+      const s = localStorage.getItem(SESSION_KEY);
+      if (s) setSavedSession(JSON.parse(s));
+    } catch {}
   }, []);
 
   // Custom mode: live concept search
@@ -120,10 +126,42 @@ export default function SessionSetup({
   }
 
   if (queue) {
-    return <StudyQueue queue={queue} preferKind={preferKind === "any" ? undefined : preferKind} />;
+    return <StudyQueue queue={queue} preferKind={preferKind === "any" ? undefined : preferKind} savedState={resumeData} />;
   }
 
   return (
+    <>
+      {savedSession && (
+        <div className="panel resume-banner">
+          <div>
+            <strong>Unfinished session</strong>
+            <p className="muted small" style={{ margin: 0 }}>
+              {Object.keys(savedSession.resultsByIndex ?? {}).length} of {savedSession.activeQueue.length} concepts answered
+            </p>
+          </div>
+          <div className="resume-actions">
+            <button
+              className="btn-primary"
+              onClick={() => {
+                setQueue(savedSession.activeQueue);
+                setResumeData(savedSession);
+                setSavedSession(null);
+              }}
+            >
+              Resume →
+            </button>
+            <button
+              className="btn-ghost btn-sm"
+              onClick={() => {
+                try { localStorage.removeItem(SESSION_KEY); } catch {}
+                setSavedSession(null);
+              }}
+            >
+              Discard
+            </button>
+          </div>
+        </div>
+      )}
     <div className="grid" style={{ gap: 20 }}>
       {/* Left: config */}
       <div>
@@ -335,5 +373,6 @@ export default function SessionSetup({
         )}
       </div>
     </div>
+    </>
   );
 }

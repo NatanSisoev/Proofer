@@ -17,9 +17,37 @@ type SessionResult = {
   elapsedSec?: number;
 };
 
-export default function StudyQueue({ queue, preferKind }: { queue: QueueNode[]; preferKind?: string }) {
-  const [activeQueue, setActiveQueue] = useState<QueueNode[]>(queue);
-  const [index, setIndex] = useState(0);
+// Per-card snapshot for back-navigation and persistence
+export type CardState = {
+  problem: Problem | null;
+  answer: string;
+  grade: Grade | null;
+  revealed: string | null;
+  hint: string | null;
+  followUp: string;
+};
+
+export type SavedSession = {
+  activeQueue: QueueNode[];
+  index: number;
+  preferKind?: string;
+  resultsByIndex: Record<number, SessionResult>;
+  cardStates: Record<number, CardState>;
+};
+
+export const SESSION_KEY = "proofer-session";
+
+export default function StudyQueue({
+  queue,
+  preferKind,
+  savedState,
+}: {
+  queue: QueueNode[];
+  preferKind?: string;
+  savedState?: SavedSession | null;
+}) {
+  const [activeQueue, setActiveQueue] = useState<QueueNode[]>(savedState?.activeQueue ?? queue);
+  const [index, setIndex] = useState(savedState?.index ?? 0);
   const [problem, setProblem] = useState<Problem | null>(null);
   const [answer, setAnswer] = useState("");
   const [grade, setGrade] = useState<Grade | null>(null);
@@ -28,7 +56,10 @@ export default function StudyQueue({ queue, preferKind }: { queue: QueueNode[]; 
   const [revealed, setRevealed] = useState<string | null>(null);
   const [followUp, setFollowUp] = useState("");
   const [followUpBusy, setFollowUpBusy] = useState(false);
-  const [results, setResults] = useState<SessionResult[]>([]);
+  // Results keyed by queue index so back-nav updates the right card
+  const [resultsByIndex, setResultsByIndex] = useState<Record<number, SessionResult>>(
+    savedState?.resultsByIndex ?? {}
+  );
   const [done, setDone] = useState(false);
   const [showReminder, setShowReminder] = useState(false);
   const [hint, setHint] = useState<string | null>(null);
@@ -36,13 +67,13 @@ export default function StudyQueue({ queue, preferKind }: { queue: QueueNode[]; 
   const [sessionElapsed, setSessionElapsed] = useState(0);
   const [sessionStart] = useState(() => Date.now());
   const [copied, setCopied] = useState(false);
-  // Prefetch cache: map nodeId → fetched Problem data
+
+  // Per-card state snapshots — mutated imperatively, not re-render triggers
+  const cardStatesRef = useRef<Record<number, CardState>>(savedState?.cardStates ?? {});
   const prefetchCache = useRef<Map<string, Promise<any>>>(new Map());
   const questionStart = useRef<number>(Date.now());
   const currentNode = activeQueue[index];
 
-  /** Fire-and-forget: start generating a problem for nodeId, storing the
-   *  promise in prefetchCache so generate() can await it instead of re-fetching. */
   const prefetch = useCallback((nodeId: string) => {
     if (prefetchCache.current.has(nodeId)) return;
     const p = fetch("/api/practice/generate", {
@@ -67,9 +98,8 @@ export default function StudyQueue({ queue, preferKind }: { queue: QueueNode[]; 
     setHintBusy(false);
     setCopied(false);
     try {
-      // Use prefetch cache if available, otherwise fetch fresh.
       const cached = prefetchCache.current.get(nodeId);
-      prefetchCache.current.delete(nodeId); // consume it
+      prefetchCache.current.delete(nodeId);
       const data = await (cached ?? fetch("/api/practice/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -84,17 +114,33 @@ export default function StudyQueue({ queue, preferKind }: { queue: QueueNode[]; 
     } finally {
       if (!signal?.aborted) setBusy(false);
     }
-  }, []);
+  }, [preferKind]);
 
+  // Load card on index change — restore snapshot or generate fresh
   useEffect(() => {
     if (done || !currentNode) return;
+    const saved = cardStatesRef.current[index];
+    if (saved?.problem) {
+      setProblem(saved.problem);
+      setAnswer(saved.answer);
+      setGrade(saved.grade);
+      setRevealed(saved.revealed);
+      setHint(saved.hint);
+      setFollowUp(saved.followUp);
+      setBusy(false);
+      setError(null);
+      setShowReminder(false);
+      setHintBusy(false);
+      setFollowUpBusy(false);
+      setCopied(false);
+      return;
+    }
     const ctrl = new AbortController();
     generate(currentNode.id, ctrl.signal);
     return () => ctrl.abort();
   }, [index, generate, currentNode, done]);
 
-  // Drop prefetch entries for nodes we've skipped past (e.g. double-skip
-  // jumping over the prefetched "next" node) so they don't sit unconsumed.
+  // Drop prefetch entries for nodes we've skipped past
   useEffect(() => {
     const keep = new Set([currentNode?.id, activeQueue[index + 1]?.id].filter(Boolean));
     for (const id of prefetchCache.current.keys()) {
@@ -102,11 +148,11 @@ export default function StudyQueue({ queue, preferKind }: { queue: QueueNode[]; 
     }
   }, [index, currentNode, activeQueue]);
 
-  // Prefetch next problem while the user is answering the current one.
+  // Prefetch next card while user is answering current — skip if already snapshotted
   useEffect(() => {
     if (!problem || done) return;
     const nextNode = activeQueue[index + 1];
-    if (nextNode) prefetch(nextNode.id);
+    if (nextNode && !cardStatesRef.current[index + 1]?.problem) prefetch(nextNode.id);
   }, [problem, index, activeQueue, done, prefetch]);
 
   // Session elapsed timer
@@ -116,18 +162,45 @@ export default function StudyQueue({ queue, preferKind }: { queue: QueueNode[]; 
     return () => clearInterval(id);
   }, [done, sessionStart]);
 
-  // Ctrl+Enter to submit
+  // Persist to localStorage — include current card's live state
+  useEffect(() => {
+    if (done) {
+      try { localStorage.removeItem(SESSION_KEY); } catch {}
+      return;
+    }
+    try {
+      const s: SavedSession = {
+        activeQueue,
+        index,
+        preferKind,
+        resultsByIndex,
+        cardStates: {
+          ...cardStatesRef.current,
+          [index]: { problem, answer, grade, revealed, hint, followUp },
+        },
+      };
+      localStorage.setItem(SESSION_KEY, JSON.stringify(s));
+    } catch {}
+  }, [activeQueue, index, preferKind, resultsByIndex, done, problem, answer, grade, revealed, hint, followUp]);
+
+  // Ctrl+Enter handler
   useEffect(() => {
     function handler(e: KeyboardEvent) {
       if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
         e.preventDefault();
         if (!grade && !busy && answer.trim()) submit();
+        else if (grade && followUp.trim() && !followUpBusy) submitFollowUp();
         else if (grade) advance();
       }
     }
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   });
+
+  // Snapshot current card before navigating away
+  function saveCardState() {
+    cardStatesRef.current[index] = { problem, answer, grade, revealed, hint, followUp };
+  }
 
   async function getHint() {
     if (!problem || hintBusy) return;
@@ -157,10 +230,10 @@ export default function StudyQueue({ queue, preferKind }: { queue: QueueNode[]; 
       if (res.ok) {
         setRevealed(data.idealSolution);
         const elapsedSec = Math.round((Date.now() - questionStart.current) / 1000);
-        setResults((prev) => [
+        setResultsByIndex((prev) => ({
           ...prev,
-          { node: currentNode, verdict: "incorrect", masteryBefore: data.masteryBefore, masteryAfter: data.masteryAfter, elapsedSec },
-        ]);
+          [index]: { node: currentNode, verdict: "incorrect", masteryBefore: data.masteryBefore, masteryAfter: data.masteryAfter, elapsedSec },
+        }));
       }
     } finally {
       setBusy(false);
@@ -181,18 +254,15 @@ export default function StudyQueue({ queue, preferKind }: { queue: QueueNode[]; 
       if (!res.ok) throw new Error(data.error || "grading failed");
       setGrade(data);
       setFollowUp("");
-      // Update the last result with the new verdict
-      setResults((prev) => {
-        const updated = [...prev];
-        if (updated.length > 0) {
-          updated[updated.length - 1] = {
-            ...updated[updated.length - 1],
-            verdict: data.verdict,
-            masteryAfter: data.masteryAfter,
-          };
-        }
-        return updated;
-      });
+      // Update this card's result specifically (not last item in array)
+      setResultsByIndex((prev) => ({
+        ...prev,
+        [index]: {
+          ...(prev[index] ?? { node: currentNode, masteryBefore: data.masteryBefore, elapsedSec: 0 }),
+          verdict: data.verdict,
+          masteryAfter: data.masteryAfter,
+        },
+      }));
     } catch (e: any) {
       setError(e.message || "Grading failed");
     } finally {
@@ -214,9 +284,9 @@ export default function StudyQueue({ queue, preferKind }: { queue: QueueNode[]; 
       if (!res.ok) throw new Error(data.error || "grading failed");
       setGrade(data);
       const elapsedSec = Math.round((Date.now() - questionStart.current) / 1000);
-      setResults((prev) => [
+      setResultsByIndex((prev) => ({
         ...prev,
-        {
+        [index]: {
           node: currentNode,
           verdict: data.verdict,
           masteryBefore: data.masteryBefore,
@@ -224,7 +294,7 @@ export default function StudyQueue({ queue, preferKind }: { queue: QueueNode[]; 
           justMastered: data.justMastered ?? false,
           elapsedSec,
         },
-      ]);
+      }));
     } catch (e: any) {
       setError(e.message || "Grading failed");
     } finally {
@@ -233,6 +303,7 @@ export default function StudyQueue({ queue, preferKind }: { queue: QueueNode[]; 
   }
 
   function advance() {
+    saveCardState();
     if (index + 1 >= activeQueue.length) {
       setDone(true);
     } else {
@@ -240,7 +311,15 @@ export default function StudyQueue({ queue, preferKind }: { queue: QueueNode[]; 
     }
   }
 
+  function goBack() {
+    if (index <= 0) return;
+    saveCardState();
+    setIndex((i) => i - 1);
+  }
+
+  // ─── Done screen ────────────────────────────────────────────────────────────
   if (done) {
+    const results = Object.values(resultsByIndex);
     const correct = results.filter((r) => r.verdict === "correct").length;
     const partial = results.filter((r) => r.verdict === "partial").length;
     const incorrect = results.filter((r) => r.verdict === "incorrect").length;
@@ -303,49 +382,52 @@ export default function StudyQueue({ queue, preferKind }: { queue: QueueNode[]; 
 
         <div className="panel" style={{ marginTop: 24 }}>
           <h2>Results</h2>
-          {results.map((r, i) => (
-            <div key={i} className="session-result-row">
-              <span
-                className="verdict-dot"
-                style={{ background: VERDICT[r.verdict]?.bg, color: VERDICT[r.verdict]?.color }}
-              >
-                {VERDICT[r.verdict]?.icon}
-              </span>
-              <Link href={`/node/${encodeURIComponent(r.node.id)}`} className="text-link">
-                {r.node.title}
-              </Link>
-              {r.node.area && <span className="muted small"> · {r.node.area}</span>}
-              {r.justMastered && <span className="mastered-badge">mastered</span>}
-              <span className="muted small result-mastery">
-                {r.elapsedSec !== undefined && (
-                  <span className="label-xs" style={{ opacity: 0.6 }}>{r.elapsedSec}s</span>
-                )}
-                {Math.round(r.masteryBefore * 100)}% → <strong>{Math.round(r.masteryAfter * 100)}%</strong>
-              </span>
-            </div>
-          ))}
+          {Object.entries(resultsByIndex)
+            .sort(([a], [b]) => Number(a) - Number(b))
+            .map(([qi, r]) => (
+              <div key={qi} className="session-result-row">
+                <span
+                  className="verdict-dot"
+                  style={{ background: VERDICT[r.verdict]?.bg, color: VERDICT[r.verdict]?.color }}
+                >
+                  {VERDICT[r.verdict]?.icon}
+                </span>
+                <Link href={`/node/${encodeURIComponent(r.node.id)}`} className="text-link">
+                  {r.node.title}
+                </Link>
+                {r.node.area && <span className="muted small"> · {r.node.area}</span>}
+                {r.justMastered && <span className="mastered-badge">mastered</span>}
+                <span className="muted small result-mastery">
+                  {r.elapsedSec !== undefined && (
+                    <span className="label-xs" style={{ opacity: 0.6 }}>{r.elapsedSec}s</span>
+                  )}
+                  {Math.round(r.masteryBefore * 100)}% → <strong>{Math.round(r.masteryAfter * 100)}%</strong>
+                </span>
+              </div>
+            ))}
         </div>
 
         <div className="session-actions">
-          {incorrect + partial > 0 && (
-            <button
-              className="btn-ghost btn-sm btn-warn"
-              onClick={() => {
-                const retryNodes = results
-                  .filter((r) => r.verdict === "incorrect" || r.verdict === "partial")
-                  .map((r) => r.node);
-                if (retryNodes.length > 0) {
+          {(incorrect + partial > 0) && (() => {
+            const retryNodes = Object.values(resultsByIndex)
+              .filter((r) => r.verdict === "incorrect" || r.verdict === "partial")
+              .map((r) => r.node);
+            return retryNodes.length > 0 ? (
+              <button
+                className="btn-ghost btn-sm btn-warn"
+                onClick={() => {
                   setActiveQueue(retryNodes);
-                  setResults([]);
+                  setResultsByIndex({});
+                  cardStatesRef.current = {};
                   setIndex(0);
                   setDone(false);
                   setSessionElapsed(0);
-                }
-              }}
-            >
-              Retry {incorrect + partial} missed
-            </button>
-          )}
+                }}
+              >
+                Retry {incorrect + partial} missed
+              </button>
+            ) : null;
+          })()}
           <Link href="/session" className="btn-primary">New session</Link>
           <Link href="/history" className="btn-ghost">History</Link>
           <Link href="/" className="btn-ghost">Home</Link>
@@ -354,32 +436,38 @@ export default function StudyQueue({ queue, preferKind }: { queue: QueueNode[]; 
     );
   }
 
-  const progress = index / activeQueue.length;
-
+  // ─── Active session ──────────────────────────────────────────────────────────
   return (
     <div className="practice">
-      {/* Session progress bar */}
       <div className="session-progress">
         <div className="session-progress-bar" style={{ width: `${(index / activeQueue.length) * 100}%` }} />
       </div>
       <div className="session-progress-header">
         <div className="session-progress-left">
+          <button
+            className="btn-ghost btn-sm"
+            onClick={goBack}
+            disabled={index === 0}
+            title="Go back to previous concept"
+          >
+            ← Back
+          </button>
           <span className="muted small">Concept {index + 1} of {activeQueue.length}</span>
           <span className="muted small tabular">
             {Math.floor(sessionElapsed / 60)}:{String(sessionElapsed % 60).padStart(2, "0")}
           </span>
         </div>
         <div className="dots-row">
-          {results.map((r, i) => (
+          {activeQueue.map((_, i) => (
             <span
               key={i}
-              title={r.node.title}
-              className="progress-dot"
-              style={{ background: VERDICT[r.verdict]?.color }}
+              className={`progress-dot${i === index ? " dot-current" : ""}`}
+              style={{
+                background: resultsByIndex[i]
+                  ? VERDICT[resultsByIndex[i].verdict]?.color
+                  : i === index ? "var(--accent)" : "var(--border)",
+              }}
             />
-          ))}
-          {Array.from({ length: activeQueue.length - results.length }).map((_, i) => (
-            <span key={`empty-${i}`} className="progress-dot" style={{ background: "var(--border)" }} />
           ))}
         </div>
       </div>
