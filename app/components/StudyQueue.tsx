@@ -67,6 +67,7 @@ export default function StudyQueue({
   const [sessionElapsed, setSessionElapsed] = useState(0);
   const [sessionStart] = useState(() => Date.now());
   const [copied, setCopied] = useState(false);
+  const [unlockedNodes, setUnlockedNodes] = useState<{ id: string; title: string; area: string | null; type: string | null }[]>([]);
 
   // Per-card state snapshots — mutated imperatively, not re-render triggers
   const cardStatesRef = useRef<Record<number, CardState>>(savedState?.cardStates ?? {});
@@ -161,6 +162,19 @@ export default function StudyQueue({
     const id = setInterval(() => setSessionElapsed(Math.floor((Date.now() - sessionStart) / 1000)), 1000);
     return () => clearInterval(id);
   }, [done, sessionStart]);
+
+  // Fetch newly unlocked concepts when session completes
+  useEffect(() => {
+    if (!done) return;
+    const masteredIds = Object.values(resultsByIndex)
+      .filter((r) => r.justMastered)
+      .map((r) => r.node.id);
+    if (masteredIds.length === 0) return;
+    fetch(`/api/newly-unlocked?nodes=${masteredIds.map(encodeURIComponent).join(",")}`)
+      .then((r) => r.json())
+      .then(setUnlockedNodes)
+      .catch(() => {});
+  }, [done]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Persist to localStorage — include current card's live state
   useEffect(() => {
@@ -408,6 +422,20 @@ export default function StudyQueue({
               {results.filter((r) => r.justMastered).map((r, i) => (
                 <Link key={i} href={`/node/${encodeURIComponent(r.node.id)}`} className="mastered-node-chip">
                   {r.node.title}
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {unlockedNodes.length > 0 && (
+          <div className="unlocked-banner">
+            <div className="unlocked-banner-title">Concepts now available to learn</div>
+            <div className="chips-row">
+              {unlockedNodes.map((n) => (
+                <Link key={n.id} href={`/node/${encodeURIComponent(n.id)}`} className="unlocked-node-chip">
+                  {n.type && <span className={`type-badge t-${n.type}`}>{n.type}</span>}
+                  {n.title}
                 </Link>
               ))}
             </div>
