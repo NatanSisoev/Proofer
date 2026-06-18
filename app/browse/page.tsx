@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 function MasteryBar({ p }: { p: number }) {
   return (
     <div className="mastery-bar-row">
-      <div className="bar" style={{ flex: 1, maxWidth: 120 }}>
+      <div className="bar mastery-bar-flex">
         <span style={{ width: `${Math.round(p * 100)}%` }} />
       </div>
       <span className="small muted">{Math.round(p * 100)}%</span>

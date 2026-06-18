@@ -835,6 +835,7 @@ details[open].practice-history > summary::before { transform: rotate(90deg); }
 .area-header { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px; margin-bottom: 20px; }
 .mastery-summary { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .mastery-bar-row { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.mastery-bar-flex { flex: 1; max-width: 120px; }
 .node-list { display: flex; flex-direction: column; gap: 2px; margin-top: 16px; }
 .browse-row-left { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1; }
 .browse-node-link { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
