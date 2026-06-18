@@ -91,46 +91,34 @@ export default function VoiceInput({ onTranscript, disabled, lang = "en-US" }: P
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+    <div className="voice-input-root">
       <button
         type="button"
         onClick={toggle}
         disabled={disabled}
         title={listening ? "Stop recording" : "Speak your answer"}
+        className="voice-btn"
         style={{
           background: listening ? "var(--red-soft)" : "var(--bg-soft)",
           border: `1px solid ${listening ? "var(--red)" : "var(--border)"}`,
-          borderRadius: 10,
-          padding: "10px 14px",
-          cursor: "pointer",
           color: listening ? "var(--red)" : "var(--muted)",
-          fontSize: 18,
-          lineHeight: 1,
-          display: "flex",
-          alignItems: "center",
-          gap: 6,
-          transition: "all 0.15s",
           animation: listening ? "micPulse 1.5s ease-in-out infinite" : "none",
         }}
       >
         🎤
-        <span style={{ fontSize: 12, fontWeight: 600, letterSpacing: "0.02em" }}>
+        <span className="voice-btn-label">
           {listening ? "Stop" : "Speak"}
         </span>
       </button>
 
       {interim && (
-        <span style={{
-          fontSize: 12, color: "var(--muted)", fontStyle: "italic",
-          padding: "4px 8px", background: "var(--bg-soft)", borderRadius: 6,
-          maxWidth: 300, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-        }}>
+        <span className="voice-interim">
           {interim}…
         </span>
       )}
 
       {error && (
-        <span style={{ fontSize: 12, color: "var(--red)" }}>{error}</span>
+        <span className="voice-error">{error}</span>
       )}
     </div>
   );

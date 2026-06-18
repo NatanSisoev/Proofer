@@ -981,6 +981,22 @@ details[open].practice-history > summary::before { transform: rotate(90deg); }
 .issue-pills { display: flex; flex-wrap: wrap; gap: 4px; justify-content: flex-end; }
 .collapse-btn { display: flex; justify-content: space-between; align-items: center; width: 100%; background: none; border: none; cursor: pointer; color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; padding: 0; }
 
+/* voice input */
+.voice-input-root { display: flex; flex-direction: column; gap: 4px; }
+.voice-btn { border-radius: 10px; padding: 10px 14px; font-size: 18px; line-height: 1; display: flex; align-items: center; gap: 6px; transition: all 0.15s; }
+.voice-btn-label { font-size: 12px; font-weight: 600; letter-spacing: 0.02em; }
+.voice-interim { font-size: 12px; color: var(--muted); font-style: italic; padding: 4px 8px; background: var(--bg-soft); border-radius: 6px; max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.voice-error { font-size: 12px; color: var(--red); }
+
+/* sync button */
+.sync-wrapper { display: inline-flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+.sync-btn { font-size: 12px; padding: 5px 12px; display: inline-flex; align-items: center; gap: 6px; }
+.sync-status { max-width: 280px; text-align: right; line-height: 1.4; white-space: pre-wrap; }
+
+/* graph page + loading */
+.graph-canvas { display: flex; flex-direction: column; height: calc(100vh - 48px); padding-bottom: 16px; }
+.graph-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 16px; }
+
 /* compare-with component */
 .panel-label { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
 .close-btn { font-size: 11px; padding: 2px 8px; color: var(--muted); }

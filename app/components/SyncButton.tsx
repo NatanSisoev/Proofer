@@ -37,12 +37,11 @@ export default function SyncButton() {
   }
 
   return (
-    <div style={{ display: "inline-flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
+    <div className="sync-wrapper">
       <button
         onClick={sync}
         disabled={state === "syncing"}
-        className="btn-ghost"
-        style={{ fontSize: 12, padding: "5px 12px", display: "inline-flex", alignItems: "center", gap: 6 }}
+        className="btn-ghost sync-btn"
       >
         {state === "syncing" ? (
           <>
@@ -55,14 +54,8 @@ export default function SyncButton() {
       </button>
       {msg && (
         <span
-          className="small"
-          style={{
-            color: state === "error" ? "var(--red)" : "var(--green)",
-            maxWidth: 280,
-            textAlign: "right",
-            lineHeight: 1.4,
-            whiteSpace: "pre-wrap",
-          }}
+          className="small sync-status"
+          style={{ color: state === "error" ? "var(--red)" : "var(--green)" }}
         >
           {msg}
         </span>
