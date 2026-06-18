@@ -154,12 +154,10 @@ export default function ProgressPage() {
                 return (
                   <div key={h.bucket} className="hist-bar-col">
                     <div
+                      className="hist-bar"
                       style={{
-                        width: "100%",
                         height: `${Math.max(4, pct * 72)}px`,
                         background: isGood ? "var(--green)" : h.bucket >= 4 ? "var(--amber)" : "var(--muted)",
-                        borderRadius: "3px 3px 0 0",
-                        opacity: 0.85,
                       }}
                     />
                   </div>
@@ -348,10 +346,11 @@ export default function ProgressPage() {
                               {d.count > 0 ? d.count : ""}
                             </span>
                             <div
+                              className="forecast-bar"
                               style={{
-                                width: "100%", height: barH,
+                                height: barH,
                                 background: isToday ? "var(--amber)" : "var(--accent)",
-                                borderRadius: 3, opacity: d.count === 0 ? 0.2 : 0.85,
+                                opacity: d.count === 0 ? 0.2 : 0.85,
                               }}
                             />
                             <span className="muted small label-xs" style={{ color: isToday ? "var(--amber)" : undefined }}>

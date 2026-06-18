@@ -213,7 +213,7 @@ export default function SessionSetup({
               <select
                 value={area}
                 onChange={(e) => setArea(e.target.value)}
-                style={{ width: "100%" }}
+                className="form-input"
               >
                 {areas.map((a) => <option key={a} value={a}>{a}</option>)}
               </select>
