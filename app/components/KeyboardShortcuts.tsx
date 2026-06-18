@@ -22,6 +22,7 @@ const SESSION_SHORTCUTS = [
   { key: "Ctrl+Enter", desc: "Submit answer / advance" },
   { key: "←",          desc: "Go back to previous card" },
   { key: "→",          desc: "Advance to next card (after grading)" },
+  { key: "h",          desc: "Get a hint (before answering)" },
 ];
 
 export default function KeyboardShortcuts() {

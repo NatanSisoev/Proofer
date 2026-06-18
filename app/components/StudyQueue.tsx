@@ -195,6 +195,7 @@ export default function StudyQueue({
       } else if (!inText && !e.ctrlKey && !e.metaKey && !e.altKey) {
         if (e.key === "ArrowLeft") goBack();
         else if (e.key === "ArrowRight" && grade) advance();
+        else if (e.key === "h" && !grade && !hint && problem?.mode !== "demo") getHint();
       }
     }
     window.addEventListener("keydown", handler);
