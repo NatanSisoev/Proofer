@@ -6,11 +6,11 @@ export default function Loading() {
       <div className="breadcrumb">
         <SkelLine width={120} />
       </div>
-      <div className="skel skel-title" style={{ width: 360, marginTop: 8, marginBottom: 4 }} />
+      <div className="skel skel-title skel-node-title" />
       <div className="skel skel-tag" style={{ marginBottom: 20 }} />
       <div className="grid">
         <SkelPanel lines={8} />
-        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        <div className="skel-col">
           <SkelPanel lines={4} />
           <SkelPanel lines={4} />
         </div>

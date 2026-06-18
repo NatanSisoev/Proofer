@@ -25,12 +25,12 @@ export function SkelPanel({ lines = 3, title = true }: { lines?: number; title?:
 
 export function SkelHeader({ withCta = false }: { withCta?: boolean }) {
   return (
-    <header className="top" style={{ borderBottom: "none", paddingBottom: 20 }}>
+    <header className="top skel-header-flat">
       <div>
         <div className="skel skel-title" />
         <div className="skel skel-tag" />
       </div>
-      {withCta && <span style={{ marginLeft: "auto", flexShrink: 0 }}><div className="skel" style={{ width: 140, height: 36, borderRadius: 8 }} /></span>}
+      {withCta && <span className="skel-cta-spacer"><div className="skel skel-cta-box" /></span>}
     </header>
   );
 }
@@ -45,7 +45,7 @@ export function SkelPage({ panels = 3, lines = 4, withCta = false, stats = true 
     <div className="wrap">
       <SkelHeader withCta={withCta} />
       {stats && <SkelStatRow />}
-      <div style={{ display: "flex", flexDirection: "column", gap: 16, marginTop: stats ? 20 : 0 }}>
+      <div className="skel-col" style={{ marginTop: stats ? 20 : 0 }}>
         {Array.from({ length: panels }).map((_, i) => (
           <SkelPanel key={i} lines={lines} />
         ))}

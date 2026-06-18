@@ -997,6 +997,14 @@ details[open].practice-history > summary::before { transform: rotate(90deg); }
 .graph-canvas { display: flex; flex-direction: column; height: calc(100vh - 48px); padding-bottom: 16px; }
 .graph-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 16px; }
 
+/* skeleton / loading */
+.skel-col { display: flex; flex-direction: column; gap: 16px; }
+.skel-node-title { width: 360px; margin-top: 8px; margin-bottom: 4px; }
+.skel-learn-tag { margin-bottom: 20px; width: 100%; max-width: 640px; }
+.skel-header-flat { border-bottom: none; padding-bottom: 20px; }
+.skel-cta-spacer { margin-left: auto; flex-shrink: 0; }
+.skel-cta-box { width: 140px; height: 36px; border-radius: 8px; }
+
 /* compare-with component */
 .panel-label { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
 .close-btn { font-size: 11px; padding: 2px 8px; color: var(--muted); }
