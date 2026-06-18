@@ -969,9 +969,14 @@ details[open].practice-history > summary::before { transform: rotate(90deg); }
 
 /* home page */
 .streak-label { color: var(--muted); font-weight: 600; }
-.panel-spotlight { margin-bottom: 20px; position: relative; }
+.panel-spotlight {
+  margin-bottom: 20px; position: relative;
+  border-left: 3px solid var(--accent);
+  background: linear-gradient(135deg, var(--accent-soft) 0%, var(--panel) 60%);
+}
 .spotlight-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 4px; }
 .due-actions { display: flex; gap: 8px; align-items: center; }
+.panel-due { border-left: 3px solid var(--amber); }
 .item-actions { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
 
 /* quality filters */

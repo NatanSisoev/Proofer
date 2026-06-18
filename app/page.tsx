@@ -142,7 +142,7 @@ export default function Home() {
 
       {/* Due for review — shown prominently when non-empty */}
       {due.length > 0 && (
-        <div className="panel" style={{ marginBottom: 20 }}>
+        <div className="panel panel-due" style={{ marginBottom: 20 }}>
           <div className="panel-header">
             <h2 className="amber">Due for review</h2>
             <Link
