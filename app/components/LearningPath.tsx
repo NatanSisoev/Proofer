@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { learningPath } from "@/lib/queries";
-import type { BrowseNode } from "@/lib/queries";
 
 export default function LearningPath({ nodeId }: { nodeId: string }) {
   const path = learningPath(nodeId);
@@ -8,12 +7,18 @@ export default function LearningPath({ nodeId }: { nodeId: string }) {
 
   const show = path.slice(0, 12);
   const extra = path.length - show.length;
+  const sessionIds = path.slice(0, 10).map((n) => encodeURIComponent(n.id)).join(",");
 
   return (
     <div className="panel" style={{ marginTop: 16 }}>
       <div className="panel-header">
         <h2>Learning path — {path.length} unmastered prerequisite{path.length !== 1 ? "s" : ""}</h2>
-        <span className="muted small">foundations first</span>
+        <Link
+          href={`/session?mode=custom&nodes=${sessionIds}`}
+          className="pill pill-accent"
+        >
+          Practice all →
+        </Link>
       </div>
       <p className="muted small path-subtitle">
         Master these in order to be fully ready for this concept.
@@ -44,7 +49,7 @@ export default function LearningPath({ nodeId }: { nodeId: string }) {
       </div>
       {extra > 0 && (
         <p className="muted small" style={{ marginTop: 8 }}>
-          …and {extra} more. <Link href={`/browse?area=${encodeURIComponent("")}`}>Browse all prerequisites</Link>
+          …and {extra} more.
         </p>
       )}
     </div>
