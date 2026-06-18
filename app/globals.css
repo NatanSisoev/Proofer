@@ -1018,6 +1018,9 @@ details[open].practice-history > summary::before { transform: rotate(90deg); }
 .quote-snippet { margin: 0; font-size: 12px; color: var(--muted); border-left: 2px solid var(--border); padding-left: 8px; font-style: italic; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .add-link-btn { font-size: 11px; padding: 3px 10px; border-radius: 6px; background: var(--accent-soft); border: 1px solid var(--accent); color: var(--accent); cursor: pointer; }
 .dismiss-btn { font-size: 11px; padding: 3px 8px; border-radius: 6px; background: transparent; border: 1px solid var(--border); color: var(--muted); cursor: pointer; }
+.link-suggestion-desc { font-size: 13px; margin-bottom: 4px; }
+.link-suggestion-tgt { font-weight: 600; color: var(--accent); }
+.link-added-badge { color: var(--green); font-size: 12px; }
 
 /* global graph */
 .graph-layout { display: flex; flex-direction: column; gap: 12px; height: 100%; }

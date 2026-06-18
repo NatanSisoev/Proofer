@@ -59,13 +59,13 @@ export default function LinkSuggestions({ initial }: { initial: LinkSuggestion[]
             >
               <div className="link-suggestion-row">
                 <div className="flex-fill">
-                  <div style={{ fontSize: 13, marginBottom: 4 }}>
+                  <div className="link-suggestion-desc">
                     <Link href={`/node/${encodeURIComponent(s.src_id)}`} style={{ fontWeight: 600 }}>
                       {s.src_title}
                     </Link>
                     {s.src_area && <span className="muted small"> · {s.src_area}</span>}
                     <span className="muted" style={{ margin: "0 6px" }}>mentions</span>
-                    <Link href={`/node/${encodeURIComponent(s.tgt_id)}`} style={{ fontWeight: 600, color: "var(--accent)" }}>
+                    <Link href={`/node/${encodeURIComponent(s.tgt_id)}`} className="link-suggestion-tgt">
                       {s.tgt_title}
                     </Link>
                     {s.tgt_area && <span className="muted small"> · {s.tgt_area}</span>}
@@ -76,7 +76,7 @@ export default function LinkSuggestions({ initial }: { initial: LinkSuggestion[]
                 </div>
                 <div className="item-actions">
                   {isAdded ? (
-                    <span style={{ color: "var(--green)", fontSize: 12 }}>✓ added</span>
+                    <span className="link-added-badge">✓ added</span>
                   ) : (
                     <>
                       <button
