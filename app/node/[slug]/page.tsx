@@ -198,16 +198,24 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
               </div>
               <div className="bar"><span style={{ width: `${Math.round(ready.score * 100)}%` }} /></div>
               {ready.missing.length > 0 && (
-                <p className="muted small" style={{ marginTop: 10 }}>
-                  Still need:{" "}
-                  {ready.missing.slice(0, 8).map((m, i) => (
-                    <span key={m.id}>
-                      {i > 0 && ", "}
-                      <Link href={`/node/${encodeURIComponent(m.id)}`}>{m.title}</Link>
-                    </span>
-                  ))}
-                  {ready.missing.length > 8 && ` and ${ready.missing.length - 8} more`}
-                </p>
+                <div className="readiness-missing">
+                  <p className="muted small" style={{ marginTop: 10 }}>
+                    Still need:{" "}
+                    {ready.missing.slice(0, 8).map((m, i) => (
+                      <span key={m.id}>
+                        {i > 0 && ", "}
+                        <Link href={`/node/${encodeURIComponent(m.id)}`}>{m.title}</Link>
+                      </span>
+                    ))}
+                    {ready.missing.length > 8 && ` and ${ready.missing.length - 8} more`}
+                  </p>
+                  <Link
+                    href={`/session?mode=custom&nodes=${ready.missing.slice(0, 10).map((m) => encodeURIComponent(m.id)).join(",")}`}
+                    className="pill pill-accent"
+                  >
+                    Practice prerequisites →
+                  </Link>
+                </div>
               )}
             </div>
           )}

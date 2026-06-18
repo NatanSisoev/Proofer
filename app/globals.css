@@ -862,6 +862,7 @@ details[open].practice-history > summary::before { transform: rotate(90deg); }
 .node-meta-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .history-dots { display: flex; gap: 4px; align-items: center; margin-left: 4px; }
 .readiness-header { display: flex; justify-content: space-between; margin-bottom: 8px; }
+.readiness-missing { display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 8px; }
 .node-actions-row { display: flex; align-items: center; gap: 6px; }
 
 /* study plan */

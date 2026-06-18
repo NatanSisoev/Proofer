@@ -11,10 +11,25 @@ export async function GET(req: NextRequest) {
   const mode = searchParams.get("mode") || "smart";
   const area = searchParams.get("area") || null;
   const limit = Math.min(parseInt(searchParams.get("limit") || "10"), 20);
+  const idsParam = searchParams.get("ids") || null;
 
   let rows: QueueNode[] = [];
 
-  if (mode === "due") {
+  if (mode === "ids" && idsParam) {
+    // Fetch specific nodes by ID, in the requested order
+    const ids = idsParam.split(",").filter(Boolean).slice(0, 20);
+    if (ids.length > 0) {
+      const placeholders = ids.map(() => "?").join(",");
+      const found = db().prepare(`
+        SELECT n.id, n.title, n.type, n.area
+        FROM nodes n
+        WHERE n.id IN (${placeholders}) AND n.exists_ = 1
+      `).all(...ids) as QueueNode[];
+      // Preserve the requested order
+      const byId = new Map(found.map((r) => [r.id, r]));
+      rows = ids.map((id) => byId.get(id)).filter(Boolean) as QueueNode[];
+    }
+  } else if (mode === "due") {
     // concepts past their review due date
     rows = db().prepare(`
       SELECT n.id, n.title, n.type, n.area

@@ -39,7 +39,8 @@ export default function SessionSetup({
 }) {
   const searchParams = useSearchParams();
   const modeFromUrl = searchParams.get("mode");
-  const [mode, setMode] = useState<Mode>(initialMode);
+  const nodesFromUrl = searchParams.get("nodes");
+  const [mode, setMode] = useState<Mode>(nodesFromUrl ? "custom" : initialMode);
   const [area, setArea] = useState<string>(initialArea || areas[0] || "");
   const [count, setCount] = useState(5);
   const [preferKind, setPreferKind] = useState<ProblemKind>("any");
@@ -57,9 +58,20 @@ export default function SessionSetup({
   const [customPicked, setCustomPicked] = useState<QueueNode[]>([]);
   const customDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Pre-populate custom queue from ?nodes=id1,id2,... URL param
+  useEffect(() => {
+    if (!nodesFromUrl) return;
+    const ids = nodesFromUrl.split(",").filter(Boolean);
+    if (!ids.length) return;
+    fetch(`/api/session/queue?mode=ids&ids=${encodeURIComponent(ids.join(","))}`)
+      .then((r) => r.json())
+      .then((data) => { if (data.queue?.length) setCustomPicked(data.queue); })
+      .catch(() => {});
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Restore last-used mode from localStorage unless a mode was passed via URL
   useEffect(() => {
-    if (!modeFromUrl) {
+    if (!modeFromUrl && !nodesFromUrl) {
       try {
         const saved = localStorage.getItem("proofer-session-mode") as Mode | null;
         const VALID: Mode[] = ["smart", "due", "weak", "area", "bookmarks", "custom"];
