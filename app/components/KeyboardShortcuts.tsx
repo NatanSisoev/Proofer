@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 
 const SHORTCUTS = [
   { key: "s / /", desc: "Focus search" },
-  { key: "p",     desc: "Practice (free)" },
   { key: "e",     desc: "Study session" },
   { key: "b",     desc: "Browse topics" },
   { key: "g",     desc: "Knowledge map" },
@@ -17,6 +16,12 @@ const SHORTCUTS = [
   { key: "h",     desc: "Home" },
   { key: "?",     desc: "Toggle this help" },
   { key: "Esc",   desc: "Close help" },
+];
+
+const SESSION_SHORTCUTS = [
+  { key: "Ctrl+Enter", desc: "Submit answer / advance" },
+  { key: "←",          desc: "Go back to previous card" },
+  { key: "→",          desc: "Advance to next card (after grading)" },
 ];
 
 export default function KeyboardShortcuts() {
@@ -38,7 +43,6 @@ export default function KeyboardShortcuts() {
         el?.focus();
         return;
       }
-      if (e.key === "p") { router.push("/learn"); return; }
       if (e.key === "e") { router.push("/session"); return; }
       if (e.key === "b") { router.push("/browse"); return; }
       if (e.key === "g") { router.push("/graph"); return; }
@@ -60,26 +64,31 @@ export default function KeyboardShortcuts() {
 
   return (
     <div className="modal-overlay" onClick={() => setOpen(false)}>
-      <div
-        className="panel"
-        style={{ minWidth: 320, padding: 24 }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <h2 style={{ margin: "0 0 16px" }}>Keyboard shortcuts</h2>
+      <div className="panel shortcuts-panel" onClick={(e) => e.stopPropagation()}>
+        <h2 className="shortcuts-heading">Keyboard shortcuts</h2>
         <table className="shortcuts-table">
           <tbody>
             {SHORTCUTS.map((s) => (
               <tr key={s.key} className="shortcuts-row">
-                <td className="shortcuts-key-cell">
-                  <kbd className="kbd">{s.key}</kbd>
-                </td>
+                <td className="shortcuts-key-cell"><kbd className="kbd">{s.key}</kbd></td>
                 <td className="shortcuts-desc">{s.desc}</td>
               </tr>
             ))}
           </tbody>
         </table>
-        <p className="muted small" style={{ marginTop: 12, marginBottom: 0 }}>
-          Press <kbd className="kbd">{`?`}</kbd> or Esc to close
+        <p className="muted small shortcuts-section-label">In a session</p>
+        <table className="shortcuts-table">
+          <tbody>
+            {SESSION_SHORTCUTS.map((s) => (
+              <tr key={s.key} className="shortcuts-row">
+                <td className="shortcuts-key-cell"><kbd className="kbd">{s.key}</kbd></td>
+                <td className="shortcuts-desc">{s.desc}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <p className="muted small shortcuts-footer">
+          Press <kbd className="kbd">?</kbd> or Esc to close
         </p>
       </div>
     </div>

@@ -946,10 +946,14 @@ details[open].practice-history > summary::before { transform: rotate(90deg); }
 .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 1000; }
 
 /* Keyboard shortcuts */
+.shortcuts-panel { min-width: 320px; padding: 24px; }
+.shortcuts-heading { margin: 0 0 16px; }
 .shortcuts-table { width: 100%; border-collapse: collapse; }
 .shortcuts-row { border-bottom: 1px solid var(--border); }
 .shortcuts-key-cell { padding: 8px 0; }
 .shortcuts-desc { padding: 8px 0 8px 16px; color: var(--text); font-size: 14px; }
+.shortcuts-section-label { margin: 14px 0 4px; font-weight: 600; }
+.shortcuts-footer { margin: 12px 0 0; }
 .kbd { background: var(--bg-soft); border: 1px solid var(--border); border-radius: 5px; padding: 2px 7px; font-family: monospace; font-size: 13px; color: var(--accent); }
 
 /* Activity calendar */
@@ -1011,4 +1015,8 @@ details[open].practice-history > summary::before { transform: rotate(90deg); }
 
 /* Settings / Quality */
 .field-select-lg { width: 100%; max-width: 260px; }
-.btn-
+.btn-download { display: inline-block; font-size: 13px; }
+.model-code { margin-left: 6px; font-size: 12px; }
+.warn-text { font-size: 13.5px; color: var(--amber); }
+.cycle-arrow { font-size: 12px; }
+.graph-tooltip { position: fixed; transform: translateX(-50%); background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 6px 12px; font-size: 12.5px; pointer-events: none; z-index: 200; white-space: nowrap; }
