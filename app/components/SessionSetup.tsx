@@ -69,15 +69,20 @@ export default function SessionSetup({
       .catch(() => {});
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Restore last-used mode from localStorage unless a mode was passed via URL
+  // Restore last-used mode + count from localStorage unless overridden by URL
   useEffect(() => {
     if (!modeFromUrl && !nodesFromUrl) {
       try {
-        const saved = localStorage.getItem("proofer-session-mode") as Mode | null;
+        const savedMode = localStorage.getItem("proofer-session-mode") as Mode | null;
         const VALID: Mode[] = ["smart", "due", "weak", "area", "bookmarks", "custom"];
-        if (saved && VALID.includes(saved)) setMode(saved);
+        if (savedMode && VALID.includes(savedMode)) setMode(savedMode);
       } catch {}
     }
+    try {
+      const savedCount = parseInt(localStorage.getItem("proofer-session-count") || "", 10);
+      const VALID_COUNTS = [3, 5, 8, 10, 15, 20];
+      if (VALID_COUNTS.includes(savedCount)) setCount(savedCount);
+    } catch {}
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
@@ -306,7 +311,10 @@ export default function SessionSetup({
             {[3, 5, 8, 10, 15, 20].map((n) => (
               <button
                 key={n}
-                onClick={() => setCount(n)}
+                onClick={() => {
+                  setCount(n);
+                  try { localStorage.setItem("proofer-session-count", String(n)); } catch {}
+                }}
                 className={count === n ? "btn-primary" : "btn-ghost"}
                 style={{ minWidth: 44 }}
               >
