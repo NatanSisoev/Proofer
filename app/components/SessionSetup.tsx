@@ -83,6 +83,11 @@ export default function SessionSetup({
       const VALID_COUNTS = [3, 5, 8, 10, 15, 20];
       if (VALID_COUNTS.includes(savedCount)) setCount(savedCount);
     } catch {}
+    try {
+      const savedKind = localStorage.getItem("proofer-session-kind") as ProblemKind | null;
+      const VALID_KINDS: ProblemKind[] = ["any", "compute", "prove", "counterexample", "explain"];
+      if (savedKind && VALID_KINDS.includes(savedKind)) setPreferKind(savedKind);
+    } catch {}
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
@@ -341,7 +346,10 @@ export default function SessionSetup({
                   name="kind"
                   value={k.key}
                   checked={preferKind === k.key}
-                  onChange={() => setPreferKind(k.key)}
+                  onChange={() => {
+                    setPreferKind(k.key);
+                    try { localStorage.setItem("proofer-session-kind", k.key); } catch {}
+                  }}
                 />
                 <div>
                   <span className="kind-label">{k.label}</span>
