@@ -132,7 +132,7 @@ export default function Home() {
             </div>
           </div>
           <div className="spotlight-mastery">
-            <div className="bar" style={{ width: 60, height: 4 }}>
+            <div className="bar spotlight-bar">
               <span style={{ width: `${Math.round(spotlight.mastery_p * 100)}%` }} />
             </div>
             <span className="muted small">{Math.round(spotlight.mastery_p * 100)}% mastery</span>

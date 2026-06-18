@@ -1000,10 +1000,18 @@ details[open].practice-history > summary::before { transform: rotate(90deg); }
 /* skeleton / loading */
 .skel-col { display: flex; flex-direction: column; gap: 16px; }
 .skel-node-title { width: 360px; margin-top: 8px; margin-bottom: 4px; }
+.skel-title-sm { margin-top: 4px; margin-bottom: 4px; }
 .skel-learn-tag { margin-bottom: 20px; width: 100%; max-width: 640px; }
 .skel-header-flat { border-bottom: none; padding-bottom: 20px; }
 .skel-cta-spacer { margin-left: auto; flex-shrink: 0; }
 .skel-cta-box { width: 140px; height: 36px; border-radius: 8px; }
+.graph-skel-fill { flex: 1; min-height: 500px; border-radius: 10px; }
+
+/* home page spotlight */
+.spotlight-bar { width: 60px; height: 4px; }
+
+/* quality filters */
+.quality-hint { margin-top: 0; margin-bottom: 10px; }
 
 /* compare-with component */
 .panel-label { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }

@@ -127,7 +127,7 @@ export default function QualityFilters({
         </button>
         {showPractice && (
           <div style={{ marginTop: 12 }}>
-            <p className="muted small" style={{ marginTop: 0, marginBottom: 10 }}>
+            <p className="muted small quality-hint">
               Notes with no structural issues but not yet practiced. Start a Smart session to work through these.
             </p>
             <div className="quality-list">

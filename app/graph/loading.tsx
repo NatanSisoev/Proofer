@@ -7,7 +7,7 @@ export default function Loading() {
           <div className="skel skel-tag" style={{ marginTop: 4 }} />
         </div>
       </div>
-      <div className="skel" style={{ flex: 1, minHeight: 500, borderRadius: 10 }} />
+      <div className="skel graph-skel-fill" />
     </div>
   );
 }
