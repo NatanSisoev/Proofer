@@ -574,10 +574,14 @@ export function searchWithMastery(q: string, limit = 25): (NodeRow & { mastery_p
          FROM nodes n
          LEFT JOIN mastery m ON m.node_id = n.id
         WHERE n.exists_ = 1 AND (n.title LIKE ? OR n.overview LIKE ?)
-        ORDER BY CASE WHEN n.title LIKE ? THEN 0 ELSE 1 END, n.title ASC
+        ORDER BY CASE
+          WHEN lower(n.title) = lower(?) THEN 0
+          WHEN n.title LIKE ? THEN 1
+          ELSE 2
+        END, n.title ASC
         LIMIT ?`
     )
-    .all(like, like, prefix, limit) as (NodeRow & { mastery_p: number })[];
+    .all(like, like, safe, prefix, limit) as (NodeRow & { mastery_p: number })[];
 
   // If few primary hits, supplement with content matches
   if (primary.length < 5) {
