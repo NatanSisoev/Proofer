@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 type Hit = {
@@ -13,6 +14,7 @@ export default function SearchBox() {
   const [hits, setHits] = useState<Hit[]>([]);
   const [cursor, setCursor] = useState(-1);
   const inputRef = useRef<HTMLInputElement>(null);
+  const router = useRouter();
 
   useEffect(() => {
     if (q.trim().length < 2) { setHits([]); setCursor(-1); return; }
@@ -31,8 +33,10 @@ export default function SearchBox() {
     if (hits.length === 0) return;
     if (e.key === "ArrowDown") { e.preventDefault(); setCursor((c) => Math.min(c + 1, hits.length - 1)); }
     if (e.key === "ArrowUp") { e.preventDefault(); setCursor((c) => Math.max(c - 1, -1)); }
-    if (e.key === "Enter" && cursor >= 0) {
-      window.location.href = `/node/${encodeURIComponent(hits[cursor].id)}`;
+    if (e.key === "Enter" && hits.length > 0) {
+      const target = cursor >= 0 ? hits[cursor] : hits[0];
+      setQ(""); setHits([]); setCursor(-1);
+      router.push(`/node/${encodeURIComponent(target.id)}`);
     }
     if (e.key === "Escape") { setQ(""); setHits([]); }
   }
