@@ -466,6 +466,20 @@ export default function StudyQueue({
           <span className="muted small tabular">
             {Math.floor(sessionElapsed / 60)}:{String(sessionElapsed % 60).padStart(2, "0")}
           </span>
+          {(() => {
+            const vals = Object.values(resultsByIndex);
+            if (vals.length === 0) return null;
+            const c = vals.filter(r => r.verdict === "correct").length;
+            const p = vals.filter(r => r.verdict === "partial").length;
+            const w = vals.filter(r => r.verdict === "incorrect").length;
+            return (
+              <span className="session-live-score">
+                {c > 0 && <span style={{ color: "var(--green)" }}>{c}✓</span>}
+                {p > 0 && <span style={{ color: "var(--amber)" }}>{p}~</span>}
+                {w > 0 && <span style={{ color: "var(--red)" }}>{w}✗</span>}
+              </span>
+            );
+          })()}
         </div>
         <div className="dots-row">
           {activeQueue.map((node, i) => (
