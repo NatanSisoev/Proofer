@@ -29,11 +29,7 @@ export default function SnoozeButton({ nodeId }: { nodeId: string }) {
       onClick={snooze}
       disabled={loading}
       title="Snooze 2 days"
-      style={{
-        background: "none", border: "none", cursor: "pointer",
-        fontSize: 12, color: "var(--muted)", padding: "2px 6px",
-        borderRadius: 5, lineHeight: 1,
-      }}
+      className="btn-snooze"
     >
       {loading ? "…" : "zz"}
     </button>

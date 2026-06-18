@@ -1108,3 +1108,7 @@ details[open].practice-history > summary::before { transform: rotate(90deg); }
 .cycle-arrow { font-size: 12px; }
 .graph-tooltip { position: fixed; transform: translateX(-50%); background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 6px 12px; font-size: 12.5px; pointer-events: none; z-index: 200; white-space: nowrap; }
 .tooltip-mastery { margin-left: 8px; }
+
+/* BookmarkButton / SnoozeButton */
+.btn-bookmark { background: none; border: none; cursor: pointer; font-size: 18px; line-height: 1; transition: color 0.2s, transform 0.1s; padding: 4px 6px; border-radius: 6px; }
+.btn-snooze { background: none; border: none; cursor: pointer; font-size: 12px; color: var(--muted); padding: 2px 6px; border-radius: 5px; line-height: 1; }
