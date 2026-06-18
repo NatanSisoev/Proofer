@@ -43,7 +43,7 @@ export default function StudyPlanClient({
   }
 
   return (
-    <div className="grid" style={{ gap: 20, marginTop: 20 }}>
+    <div className="grid study-plan-grid">
       <div>
         {/* Config panel */}
         <div className="panel" style={{ marginBottom: 16 }}>
@@ -59,10 +59,9 @@ export default function StudyPlanClient({
               onChange={e => setTargetDate(e.target.value)}
               min={new Date(Date.now() + 86400000).toISOString().slice(0, 10)}
               className="form-input"
-              style={{ colorScheme: "dark" }}
             />
             {daysLeft > 0 && (
-              <p className="muted small" style={{ marginTop: 6, marginBottom: 0 }}>
+              <p className="muted small field-hint">
                 {daysLeft} day{daysLeft !== 1 ? "s" : ""} away (~{Math.ceil(daysLeft / 7)} week{Math.ceil(daysLeft / 7) !== 1 ? "s" : ""})
               </p>
             )}
@@ -119,19 +118,15 @@ export default function StudyPlanClient({
         {busy && (
           <div className="panel center-panel">
             <div className="muted">Generating your personalised study plan…</div>
-            <div className="muted small" style={{ marginTop: 8 }}>This takes ~10–15 seconds</div>
+            <div className="muted small field-hint">This takes ~10–15 seconds</div>
           </div>
         )}
 
         {plan && !busy && (
           <div className="panel">
-            <div className="panel-header" style={{ marginBottom: 16 }}>
-              <h2 style={{ margin: 0 }}>Your study plan</h2>
-              <button
-                className="btn-ghost"
-                style={{ fontSize: 12 }}
-                onClick={() => { setPlan(null); }}
-              >
+            <div className="panel-header">
+              <h2>Your study plan</h2>
+              <button className="btn-ghost btn-sm" onClick={() => { setPlan(null); }}>
                 ✕ clear
               </button>
             </div>
@@ -147,11 +142,11 @@ export default function StudyPlanClient({
         )}
 
         {!plan && !busy && (
-          <div className="panel center-panel" style={{ background: "var(--bg-soft)" }}>
-            <div className="muted" style={{ fontSize: 14 }}>
+          <div className="panel center-panel plan-empty-state">
+            <div className="muted plan-empty-text">
               Set your target date and click <strong>Generate study plan</strong> to get a personalised schedule.
             </div>
-            <p className="muted small" style={{ marginTop: 8 }}>
+            <p className="muted small field-hint">
               The plan uses your current mastery data to prioritise weak areas and unmastered concepts.
             </p>
           </div>

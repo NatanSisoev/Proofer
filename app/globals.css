@@ -828,10 +828,14 @@ details[open].practice-history > summary::before { transform: rotate(90deg); }
 .form-input {
   background: var(--bg-soft); border: 1px solid var(--border);
   color: var(--text); border-radius: 8px; padding: 8px 12px;
-  font-size: 14px; width: 100%;
+  font-size: 14px; width: 100%; color-scheme: light;
 }
+[data-theme="dark"] .form-input { color-scheme: dark; }
+.study-plan-grid { gap: 20px; margin-top: 20px; }
 .area-stat-row { display: flex; justify-content: space-between; margin-bottom: 3px; font-size: 13px; }
 .center-panel { text-align: center; padding: 40px; }
+.plan-empty-state { background: var(--bg-soft); }
+.plan-empty-text { font-size: 14px; }
 .regen-row { margin-top: 20px; padding-top: 14px; border-top: 1px solid var(--border); display: flex; gap: 10px; }
 
 /* related edges (quality page) */
