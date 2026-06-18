@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { execFile } from "child_process";
 import { promisify } from "util";
 import { join } from "path";
+import { clearLLMCache } from "@/lib/llm";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 120;
@@ -40,6 +41,9 @@ export async function POST() {
     // that request crash on a closed handle. WAL mode allows the stale
     // connection to coexist harmlessly until it's garbage-collected.
     global.__prooferDb = undefined;
+    // Clear the LLM cache so any explain/compare/study-plan responses that
+    // referenced old note content are regenerated on the next request.
+    clearLLMCache();
     const summary = stdout.split("\n").filter(Boolean).slice(-6).join("\n");
     return NextResponse.json({ ok: true, summary });
   } catch (e: any) {

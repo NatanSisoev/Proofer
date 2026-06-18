@@ -1,5 +1,56 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { createHash } from "crypto";
+import { db } from "./db";
 import type { NodeRow } from "./db";
+
+// ===========================================================================
+// LLM response cache — SQLite-backed, 7-day TTL, keyed by SHA-256 of inputs.
+// Only used for the "read-only" explanation/comparison/study-plan calls, never
+// for problem generation or grading (which must be fresh per attempt).
+// ===========================================================================
+const CACHE_TTL_SECONDS = 7 * 24 * 60 * 60; // 7 days
+
+function cacheKey(fn: string, input: unknown): string {
+  return createHash("sha256")
+    .update(fn + "\0" + JSON.stringify(input))
+    .digest("hex");
+}
+
+function cacheGet(key: string): string | null {
+  try {
+    const row = db().prepare(
+      "SELECT value, created_at FROM llm_cache WHERE key = ?"
+    ).get(key) as { value: string; created_at: number } | undefined;
+    if (!row) return null;
+    const age = Math.floor(Date.now() / 1000) - row.created_at;
+    if (age > CACHE_TTL_SECONDS) {
+      db().prepare("DELETE FROM llm_cache WHERE key = ?").run(key);
+      return null;
+    }
+    return row.value;
+  } catch {
+    return null; // cache errors must never break the app
+  }
+}
+
+function cacheSet(key: string, value: string): void {
+  try {
+    db().prepare(
+      "INSERT OR REPLACE INTO llm_cache (key, value, created_at) VALUES (?, ?, ?)"
+    ).run(key, value, Math.floor(Date.now() / 1000));
+  } catch {
+    // ignore write failures
+  }
+}
+
+/** Clear the entire LLM cache (called on vault sync so stale content is dropped). */
+export function clearLLMCache(): void {
+  try {
+    db().prepare("DELETE FROM llm_cache").run();
+  } catch {
+    // ignore
+  }
+}
 
 // Provider selection: Gemini (free tier) wins if its key is set; else Anthropic;
 // else a demo stub. The LLM layer is the only provider-aware part of the app.
@@ -148,6 +199,9 @@ export async function explainConcept(
   prereqs: string[]
 ): Promise<string> {
   if (PROVIDER === "none") return "";
+  const ck = cacheKey("explainConcept", { id: node.id, prereqs });
+  const hit = cacheGet(ck);
+  if (hit) return hit;
   const prompt = [
     `Explain the concept "${node.title}" to a student who already knows: ${prereqs.join(", ") || "the basics"}.`,
     node.type ? `This is a ${node.type}.` : "",
@@ -159,6 +213,7 @@ export async function explainConcept(
     .filter(Boolean)
     .join("\n");
 
+  let result = "";
   if (PROVIDER === "gemini") {
     const resp = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_KEY}`,
@@ -173,19 +228,17 @@ export async function explainConcept(
     );
     if (!resp.ok) throw new Error(await resp.text());
     const data = await resp.json();
-    return data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ?? "";
-  }
-
-  if (PROVIDER === "anthropic" && anthropic) {
+    result = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ?? "";
+  } else if (PROVIDER === "anthropic" && anthropic) {
     const msg = await anthropic.messages.create({
       model: ANTHROPIC_GRADE_MODEL,
       max_tokens: 1200,
       messages: [{ role: "user", content: prompt }],
     });
-    return (msg.content[0] as any)?.text?.trim() ?? "";
+    result = (msg.content[0] as any)?.text?.trim() ?? "";
   }
-
-  return "";
+  if (result) cacheSet(ck, result);
+  return result;
 }
 
 const HINT_SCHEMA_G = {
@@ -437,6 +490,9 @@ export async function compareConcepts(
   nodeB: NodeRow
 ): Promise<string> {
   if (PROVIDER === "none") return "";
+  const ck = cacheKey("compareConcepts", { a: nodeA.id, b: nodeB.id });
+  const hit = cacheGet(ck);
+  if (hit) return hit;
   const prompt = [
     `Compare and contrast these two mathematical concepts:\n`,
     `CONCEPT A: ${nodeA.title}`,
@@ -457,6 +513,7 @@ export async function compareConcepts(
     `Be concise and precise. Use LaTeX ($...$) for all mathematics. Address the student as "you".`,
   ].filter(Boolean).join("\n");
 
+  let result = "";
   if (PROVIDER === "gemini") {
     const resp = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_KEY}`,
@@ -471,19 +528,17 @@ export async function compareConcepts(
     );
     if (!resp.ok) throw new Error(await resp.text());
     const data = await resp.json();
-    return data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ?? "";
-  }
-
-  if (PROVIDER === "anthropic" && anthropic) {
+    result = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ?? "";
+  } else if (PROVIDER === "anthropic" && anthropic) {
     const msg = await anthropic.messages.create({
       model: ANTHROPIC_GRADE_MODEL,
       max_tokens: 2000,
       messages: [{ role: "user", content: prompt }],
     });
-    return (msg.content[0] as any)?.text?.trim() ?? "";
+    result = (msg.content[0] as any)?.text?.trim() ?? "";
   }
-
-  return "";
+  if (result) cacheSet(ck, result);
+  return result;
 }
 
 // ===========================================================================
@@ -505,6 +560,9 @@ export async function reExplainConcept(
   angle: ExplainAngle = "intuitive"
 ): Promise<string> {
   if (PROVIDER === "none") return "";
+  const ck = cacheKey("reExplainConcept", { id: node.id, prereqs, angle });
+  const hit = cacheGet(ck);
+  if (hit) return hit;
   const angleGuide = ANGLE_DESC[angle];
   const prompt = [
     `Re-explain the mathematical concept "${node.title}" from a DIFFERENT ANGLE than a standard textbook.`,
@@ -517,6 +575,7 @@ export async function reExplainConcept(
     `\nWrite 2–4 focused paragraphs. Use LaTeX ($...$) for mathematics. Address the student as "you". Do NOT just restate the definition — add genuine insight from this angle.`,
   ].filter(Boolean).join("\n");
 
+  let result = "";
   if (PROVIDER === "gemini") {
     const resp = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_KEY}`,
@@ -531,19 +590,17 @@ export async function reExplainConcept(
     );
     if (!resp.ok) throw new Error(await resp.text());
     const data = await resp.json();
-    return data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ?? "";
-  }
-
-  if (PROVIDER === "anthropic" && anthropic) {
+    result = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ?? "";
+  } else if (PROVIDER === "anthropic" && anthropic) {
     const msg = await anthropic.messages.create({
       model: ANTHROPIC_GRADE_MODEL,
       max_tokens: 1500,
       messages: [{ role: "user", content: prompt }],
     });
-    return (msg.content[0] as any)?.text?.trim() ?? "";
+    result = (msg.content[0] as any)?.text?.trim() ?? "";
   }
-
-  return "";
+  if (result) cacheSet(ck, result);
+  return result;
 }
 
 // ===========================================================================
@@ -667,8 +724,13 @@ export type StudyPlanInput = {
 /** Generate a markdown study plan for an upcoming exam/deadline. */
 export async function generateStudyPlan(input: StudyPlanInput): Promise<string> {
   if (PROVIDER === "none") return "";
-
+  // Cache key includes the date so a plan generated "today" for a given target
+  // is reused on the same calendar day rather than burning an API call per page
+  // load, but automatically invalidates the next day (mastery may have changed).
   const today = new Date().toISOString().slice(0, 10);
+  const ck = cacheKey("generateStudyPlan", { ...input, today });
+  const hit = cacheGet(ck);
+  if (hit) return hit;
   const daysLeft = Math.ceil((new Date(input.targetDate).getTime() - new Date(today).getTime()) / 86400000);
   const weeksLeft = Math.max(1, Math.round(daysLeft / 7));
 
@@ -692,6 +754,7 @@ export async function generateStudyPlan(input: StudyPlanInput): Promise<string> 
     `Be specific: name actual concepts and areas from the data. Use bullet points. Keep it under 600 words.`,
   ].filter(Boolean).join("\n");
 
+  let result = "";
   if (PROVIDER === "gemini") {
     const resp = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_KEY}`,
@@ -706,19 +769,17 @@ export async function generateStudyPlan(input: StudyPlanInput): Promise<string> 
     );
     if (!resp.ok) throw new Error(await resp.text());
     const data = await resp.json();
-    return data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ?? "";
-  }
-
-  if (PROVIDER === "anthropic" && anthropic) {
+    result = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ?? "";
+  } else if (PROVIDER === "anthropic" && anthropic) {
     const msg = await anthropic.messages.create({
       model: ANTHROPIC_GRADE_MODEL,
       max_tokens: 2000,
       messages: [{ role: "user", content: prompt }],
     });
-    return (msg.content[0] as any)?.text?.trim() ?? "";
+    result = (msg.content[0] as any)?.text?.trim() ?? "";
   }
-
-  return "";
+  if (result) cacheSet(ck, result);
+  return result;
 }
 
 // ===========================================================================

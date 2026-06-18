@@ -105,6 +105,16 @@ CREATE TABLE IF NOT EXISTS settings (
   value TEXT NOT NULL
 );
 
+-- LLM response cache: key = SHA-256 of (function name + serialised inputs),
+-- value = the generated text, created_at = Unix epoch seconds.
+-- TTL is enforced in application code (7 days). Cleared on vault sync so
+-- stale explanations don't persist after content updates.
+CREATE TABLE IF NOT EXISTS llm_cache (
+  key        TEXT PRIMARY KEY,
+  value      TEXT NOT NULL,
+  created_at INTEGER NOT NULL
+);
+
 -- Generated problems live here so the ideal solution / rubric stay server-side
 -- (the student grades against a problemId, never sees the answer key).
 CREATE TABLE IF NOT EXISTS problems (
