@@ -390,6 +390,7 @@ button.know.on { background: var(--green-soft); border-color: var(--green-border
   height: 48px; display: flex; align-items: center; justify-content: space-between;
 }
 .nav-links { display: flex; align-items: center; gap: 4px; overflow-x: auto; scrollbar-width: none; }
+.nav-actions { display: flex; gap: 12px; align-items: center; }
 .nav-links::-webkit-scrollbar { display: none; }
 .nav-brand { font-weight: 700; font-size: 15px; color: var(--text); letter-spacing: -0.01em; white-space: nowrap; flex-shrink: 0; margin-right: 4px; }
 .nav-brand:hover { text-decoration: none; color: var(--text); }

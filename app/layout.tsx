@@ -39,7 +39,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <Link href="/" className="nav-brand">Proofer</Link>
               <NavLinks />
             </div>
-            <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+            <div className="nav-actions">
               <DailyGoalIndicator />
               <SearchTrigger />
               <Link href="/settings" className="nav-link" title="Settings">Settings</Link>
