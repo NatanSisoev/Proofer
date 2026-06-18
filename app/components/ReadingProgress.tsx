@@ -19,17 +19,8 @@ export default function ReadingProgress() {
   if (pct <= 0 || pct >= 100) return null;
 
   return (
-    <div style={{
-      position: "fixed", top: 48, left: 0, right: 0, height: 2, zIndex: 99,
-      background: "var(--border)",
-      pointerEvents: "none",
-    }}>
-      <div style={{
-        height: "100%",
-        width: `${pct}%`,
-        background: "var(--accent)",
-        transition: "width 0.1s linear",
-      }} />
+    <div className="reading-progress-track">
+      <div className="reading-progress-fill" style={{ width: `${pct}%` }} />
     </div>
   );
 }

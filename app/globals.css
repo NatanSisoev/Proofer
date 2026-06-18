@@ -384,6 +384,10 @@ button.know.on { background: var(--green-soft); border-color: var(--green-border
 .mastery-chip .bar { width: 120px; }
 .sparkline-svg { display: block; overflow: visible; }
 
+/* reading progress bar */
+.reading-progress-track { position: fixed; top: 48px; left: 0; right: 0; height: 2px; z-index: 99; background: var(--border); pointer-events: none; }
+.reading-progress-fill { height: 100%; background: var(--accent); transition: width 0.1s linear; }
+
 /* nav */
 .app-nav {
   position: fixed; top: 0; left: 0; right: 0; z-index: 100;
