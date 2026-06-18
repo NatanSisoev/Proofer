@@ -114,7 +114,7 @@ export default function RelatedEdges({ initial, hasKey }: { initial: RelatedEdge
               </select>
             </label>
             <button
-              className="pill pill-accent" style={{ cursor: "pointer" }}
+              className="pill pill-accent"
               disabled={classifyingAll}
               onClick={() => classifyBatch(notYetClassified.slice(0, batchSize))}
             >

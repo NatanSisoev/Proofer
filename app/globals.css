@@ -891,6 +891,8 @@ details[open].practice-history > summary::before { transform: rotate(90deg); }
 
 /* study queue */
 .session-subtitle { margin: 0 0 20px; font-size: 13px; }
+.summary-areas { margin: 12px 0 0; font-size: 12px; }
+.summary-area-count { opacity: 0.6; font-size: 11px; }
 .result-mastery { margin-left: auto; display: flex; align-items: center; gap: 8px; }
 .session-actions { display: flex; gap: 12px; margin-top: 20px; flex-wrap: wrap; }
 .session-progress-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }

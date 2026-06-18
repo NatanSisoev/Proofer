@@ -342,6 +342,10 @@ export default function StudyQueue({
     const avgTimeSec = timedResults.length > 0
       ? Math.round(timedResults.reduce((s, r) => s + (r.elapsedSec ?? 0), 0) / timedResults.length)
       : null;
+    const areaMap = new Map<string, number>();
+    for (const r of results) {
+      if (r.node.area) areaMap.set(r.node.area, (areaMap.get(r.node.area) ?? 0) + 1);
+    }
 
     return (
       <div className="session-summary">
@@ -377,6 +381,20 @@ export default function StudyQueue({
             </div>
           )}
         </div>
+
+        {areaMap.size > 0 && (
+          <p className="muted small summary-areas">
+            {[...areaMap.entries()]
+              .sort((a, b) => b[1] - a[1])
+              .map(([area, count], i) => (
+                <span key={area}>
+                  {i > 0 && " · "}
+                  <Link href={`/browse?area=${encodeURIComponent(area)}`}>{area}</Link>
+                  {" "}<span className="summary-area-count">×{count}</span>
+                </span>
+              ))}
+          </p>
+        )}
 
         {results.some((r) => r.justMastered) && (
           <div className="mastered-banner">
