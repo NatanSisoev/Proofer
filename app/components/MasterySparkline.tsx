@@ -28,7 +28,7 @@ export default function MasterySparkline({ nodeId }: { nodeId: string }) {
       width={W}
       height={H}
       viewBox={`0 0 ${W} ${H}`}
-      style={{ display: "block", overflow: "visible" }}
+      className="sparkline-svg"
       aria-label={`Mastery history: ${history.length} data points`}
     >
       <path d={fill} fill={color} opacity={0.12} />

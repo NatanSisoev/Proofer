@@ -30,7 +30,7 @@ export default function HistoryAreaFilter({
         {areas.map((a) => <option key={a} value={a}>{a}</option>)}
       </select>
       <noscript>
-        <button type="submit" className="btn-ghost" style={{ fontSize: 12, padding: "3px 8px" }}>Go</button>
+        <button type="submit" className="btn-ghost history-filter-go">Go</button>
       </noscript>
     </form>
   );

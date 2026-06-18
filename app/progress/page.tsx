@@ -252,7 +252,7 @@ export default function ProgressPage() {
                       <Link href={`/browse?area=${encodeURIComponent(a.area)}`} className="area-name">
                         {a.area}
                       </Link>
-                      <div className="bar" style={{ width: 60, flexShrink: 0 }}>
+                      <div className="bar area-row-bar">
                         <span style={{ width: `${pct}%`, background: color }} />
                       </div>
                       <span className="muted small area-pct">{pct}%</span>

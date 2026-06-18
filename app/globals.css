@@ -382,6 +382,7 @@ button.know.on { background: var(--green-soft); border-color: var(--green-border
   background: var(--bg-soft); border-radius: 10px; border: 1px solid var(--border);
 }
 .mastery-chip .bar { width: 120px; }
+.sparkline-svg { display: block; overflow: visible; }
 
 /* nav */
 .app-nav {
@@ -797,6 +798,7 @@ details[open].practice-history > summary::before { transform: rotate(90deg); }
 .area-name { font-size: 13px; color: var(--text); min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .area-pct { width: 30px; text-align: right; flex-shrink: 0; font-size: 11px; }
 .area-count { font-size: 10px; width: 32px; text-align: right; flex-shrink: 0; }
+.area-row-bar { width: 60px; flex-shrink: 0; }
 
 /* review forecast chart */
 .forecast-chart { display: flex; gap: 6px; align-items: flex-end; height: 64px; margin-bottom: 6px; }
@@ -824,6 +826,7 @@ details[open].practice-history > summary::before { transform: rotate(90deg); }
 .filter-group { display: flex; gap: 4px; align-items: center; }
 .filter-clear { align-self: center; font-size: 11px; text-decoration: underline; }
 .filter-form { display: flex; gap: 4px; align-items: center; }
+.history-filter-go { font-size: 12px; padding: 3px 8px; }
 
 /* history page: attempt card layout */
 .attempt-row-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 6px; }
