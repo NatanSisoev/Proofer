@@ -186,6 +186,7 @@ export default function StudyQueue({
   // Keyboard navigation handler
   useEffect(() => {
     function handler(e: KeyboardEvent) {
+      if (done) return; // summary screen — let global shortcuts fire
       const inText = e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLInputElement;
       if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
         e.preventDefault();
