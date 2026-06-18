@@ -4,7 +4,7 @@ import { P_INIT } from "@/lib/mastery";
 
 export const dynamic = "force-dynamic";
 
-type QueueNode = { id: string; title: string; type: string | null; area: string | null; mastery_p?: number };
+type QueueNode = { id: string; title: string; type: string | null; area: string | null; mastery_p?: number; reason?: string };
 
 export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl;
@@ -30,8 +30,7 @@ export async function GET(req: NextRequest) {
       rows = ids.map((id) => byId.get(id)).filter(Boolean) as QueueNode[];
     }
   } else if (mode === "due") {
-    // concepts past their review due date
-    rows = db().prepare(`
+    rows = (db().prepare(`
       SELECT n.id, n.title, n.type, n.area
       FROM nodes n
       JOIN mastery m ON m.node_id = n.id
@@ -41,10 +40,9 @@ export async function GET(req: NextRequest) {
         AND julianday('now') - julianday(m.last_seen) > m.half_life * 0.8
       ORDER BY (julianday('now') - julianday(m.last_seen)) / m.half_life DESC
       LIMIT ?
-    `).all(P_INIT, limit) as QueueNode[];
+    `).all(P_INIT, limit) as QueueNode[]).map((r) => ({ ...r, reason: "due for review" }));
   } else if (mode === "weak") {
-    // practiced but still low mastery
-    rows = db().prepare(`
+    rows = (db().prepare(`
       SELECT n.id, n.title, n.type, n.area
       FROM nodes n
       JOIN mastery m ON m.node_id = n.id
@@ -53,10 +51,9 @@ export async function GET(req: NextRequest) {
         AND m.p >= ?
       ORDER BY m.p ASC
       LIMIT ?
-    `).all(MASTERY_THRESHOLD, P_INIT * 0.9, limit) as QueueNode[];
+    `).all(MASTERY_THRESHOLD, P_INIT * 0.9, limit) as QueueNode[]).map((r) => ({ ...r, reason: "weak spot" }));
   } else if (mode === "bookmarks") {
-    // bookmarked concepts that aren't fully mastered yet
-    rows = db().prepare(`
+    rows = (db().prepare(`
       SELECT n.id, n.title, n.type, n.area
       FROM nodes n
       JOIN bookmarks b ON b.node_id = n.id
@@ -64,10 +61,9 @@ export async function GET(req: NextRequest) {
       WHERE n.exists_ = 1
       ORDER BY COALESCE(m.p, 0) ASC
       LIMIT ?
-    `).all(limit) as QueueNode[];
+    `).all(limit) as QueueNode[]).map((r) => ({ ...r, reason: "bookmarked" }));
   } else if (mode === "area" && area) {
-    // frontier concepts in a specific area
-    rows = db().prepare(`
+    rows = (db().prepare(`
       SELECT n.id, n.title, n.type, n.area
       FROM nodes n
       LEFT JOIN mastery m ON m.node_id = n.id
@@ -76,7 +72,7 @@ export async function GET(req: NextRequest) {
         AND COALESCE(m.p, 0) < ?
       ORDER BY COALESCE(m.p, 0) ASC
       LIMIT ?
-    `).all(area, MASTERY_THRESHOLD, limit) as QueueNode[];
+    `).all(area, MASTERY_THRESHOLD, limit) as QueueNode[]).map((r) => ({ ...r, reason: undefined }));
   } else {
     // smart: due first → in-progress frontier → fresh frontier → weak
     const due = db().prepare(`
@@ -129,17 +125,17 @@ export async function GET(req: NextRequest) {
     `).all(MASTERY_THRESHOLD) as QueueNode[];
 
     const seen = new Set([...due.map((r) => r.id)]);
-    const combined: QueueNode[] = [...due];
+    const combined: QueueNode[] = [...due.map((r) => ({ ...r, reason: "due for review" }))];
     for (const r of inProgress) {
       if (!seen.has(r.id) && combined.length < limit) {
         seen.add(r.id);
-        combined.push(r);
+        combined.push({ ...r, reason: "in progress" });
       }
     }
     for (const r of frontier) {
       if (!seen.has(r.id) && combined.length < limit) {
         seen.add(r.id);
-        combined.push(r);
+        combined.push({ ...r, reason: "ready to learn" });
       }
     }
 
@@ -158,7 +154,7 @@ export async function GET(req: NextRequest) {
       for (const r of weak) {
         if (!seen.has(r.id)) {
           seen.add(r.id);
-          combined.push(r);
+          combined.push({ ...r, reason: "weak spot" });
         }
       }
     }

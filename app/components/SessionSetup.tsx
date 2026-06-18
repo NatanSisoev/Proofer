@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import StudyQueue, { SESSION_KEY, type SavedSession } from "./StudyQueue";
 
-type QueueNode = { id: string; title: string; type: string | null; area: string | null; mastery_p?: number };
+type QueueNode = { id: string; title: string; type: string | null; area: string | null; mastery_p?: number; reason?: string };
 
 type Mode = "smart" | "due" | "weak" | "area" | "bookmarks" | "custom";
 
@@ -415,7 +415,11 @@ export default function SessionSetup({
             >
               {n.title}
             </Link>
-            {n.area && <span className="muted small" style={{ flexShrink: 0 }}>{n.area}</span>}
+            {n.reason && (
+              <span className={`reason-tag reason-${n.reason.replace(/\s+/g, "-")}`}>
+                {n.reason}
+              </span>
+            )}
             <div className="preview-mastery">
               <div className="bar bar-mini">
                 <span style={{ width: `${Math.round((n.mastery_p ?? 0) * 100)}%` }} />
