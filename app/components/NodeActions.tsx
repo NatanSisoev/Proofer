@@ -110,7 +110,7 @@ export default function NodeActions({ nodeId, nodePath, hasLLM }: Props) {
 
       {explanation && (
         <div className="panel explain-panel">
-          <h2 style={{ color: "var(--accent)", marginBottom: 10 }}>AI explanation</h2>
+          <h2 className="explain-heading">AI explanation</h2>
           <div className="markdown"><Markdown>{explanation}</Markdown></div>
         </div>
       )}

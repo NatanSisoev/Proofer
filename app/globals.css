@@ -411,6 +411,19 @@ button.know.on { background: var(--green-soft); border-color: var(--green-border
 }
 .theme-toggle:hover { color: var(--text); background: var(--bg-soft); }
 
+/* daily goal indicator pill */
+.goal-pill {
+  display: flex; align-items: center; gap: 6px;
+  text-decoration: none; padding: 3px 8px;
+  border-radius: 6px; border: 1px solid var(--border);
+  transition: border-color 0.15s;
+}
+.goal-pill:hover { text-decoration: none; border-color: var(--accent-soft); }
+.goal-pill-track { position: relative; width: 36px; height: 6px; background: var(--bg); border-radius: 999px; overflow: hidden; }
+.goal-pill-fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 999px; transition: width 0.4s ease; }
+.goal-pill-count { font-size: 11px; font-weight: 600; letter-spacing: 0.01em; }
+.goal-pill-streak { font-size: 11px; color: var(--muted); }
+
 /* browse */
 .area-grid {
   display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px;
@@ -805,6 +818,7 @@ details[open].practice-history > summary::before { transform: rotate(90deg); }
 .filter-bar { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
 .filter-group { display: flex; gap: 4px; align-items: center; }
 .filter-clear { align-self: center; font-size: 11px; text-decoration: underline; }
+.filter-form { display: flex; gap: 4px; align-items: center; }
 
 /* history page: attempt card layout */
 .attempt-row-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 6px; }
@@ -919,6 +933,7 @@ details[open].practice-history > summary::before { transform: rotate(90deg); }
 .action-success { color: var(--green); font-size: 13px; margin: 0; }
 .code-preview { white-space: pre-wrap; font-size: 12.5px; line-height: 1.55; max-height: 500px; overflow: auto; background: var(--bg); padding: 14px; border-radius: 8px; border: 1px solid var(--border); font-family: ui-monospace, monospace; }
 .explain-panel { background: var(--bg-soft); margin-top: 4px; }
+.explain-heading { color: var(--accent); margin-bottom: 10px; }
 .confirm-row { display: flex; gap: 8px; margin-top: 12px; }
 
 /* settings page */

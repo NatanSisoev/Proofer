@@ -16,7 +16,7 @@ export default function HistoryAreaFilter({
   kind?: string;
 }) {
   return (
-    <form method="GET" action="/history" style={{ display: "flex", gap: 4, alignItems: "center" }}>
+    <form method="GET" action="/history" className="filter-form">
       {verdict && <input type="hidden" name="verdict" value={verdict} />}
       {kind && <input type="hidden" name="kind" value={kind} />}
       <input type="hidden" name="page" value="1" />
