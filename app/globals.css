@@ -295,6 +295,7 @@ button.know.on { background: var(--green-soft); border-color: var(--green-border
 .markdown li { margin-bottom: 4px; }
 
 .graph-shell { height: 460px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg); overflow: hidden; position: relative; }
+.graph-fill { width: 100%; height: 100%; }
 .graph-legend { position: absolute; bottom: 8px; left: 10px; font-size: 11px; color: var(--muted); display: flex; gap: 12px; }
 .graph-legend span::before { content: "—"; margin-right: 3px; font-weight: 700; }
 
@@ -1059,3 +1060,4 @@ details[open].practice-history > summary::before { transform: rotate(90deg); }
 .warn-text { font-size: 13.5px; color: var(--amber); }
 .cycle-arrow { font-size: 12px; }
 .graph-tooltip { position: fixed; transform: translateX(-50%); background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 6px 12px; font-size: 12.5px; pointer-events: none; z-index: 200; white-space: nowrap; }
+.tooltip-mastery { margin-left: 8px; }

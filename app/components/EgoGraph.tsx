@@ -134,7 +134,7 @@ export default function EgoGraph({ slug, depth = 1 }: { slug: string; depth?: nu
 
   return (
     <div className="graph-shell">
-      <div ref={ref} style={{ width: "100%", height: "100%" }} />
+      <div ref={ref} className="graph-fill" />
       <div className="graph-legend">
         <span style={{ color: "var(--accent)" }}>depends on</span>
         <span style={{ color: "var(--purple)" }}>generalizes</span>

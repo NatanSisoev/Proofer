@@ -330,7 +330,7 @@ export default function GlobalGraph({ initialArea }: { initialArea?: string }) {
         <div className="graph-tooltip" style={{ left: tooltip.x, top: tooltip.y }}>
           <strong>{tooltip.title}</strong>
           {tooltip.type && <span className="muted"> · {tooltip.type}</span>}
-          <span style={{ marginLeft: 8, color: tooltip.mastery >= 0.8 ? "var(--green)" : tooltip.mastery > 0 ? "var(--amber)" : "var(--muted)" }}>
+          <span className="tooltip-mastery" style={{ color: tooltip.mastery >= 0.8 ? "var(--green)" : tooltip.mastery > 0 ? "var(--amber)" : "var(--muted)" }}>
             {Math.round(tooltip.mastery * 100)}% mastery
           </span>
         </div>
