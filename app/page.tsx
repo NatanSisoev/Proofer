@@ -3,7 +3,7 @@ import SearchBox from "./components/SearchBox";
 import RandomConceptButton from "./components/RandomConceptButton";
 import QuickKnown from "./components/QuickKnown";
 import SnoozeButton from "./components/SnoozeButton";
-import { frontier, stats, dueForReview, todayStats, recentlyPracticed, bookmarkedNodes, conceptOfDay } from "@/lib/queries";
+import { frontier, stats, dueForReview, todayStats, recentlyPracticed, bookmarkedNodes, conceptOfDay, areaMastery } from "@/lib/queries";
 import { getDailyGoal } from "@/lib/settings";
 
 export const dynamic = "force-dynamic";
@@ -31,6 +31,7 @@ export default function Home() {
   const recent = recentlyPracticed(6);
   const bookmarks = bookmarkedNodes();
   const spotlight = conceptOfDay();
+  const areas = areaMastery().slice(0, 12);
 
   return (
     <div className="wrap">
@@ -263,14 +264,23 @@ export default function Home() {
               <h2>Areas</h2>
               <Link href="/browse" className="small">Browse all →</Link>
             </div>
-            {s.areas.slice(0, 12).map((a) => (
-              <div className="frontier-item" key={a.area}>
-                <Link href={`/browse?area=${encodeURIComponent(a.area)}`} className="text-link">
-                  {a.area}
-                </Link>
-                <span className="pill">{a.c}</span>
-              </div>
-            ))}
+            {areas.map((a) => {
+              const pct = Math.round(a.avg_p * 100);
+              const color = pct >= 80 ? "var(--green)" : pct >= 40 ? "var(--amber)" : "var(--muted)";
+              return (
+                <div className="frontier-item area-home-row" key={a.area}>
+                  <Link href={`/browse?area=${encodeURIComponent(a.area)}`} className="text-link area-home-name">
+                    {a.area}
+                  </Link>
+                  <div className="area-home-right">
+                    <div className="bar" style={{ width: 48 }}>
+                      <span style={{ width: `${pct}%`, background: color }} />
+                    </div>
+                    <span className="muted small" style={{ color, minWidth: 28, textAlign: "right" }}>{pct}%</span>
+                  </div>
+                </div>
+              );
+            })}
           </div>
 
           <div className="panel">
