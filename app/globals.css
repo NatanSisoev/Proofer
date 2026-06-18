@@ -26,10 +26,18 @@
   --edge-depends-on: #C9CDD8;
   --edge-generalizes: #D8D0E8;
   --edge-equivalent-to: #CFE0D5;
+  --edge-instance-of: #F0E4C5;
   --edge-contradicts: #E8D0D0;
   --edge-default: #D0D0CC;
   --graph-border: #D0D0CC;
   --graph-label: #374151;
+  /* Ego-graph node-type fill colors */
+  --node-definition: #C5D4E8;
+  --node-theorem: #D8D0E8;
+  --node-algorithm: #C5DCC0;
+  --node-example: #F0E4C5;
+  --node-default: #E8E8E4;
+  --node-ghost: #F5E8E8;
   --panel-translucent: rgba(255, 255, 255, 0.95);
 }
 
@@ -60,10 +68,17 @@
   --edge-depends-on: #4B4E5C;
   --edge-generalizes: #4A4264;
   --edge-equivalent-to: #3D5048;
+  --edge-instance-of: #524030;
   --edge-contradicts: #5C3E3E;
   --edge-default: #404249;
   --graph-border: #404249;
   --graph-label: #C5C9D1;
+  --node-definition: #3E4F6E;
+  --node-theorem: #4A4264;
+  --node-algorithm: #3E5244;
+  --node-example: #524030;
+  --node-default: #3A3B3F;
+  --node-ghost: #332323;
   --panel-translucent: rgba(26, 27, 30, 0.85);
   --panel-shadow: 0 1px 2px rgba(0,0,0,0.2);
 }
@@ -996,8 +1011,4 @@ details[open].practice-history > summary::before { transform: rotate(90deg); }
 
 /* Settings / Quality */
 .field-select-lg { width: 100%; max-width: 260px; }
-.btn-download { display: inline-block; font-size: 13px; }
-.model-code { margin-left: 6px; font-size: 12px; }
-.warn-text { font-size: 13.5px; color: var(--amber); }
-.cycle-arrow { font-size: 12px; }
-.graph-tooltip { position: fixed; transform: translateX(-50%); background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 6px 12px; font-size: 12.5px; pointer-events: none; z-index: 200; white-space: nowrap; }
+.btn-

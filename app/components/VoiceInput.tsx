@@ -98,7 +98,7 @@ export default function VoiceInput({ onTranscript, disabled, lang = "en-US" }: P
         disabled={disabled}
         title={listening ? "Stop recording" : "Speak your answer"}
         style={{
-          background: listening ? "#F5E8E8" : "var(--bg-soft)",
+          background: listening ? "var(--red-soft)" : "var(--bg-soft)",
           border: `1px solid ${listening ? "var(--red)" : "var(--border)"}`,
           borderRadius: 10,
           padding: "10px 14px",
@@ -133,5 +133,3 @@ export default function VoiceInput({ onTranscript, disabled, lang = "en-US" }: P
         <span style={{ fontSize: 12, color: "var(--red)" }}>{error}</span>
       )}
     </div>
-  );
-}

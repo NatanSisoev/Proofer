@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd /c/Users/natan/Mathematics && echo \"---TOP---\" && ls && echo \"---COUNT---\" && find . -name '*.md' -not -path './.git/*' -not -path './.obsidian/*' | wc -l && echo \"---TEMPLATE---\" && find . -iname 'template*.md' | head)"
+    ]
+  }
+}

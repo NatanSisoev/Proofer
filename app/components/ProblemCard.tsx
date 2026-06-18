@@ -213,6 +213,7 @@ export function GradeFeedback({
             onKeyDown={(e) => {
               if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
                 e.preventDefault();
+                e.nativeEvent.stopPropagation();
                 if (followUp.trim()) onSubmitFollowUp();
               }
             }}

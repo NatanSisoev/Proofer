@@ -6,7 +6,11 @@ import LinkSuggestions from "@/app/components/LinkSuggestions";
 import RelatedEdges from "@/app/components/RelatedEdges";
 import { HAS_KEY } from "@/lib/llm";
 
-export const dynamic = "force-dynamic";
+// All queries on this page are graph-structural (don't vary per user request),
+// so we can use Next.js ISR instead of force-dynamic. Each tab URL is cached
+// independently (/quality vs /quality?tab=links etc.), and each expensive query
+// is wrapped in unstable_cache for in-process data memoisation as well.
+export const revalidate = 60;
 
 // linkSuggestions() is an O(n^2) scan over all note content — cache it
 // instead of recomputing on every /quality?tab=links request.
@@ -29,6 +33,20 @@ const getDependencyCycles = unstable_cache(
 const getNoteQuality = unstable_cache(
   async () => noteQuality(),
   ["note-quality"],
+  { revalidate: 120 }
+);
+
+// relatedEdgesWithNodes() and relatedEdgeCount() only change on vault sync —
+// cache them so the edges tab and count badge are instant.
+const getRelatedEdges = unstable_cache(
+  async (limit: number) => relatedEdgesWithNodes(limit),
+  ["related-edges"],
+  { revalidate: 120 }
+);
+
+const getRelatedEdgeCount = unstable_cache(
+  async () => relatedEdgeCount(),
+  ["related-edge-count"],
   { revalidate: 120 }
 );
 
@@ -56,8 +74,8 @@ export default async function QualityPage({
 
   const suggestions = tab === "links" ? await getLinkSuggestions(60) : [];
   const cycles = await getDependencyCycles(40);
-  const relatedEdges = tab === "edges" ? relatedEdgesWithNodes(150) : [];
-  const relatedCount = relatedEdgeCount();
+  const relatedEdges = tab === "edges" ? await getRelatedEdges(150) : [];
+  const relatedCount = await getRelatedEdgeCount();
 
   // Generate an actionable summary
   const topIssue = Object.entries(byIssue).sort((a, b) => b[1] - a[1])[0];
@@ -184,24 +202,4 @@ export default async function QualityPage({
                   <span className="cycle-nodes">
                     {c.nodes.map((n, j) => (
                       <span key={j} className="cycle-node-pair">
-                        {j > 0 && <span className="muted" style={{ fontSize: 12 }}>{c.mutual ? "⇄" : "→"}</span>}
-                        <Link href={`/node/${encodeURIComponent(n)}`}>{n}</Link>
-                      </span>
-                    ))}
-                    {/* close the loop for cycles longer than a mutual pair */}
-                    {!c.mutual && (
-                      <span className="cycle-node-pair">
-                        <span className="muted cycle-arrow">→</span>
-                        <Link href={`/node/${encodeURIComponent(c.nodes[0])}`} className="muted">{c.nodes[0]}</Link>
-                      </span>
-                    )}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
+                        {j > 0 && <span className="muted" style={{ fontSize: 12 }}>
