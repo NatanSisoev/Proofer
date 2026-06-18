@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import StudyQueue, { SESSION_KEY, type SavedSession } from "./StudyQueue";
 
@@ -36,6 +37,8 @@ export default function SessionSetup({
   initialMode?: Mode;
   initialArea?: string;
 }) {
+  const searchParams = useSearchParams();
+  const modeFromUrl = searchParams.get("mode");
   const [mode, setMode] = useState<Mode>(initialMode);
   const [area, setArea] = useState<string>(initialArea || areas[0] || "");
   const [count, setCount] = useState(5);
@@ -53,6 +56,17 @@ export default function SessionSetup({
   const [customResults, setCustomResults] = useState<QueueNode[]>([]);
   const [customPicked, setCustomPicked] = useState<QueueNode[]>([]);
   const customDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Restore last-used mode from localStorage unless a mode was passed via URL
+  useEffect(() => {
+    if (!modeFromUrl) {
+      try {
+        const saved = localStorage.getItem("proofer-session-mode") as Mode | null;
+        const VALID: Mode[] = ["smart", "due", "weak", "area", "bookmarks", "custom"];
+        if (saved && VALID.includes(saved)) setMode(saved);
+      } catch {}
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     fetch("/api/session/stats").then((r) => r.json()).then(setCounts).catch(() => {});
@@ -187,7 +201,10 @@ export default function SessionSetup({
                   name="mode"
                   value={m.key}
                   checked={mode === m.key}
-                  onChange={() => setMode(m.key)}
+                  onChange={() => {
+                    setMode(m.key);
+                    try { localStorage.setItem("proofer-session-mode", m.key); } catch {}
+                  }}
                 />
                 <div className="mode-body">
                   <div className="mode-label-row">
