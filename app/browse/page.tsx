@@ -103,8 +103,9 @@ export default async function BrowsePage({
             <div className="bar">
               <span style={{ width: `${Math.round(a.avg_mastery * 100)}%` }} />
             </div>
-            <div className="small muted" style={{ marginTop: 4 }}>
-              avg mastery {Math.round(a.avg_mastery * 100)}%
+            <div className="area-card-stats">
+              <span className="small muted">avg {Math.round(a.avg_mastery * 100)}%</span>
+              <span className="small muted">{a.mastered}/{a.count} mastered</span>
             </div>
           </Link>
         ))}

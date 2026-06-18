@@ -426,6 +426,7 @@ button.know.on { background: var(--green-soft); border-color: var(--green-border
   transform: translateY(-1px);
 }
 .area-name { font-weight: 700; font-size: 15px; color: var(--text); margin-bottom: 4px; }
+.area-card-stats { display: flex; justify-content: space-between; margin-top: 4px; }
 
 .browse-filters {
   display: flex; flex-wrap: wrap; gap: 12px; align-items: center;

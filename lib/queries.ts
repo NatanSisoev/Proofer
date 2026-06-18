@@ -340,7 +340,7 @@ export function egoGraph(id: string, depth = 1) {
   };
 }
 
-export type BrowseArea = { area: string; count: number; avg_mastery: number };
+export type BrowseArea = { area: string; count: number; avg_mastery: number; mastered: number };
 export type BrowseNode = NodeRow & { mastery_p: number };
 
 export function browseAreas(): BrowseArea[] {
@@ -348,7 +348,8 @@ export function browseAreas(): BrowseArea[] {
     .prepare(
       `SELECT n.area,
               COUNT(*) AS count,
-              AVG(COALESCE(m.p, 0)) AS avg_mastery
+              AVG(COALESCE(m.p, 0)) AS avg_mastery,
+              SUM(CASE WHEN COALESCE(m.p, 0) >= 0.8 THEN 1 ELSE 0 END) AS mastered
          FROM nodes n
          LEFT JOIN mastery m ON m.node_id = n.id
         WHERE n.exists_ = 1 AND n.area IS NOT NULL
