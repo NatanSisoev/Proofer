@@ -100,6 +100,9 @@ export default function Home() {
               <div className="spotlight-meta">
                 {spotlight.type && <span className={`type-badge t-${spotlight.type}`}>{spotlight.type}</span>}
                 {spotlight.area && <span className="muted small">{spotlight.area}</span>}
+                <span className="pill label-xs">
+                  {spotlight.reason === "frontier" ? "all prereqs ready" : "unmastered"}
+                </span>
               </div>
               <Link
                 href={`/node/${encodeURIComponent(spotlight.id)}`}

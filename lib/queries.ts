@@ -917,7 +917,7 @@ export function bookmarkedNodes(): BrowseNode[] {
  * Prefers frontier concepts with content; falls back to any real concept.
  * Uses day-of-year mod count for deterministic daily rotation.
  */
-export function conceptOfDay(): (BrowseNode & { has_content: number }) | null {
+export function conceptOfDay(): (BrowseNode & { has_content: number; reason: "frontier" | "unmastered" }) | null {
   const dayIdx = Math.floor(Date.now() / 86400000); // days since epoch
 
   // Try frontier first (all prereqs known, has content)
@@ -942,7 +942,7 @@ export function conceptOfDay(): (BrowseNode & { has_content: number }) | null {
     .all() as (BrowseNode & { has_content: number })[];
 
   if (frontierWithContent.length > 0) {
-    return frontierWithContent[dayIdx % frontierWithContent.length];
+    return { ...frontierWithContent[dayIdx % frontierWithContent.length], reason: "frontier" };
   }
 
   // Fallback: any concept with content, not yet mastered
@@ -958,7 +958,7 @@ export function conceptOfDay(): (BrowseNode & { has_content: number }) | null {
     )
     .all() as (BrowseNode & { has_content: number })[];
 
-  if (all.length > 0) return all[dayIdx % all.length];
+  if (all.length > 0) return { ...all[dayIdx % all.length], reason: "unmastered" };
   return null;
 }
 
