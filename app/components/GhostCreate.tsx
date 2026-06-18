@@ -40,7 +40,6 @@ export default function GhostCreate({ nodeId, nodeTitle, nodeArea }: Props) {
           value={type}
           onChange={(e) => setType(e.target.value)}
           className="filter-btn"
-          style={{ cursor: "pointer" }}
         >
           {TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
         </select>

@@ -260,14 +260,12 @@ export default function GlobalGraph({ initialArea }: { initialArea?: string }) {
           value={searchQ}
           onChange={(e) => setSearchQ(e.target.value)}
           placeholder="Highlight node…"
-          className="search-box"
-          style={{ fontSize: 12, padding: "5px 10px", maxWidth: 160 }}
+          className="search-box graph-search-input"
         />
         <select
           value={area}
           onChange={(e) => setArea(e.target.value)}
-          className="filter-btn"
-          style={{ fontSize: 13, padding: "5px 12px", cursor: "pointer" }}
+          className="filter-btn graph-area-select"
         >
           <option value="">All areas ({areas.reduce((s, a) => s + a.c, 0)} concepts)</option>
           {areas.map((a) => (
@@ -277,7 +275,7 @@ export default function GlobalGraph({ initialArea }: { initialArea?: string }) {
           ))}
         </select>
 
-        <label className="graph-label" style={{ cursor: "pointer" }}>
+        <label className="graph-label">
           <input
             type="checkbox"
             checked={hideMastered}
@@ -296,7 +294,7 @@ export default function GlobalGraph({ initialArea }: { initialArea?: string }) {
             step={10}
             value={minMastery}
             onChange={(e) => setMinMastery(Number(e.target.value))}
-            style={{ width: 80, accentColor: "var(--accent)" }}
+            className="graph-range"
           />
           <span style={{ width: 32 }}>{minMastery}%</span>
         </label>
