@@ -28,12 +28,14 @@ const KIND_OPTIONS: { key: ProblemKind; label: string; desc: string }[] = [
   { key: "counterexample",label: "Counter",        desc: "Find a counterexample" },
 ];
 
+type AreaOption = { area: string; count: number; avg_mastery: number };
+
 export default function SessionSetup({
   areas,
   initialMode = "smart",
   initialArea = "",
 }: {
-  areas: string[];
+  areas: AreaOption[];
   initialMode?: Mode;
   initialArea?: string;
 }) {
@@ -41,7 +43,7 @@ export default function SessionSetup({
   const modeFromUrl = searchParams.get("mode");
   const nodesFromUrl = searchParams.get("nodes");
   const [mode, setMode] = useState<Mode>(nodesFromUrl ? "custom" : initialMode);
-  const [area, setArea] = useState<string>(initialArea || areas[0] || "");
+  const [area, setArea] = useState<string>(initialArea || areas[0]?.area || "");
   const [count, setCount] = useState(5);
   const [preferKind, setPreferKind] = useState<ProblemKind>("any");
   const [loading, setLoading] = useState(false);
@@ -91,7 +93,7 @@ export default function SessionSetup({
     if (!initialArea) {
       try {
         const savedArea = localStorage.getItem("proofer-session-area");
-        if (savedArea && areas.includes(savedArea)) setArea(savedArea);
+        if (savedArea && areas.some((a) => a.area === savedArea)) setArea(savedArea);
       } catch {}
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -263,7 +265,11 @@ export default function SessionSetup({
                 }}
                 className="form-input"
               >
-                {areas.map((a) => <option key={a} value={a}>{a}</option>)}
+                {areas.map((a) => (
+                  <option key={a.area} value={a.area}>
+                    {a.area} — {a.count} concepts, {Math.round(a.avg_mastery * 100)}% avg
+                  </option>
+                ))}
               </select>
             </div>
           )}
