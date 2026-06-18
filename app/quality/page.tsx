@@ -202,4 +202,24 @@ export default async function QualityPage({
                   <span className="cycle-nodes">
                     {c.nodes.map((n, j) => (
                       <span key={j} className="cycle-node-pair">
-                        {j > 0 && <span className="muted" style={{ fontSize: 12 }}>
+                        {j > 0 && <span className="muted" style={{ fontSize: 12 }}>{c.mutual ? "⇄" : "→"}</span>}
+                        <Link href={`/node/${encodeURIComponent(n)}`}>{n}</Link>
+                      </span>
+                    ))}
+                    {/* close the loop for cycles longer than a mutual pair */}
+                    {!c.mutual && (
+                      <span className="cycle-node-pair">
+                        <span className="muted cycle-arrow">→</span>
+                        <Link href={`/node/${encodeURIComponent(c.nodes[0])}`} className="muted">{c.nodes[0]}</Link>
+                      </span>
+                    )}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}

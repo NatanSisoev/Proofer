@@ -106,4 +106,41 @@ export default function EgoGraph({ slug, depth = 1 }: { slug: string; depth?: nu
             selector: "edge",
             style: {
               width: 1.4,
-              "li
+              "line-color": "data(color)",
+              "target-arrow-color": "data(color)",
+              "target-arrow-shape": "triangle",
+              "arrow-scale": 0.7,
+              "curve-style": "bezier",
+              opacity: 0.7,
+            },
+          },
+        ],
+        layout: { name: "concentric", concentric: (n: any) => (n.data("isCenter") ? 10 : 1), levelWidth: () => 1, minNodeSpacing: 28, padding: 24 },
+        minZoom: 0.3,
+        maxZoom: 2.5,
+        wheelSensitivity: 0.2,
+      });
+
+      cy.on("tap", "node", (evt) => {
+        const id = evt.target.id();
+        if (id !== data.center) router.push(`/node/${encodeURIComponent(id)}`);
+      });
+    })();
+    return () => {
+      cancelled = true;
+      cy?.destroy();
+    };
+  }, [slug, depth, router]);
+
+  return (
+    <div className="graph-shell">
+      <div ref={ref} style={{ width: "100%", height: "100%" }} />
+      <div className="graph-legend">
+        <span style={{ color: "var(--accent)" }}>depends on</span>
+        <span style={{ color: "var(--purple)" }}>generalizes</span>
+        <span style={{ color: "var(--green)" }}>equivalent</span>
+        <span style={{ color: "var(--muted)" }}>related</span>
+      </div>
+    </div>
+  );
+}

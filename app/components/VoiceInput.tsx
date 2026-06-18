@@ -133,3 +133,5 @@ export default function VoiceInput({ onTranscript, disabled, lang = "en-US" }: P
         <span style={{ fontSize: 12, color: "var(--red)" }}>{error}</span>
       )}
     </div>
+  );
+}
