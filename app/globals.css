@@ -457,6 +457,14 @@ button.know.on { background: var(--green-soft); border-color: var(--green-border
 }
 .path-row:hover { background: var(--bg-soft); }
 .path-num { width: 20px; text-align: right; flex-shrink: 0; }
+.path-subtitle { margin-top: -4px; margin-bottom: 10px; }
+.path-link { flex: 1; font-size: 13.5px; }
+
+/* weakness diagnosis */
+.diagnosis-panel { background: var(--bg-soft); margin-top: 12px; }
+.diagnosis-heading { color: var(--accent); margin-bottom: 8px; }
+.diagnosis-text { margin: 0; font-size: 14px; line-height: 1.6; color: var(--text); }
+.diagnosis-btn { font-size: 12px; margin-top: 8px; }
 
 /* progress page */
 .attempt-row {
@@ -663,6 +671,7 @@ details[open].practice-history > summary::before { transform: rotate(90deg); }
   display: flex; align-items: center; padding: 12px 16px;
   border-bottom: 1px solid var(--border); gap: 10px;
 }
+.global-search-icon { color: var(--muted); font-size: 16px; }
 .global-search-input {
   flex: 1; background: none; border: none; outline: none;
   font-size: 16px; color: var(--text);

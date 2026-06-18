@@ -15,7 +15,7 @@ export default function LearningPath({ nodeId }: { nodeId: string }) {
         <h2>Learning path — {path.length} unmastered prerequisite{path.length !== 1 ? "s" : ""}</h2>
         <span className="muted small">foundations first</span>
       </div>
-      <p className="muted small" style={{ marginTop: -4, marginBottom: 10 }}>
+      <p className="muted small path-subtitle">
         Master these in order to be fully ready for this concept.
       </p>
       <div className="path-list">
@@ -23,7 +23,7 @@ export default function LearningPath({ nodeId }: { nodeId: string }) {
           <div key={n.id} className="path-row">
             <span className="path-num muted small">{i + 1}</span>
             {n.type && <span className={`type-badge t-${n.type}`}>{n.type}</span>}
-            <Link href={`/node/${encodeURIComponent(n.id)}`} style={{ flex: 1, fontSize: 13.5 }}>
+            <Link href={`/node/${encodeURIComponent(n.id)}`} className="path-link">
               {n.title}
             </Link>
             <div className="bar" style={{ width: 56 }}>

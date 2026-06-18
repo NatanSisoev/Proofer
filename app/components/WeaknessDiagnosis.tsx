@@ -21,12 +21,9 @@ export default function WeaknessDiagnosis({ nodeId, attemptCount }: { nodeId: st
 
   if (diagnosis) {
     return (
-      <div
-        className="panel"
-        style={{ background: "var(--bg-soft)", marginTop: 12 }}
-      >
-        <h2 style={{ color: "var(--accent)", marginBottom: 8 }}>AI diagnosis</h2>
-        <p style={{ margin: 0, fontSize: 14, lineHeight: 1.6, color: "var(--text)" }}>{diagnosis}</p>
+      <div className="panel diagnosis-panel">
+        <h2 className="diagnosis-heading">AI diagnosis</h2>
+        <p className="diagnosis-text">{diagnosis}</p>
       </div>
     );
   }
@@ -35,8 +32,7 @@ export default function WeaknessDiagnosis({ nodeId, attemptCount }: { nodeId: st
     <button
       onClick={diagnose}
       disabled={loading}
-      className="btn-ghost"
-      style={{ fontSize: 12, marginTop: 8 }}
+      className="btn-ghost diagnosis-btn"
     >
       {loading ? "Diagnosing…" : `Diagnose why you keep struggling (${attemptCount} attempts)`}
     </button>

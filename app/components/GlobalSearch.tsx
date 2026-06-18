@@ -79,7 +79,7 @@ export default function GlobalSearch() {
     <div className="global-search-overlay" onClick={close}>
       <div className="global-search-panel" onClick={(e) => e.stopPropagation()}>
         <div className="global-search-header">
-          <span style={{ color: "var(--muted)", fontSize: 16 }}>🔍</span>
+          <span className="global-search-icon">🔍</span>
           <input
             ref={inputRef}
             value={q}
