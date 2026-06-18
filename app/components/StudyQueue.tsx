@@ -183,14 +183,18 @@ export default function StudyQueue({
     } catch {}
   }, [activeQueue, index, preferKind, resultsByIndex, done, problem, answer, grade, revealed, hint, followUp]);
 
-  // Ctrl+Enter handler
+  // Keyboard navigation handler
   useEffect(() => {
     function handler(e: KeyboardEvent) {
+      const inText = e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLInputElement;
       if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
         e.preventDefault();
         if (!grade && !busy && answer.trim()) submit();
         else if (grade && followUp.trim() && !followUpBusy) submitFollowUp();
         else if (grade) advance();
+      } else if (!inText && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        if (e.key === "ArrowLeft") goBack();
+        else if (e.key === "ArrowRight" && grade) advance();
       }
     }
     window.addEventListener("keydown", handler);
@@ -315,6 +319,12 @@ export default function StudyQueue({
     if (index <= 0) return;
     saveCardState();
     setIndex((i) => i - 1);
+  }
+
+  function goTo(i: number) {
+    if (i === index) return;
+    saveCardState();
+    setIndex(i);
   }
 
   // ─── Done screen ────────────────────────────────────────────────────────────
@@ -458,7 +468,7 @@ export default function StudyQueue({
           </span>
         </div>
         <div className="dots-row">
-          {activeQueue.map((_, i) => (
+          {activeQueue.map((node, i) => (
             <span
               key={i}
               className={`progress-dot${i === index ? " dot-current" : ""}`}
@@ -466,7 +476,10 @@ export default function StudyQueue({
                 background: resultsByIndex[i]
                   ? VERDICT[resultsByIndex[i].verdict]?.color
                   : i === index ? "var(--accent)" : "var(--border)",
+                cursor: i === index ? "default" : "pointer",
               }}
+              title={node.title}
+              onClick={() => goTo(i)}
             />
           ))}
         </div>
