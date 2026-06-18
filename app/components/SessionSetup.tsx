@@ -88,6 +88,12 @@ export default function SessionSetup({
       const VALID_KINDS: ProblemKind[] = ["any", "compute", "prove", "counterexample", "explain"];
       if (savedKind && VALID_KINDS.includes(savedKind)) setPreferKind(savedKind);
     } catch {}
+    if (!initialArea) {
+      try {
+        const savedArea = localStorage.getItem("proofer-session-area");
+        if (savedArea && areas.includes(savedArea)) setArea(savedArea);
+      } catch {}
+    }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
@@ -251,7 +257,10 @@ export default function SessionSetup({
               <label className="muted small field-label">Area</label>
               <select
                 value={area}
-                onChange={(e) => setArea(e.target.value)}
+                onChange={(e) => {
+                  setArea(e.target.value);
+                  try { localStorage.setItem("proofer-session-area", e.target.value); } catch {}
+                }}
                 className="form-input"
               >
                 {areas.map((a) => <option key={a} value={a}>{a}</option>)}
