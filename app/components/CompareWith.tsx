@@ -89,8 +89,7 @@ export default function CompareWith({ nodeId, nodeTitle }: { nodeId: string; nod
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search for another concept…"
-            className="search-box"
-            style={{ fontSize: 13, padding: "8px 12px" }}
+            className="search-box compare-search-input"
           />
           {results.length > 0 && (
             <div className="search-dropdown">

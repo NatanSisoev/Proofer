@@ -46,9 +46,8 @@ export default function ReExplain({ nodeId }: { nodeId: string }) {
   if (!open) {
     return (
       <button
-        className="btn-ghost btn-sm"
+        className="btn-ghost btn-sm reexplain-trigger"
         onClick={() => { setOpen(true); generate("intuitive"); }}
-        style={{ color: "var(--accent)", marginTop: 12 }}
       >
         ✨ Explain differently
       </button>

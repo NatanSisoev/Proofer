@@ -21,9 +21,7 @@ export default function QuickKnown({ nodeId }: { nodeId: string }) {
   }
 
   if (done) {
-    return (
-      <span style={{ fontSize: 11, color: "var(--green)", padding: "2px 8px" }}>✓ known</span>
-    );
+    return <span className="quick-known-done">✓ known</span>;
   }
 
   return (
@@ -31,11 +29,7 @@ export default function QuickKnown({ nodeId }: { nodeId: string }) {
       onClick={mark}
       disabled={pending}
       title="Mark as known"
-      style={{
-        fontSize: 11, padding: "2px 8px", borderRadius: 999,
-        border: "1px solid var(--border)", background: "transparent",
-        color: "var(--muted)", cursor: "pointer",
-      }}
+      className="quick-known-btn"
     >
       know
     </button>
