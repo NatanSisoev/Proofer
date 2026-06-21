@@ -207,7 +207,7 @@ header.top .tag { color: var(--muted); font-size: 14px; margin-top: 4px; }
 
 .panel {
   background: var(--panel); border: 1px solid var(--border);
-  border-radius: 10px; padding: 20px;
+  border-radius: 12px; padding: 20px;
   box-shadow: var(--panel-shadow, 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04));
   transition: border-color 0.15s;
 }
@@ -371,7 +371,7 @@ button.know.on { background: var(--green-soft); border-color: var(--green-border
 .practice-actions { display: flex; gap: 10px; flex-wrap: wrap; }
 .btn-primary {
   background: var(--accent-strong); color: #FFFFFF; border: none; font-weight: 600;
-  padding: 10px 22px; border-radius: 8px; font-size: 14px; cursor: pointer;
+  padding: 9px 20px; border-radius: 999px; font-size: 14px; cursor: pointer;
   letter-spacing: 0.01em; transition: opacity 0.15s; text-decoration: none;
 }
 .btn-primary:hover:not(:disabled) { opacity: 0.85; text-decoration: none; }
@@ -382,7 +382,7 @@ button.know.on { background: var(--green-soft); border-color: var(--green-border
 [data-theme="dark"] .btn-primary:hover:not(:disabled) { opacity: 1; background: var(--bg-soft); }
 .btn-ghost {
   background: transparent; color: var(--text); border: 1px solid var(--border);
-  padding: 10px 18px; border-radius: 8px; font-size: 14px; cursor: pointer;
+  padding: 9px 18px; border-radius: 999px; font-size: 14px; cursor: pointer;
   transition: background 0.15s, border-color 0.15s; text-decoration: none;
 }
 .btn-ghost:hover:not(:disabled) { background: var(--bg-soft); border-color: var(--muted); text-decoration: none; }
@@ -423,7 +423,7 @@ button.know.on { background: var(--green-soft); border-color: var(--green-border
 
 .cta {
   display: inline-block; background: var(--accent-strong); color: #FFFFFF; font-weight: 600;
-  padding: 9px 20px; border-radius: 8px; font-size: 14px; letter-spacing: 0.01em;
+  padding: 9px 20px; border-radius: 999px; font-size: 14px; letter-spacing: 0.01em;
   transition: opacity 0.15s;
 }
 .cta:hover { text-decoration: none; opacity: 0.85; }
@@ -678,15 +678,21 @@ details[open].practice-history > summary::before { transform: rotate(90deg); }
 .search-dropdown-item:hover { background: var(--bg-soft); }
 
 /* tab bar */
-.tab-bar { display: flex; gap: 4px; margin-bottom: 20px; border-bottom: 1px solid var(--border); }
+.tab-bar {
+  display: inline-flex; gap: 2px; padding: 3px;
+  background: var(--bg-soft); border-radius: 10px; border: none;
+  margin-bottom: 20px;
+}
 .tab-link {
-  padding: 8px 16px; font-size: 14px; font-weight: 400; text-decoration: none;
-  border-radius: 8px 8px 0 0; border: 1px solid transparent;
-  border-bottom-color: transparent; color: var(--muted);
-  margin-bottom: -1px; transition: color 0.15s;
+  padding: 6px 14px; font-size: 13px; font-weight: 500; text-decoration: none;
+  border-radius: 8px; border: none; color: var(--muted);
+  margin: 0; transition: color 0.15s;
 }
 .tab-link:hover { color: var(--text); text-decoration: none; }
-.tab-link.active { background: var(--panel); border-color: var(--border); border-bottom-color: var(--panel); color: var(--text); font-weight: 600; }
+.tab-link.active {
+  background: var(--panel); color: var(--text); font-weight: 600;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+}
 
 /* home: "jump back in" recent practice chips */
 .recent-chip {
