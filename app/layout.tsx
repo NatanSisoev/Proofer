@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Inter, Lora } from "next/font/google";
 import "./globals.css";
 import SyncButton from "./components/SyncButton";
 import KeyboardShortcuts from "./components/KeyboardShortcuts";
@@ -15,6 +16,9 @@ export const metadata: Metadata = {
   description: "A typed knowledge graph of mathematical concepts.",
 };
 
+const inter = Inter({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
+const lora = Lora({ subsets: ["latin"], variable: "--font-serif", display: "swap" });
+
 const THEME_BOOT_SCRIPT = `
 (function () {
   try {
@@ -27,7 +31,7 @@ const THEME_BOOT_SCRIPT = `
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning className={`${inter.variable} ${lora.variable}`}>
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
       </head>
