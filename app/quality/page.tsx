@@ -4,7 +4,7 @@ import { noteQuality, linkSuggestions, dependencyCycles, relatedEdgesWithNodes, 
 import QualityFilters from "@/app/components/QualityFilters";
 import LinkSuggestions from "@/app/components/LinkSuggestions";
 import RelatedEdges from "@/app/components/RelatedEdges";
-import { HAS_KEY } from "@/lib/llm";
+import { hasKey } from "@/lib/llm";
 
 // All queries on this page are graph-structural (don't vary per user request),
 // so we can use Next.js ISR instead of force-dynamic. Each tab URL is cached
@@ -57,6 +57,7 @@ export default async function QualityPage({
 }) {
   const { tab: tabParam } = await searchParams;
   const tab = tabParam === "links" ? "links" : tabParam === "cycles" ? "cycles" : tabParam === "edges" ? "edges" : "issues";
+  const llmAvailable = hasKey();
 
   const issues = await getNoteQuality();
   const allIssueTypes = Array.from(new Set(issues.flatMap((n) => n.issues))).sort();
@@ -169,11 +170,11 @@ export default async function QualityPage({
             These <code>related</code> edges are untyped — they link two concepts but say nothing about
             the relationship. Reclassifying them as <code>depends_on</code>, <code>generalizes</code>, etc.
             directly improves the prerequisite graph that the mastery model depends on.
-            {HAS_KEY
+            {llmAvailable
               ? " Click \"AI classify\" to get a suggestion, then apply it or choose a different type."
               : " Add GEMINI_API_KEY or ANTHROPIC_API_KEY to enable AI suggestions."}
           </p>
-          <RelatedEdges initial={relatedEdges} hasKey={HAS_KEY} />
+          <RelatedEdges initial={relatedEdges} hasKey={llmAvailable} />
         </div>
       )}
 

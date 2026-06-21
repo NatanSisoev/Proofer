@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db, type NodeRow, MASTERY_THRESHOLD } from "@/lib/db";
 import { getNode, newlyUnlocked } from "@/lib/queries";
 import { applyAttempt, getMasteryP, recordAttempt } from "@/lib/mastery";
-import { gradeAnswer, friendlyLLMError, HAS_KEY } from "@/lib/llm";
+import { gradeAnswer, friendlyLLMError, hasKey } from "@/lib/llm";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 120;
@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
     evidence: grade.mastery_evidence,
     gap: grade.gap,
     blamed_prereq: blamed || "",
-    mode: HAS_KEY ? "ai" : "demo",
+    mode: hasKey() ? "ai" : "demo",
   });
 
   const masteryAfter = getMasteryP(node.id);

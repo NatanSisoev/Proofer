@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { generateHint, HAS_KEY, friendlyLLMError } from "@/lib/llm";
+import { generateHint, hasKey, friendlyLLMError } from "@/lib/llm";
 
 export const maxDuration = 30;
 
 export async function POST(req: NextRequest) {
-  if (!HAS_KEY) return NextResponse.json({ error: "No AI provider configured" }, { status: 400 });
+  if (!hasKey()) return NextResponse.json({ error: "No AI provider configured" }, { status: 400 });
 
   const { problemId } = await req.json();
   if (!problemId) return NextResponse.json({ error: "problemId required" }, { status: 400 });

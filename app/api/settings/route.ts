@@ -6,6 +6,8 @@ export const dynamic = "force-dynamic";
 const DEFAULTS: Record<string, string> = {
   daily_goal: "5",
   voice_lang: "en-US",
+  gemini_api_key: "",
+  anthropic_api_key: "",
 };
 
 function getAll(): Record<string, string> {

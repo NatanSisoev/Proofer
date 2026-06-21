@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { classifyEdge, friendlyLLMError, HAS_KEY } from "@/lib/llm";
+import { classifyEdge, friendlyLLMError, hasKey } from "@/lib/llm";
 import type { RelatedEdge } from "@/lib/queries";
 
 export const dynamic = "force-dynamic";
@@ -12,7 +12,7 @@ export const maxDuration = 60;
  * Does NOT write to the database — the client confirms before retying.
  */
 export async function POST(req: NextRequest) {
-  if (!HAS_KEY) {
+  if (!hasKey()) {
     return NextResponse.json({ error: "No AI provider configured — set GEMINI_API_KEY or ANTHROPIC_API_KEY" }, { status: 400 });
   }
 

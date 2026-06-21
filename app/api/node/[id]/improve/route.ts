@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { readFileSync, writeFileSync } from "fs";
 import { getNode } from "@/lib/queries";
-import { improveNote, friendlyLLMError, HAS_KEY } from "@/lib/llm";
+import { improveNote, friendlyLLMError, hasKey } from "@/lib/llm";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 120;
@@ -14,7 +14,7 @@ export async function POST(
   const node = getNode(decodeURIComponent(id));
   if (!node || node.exists_ === 0) return NextResponse.json({ error: "node not found" }, { status: 404 });
   if (!node.path) return NextResponse.json({ error: "no source file for this node" }, { status: 400 });
-  if (!HAS_KEY) return NextResponse.json({ error: "No LLM provider configured — set GEMINI_API_KEY or ANTHROPIC_API_KEY." }, { status: 400 });
+  if (!hasKey()) return NextResponse.json({ error: "No LLM provider configured — set an API key in Settings or GEMINI_API_KEY/ANTHROPIC_API_KEY in .env.local." }, { status: 400 });
 
   let original: string;
   try {

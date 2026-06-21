@@ -6,6 +6,8 @@ import Link from "next/link";
 type Settings = {
   daily_goal: string;
   voice_lang: string;
+  gemini_api_key: string;
+  anthropic_api_key: string;
 };
 
 type ProviderInfo = {
@@ -27,17 +29,22 @@ const VOICE_LANGS = [
 ];
 
 export default function SettingsPage() {
-  const [settings, setSettings] = useState<Settings>({ daily_goal: "5", voice_lang: "en-US" });
+  const [settings, setSettings] = useState<Settings>({ daily_goal: "5", voice_lang: "en-US", gemini_api_key: "", anthropic_api_key: "" });
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [loading, setLoading] = useState(true);
   const [provider, setProvider] = useState<ProviderInfo | null>(null);
+  const [geminiKeyInput, setGeminiKeyInput] = useState("");
+  const [anthropicKeyInput, setAnthropicKeyInput] = useState("");
+  const [showKeys, setShowKeys] = useState(false);
 
   useEffect(() => {
     fetch("/api/settings")
       .then((r) => r.json())
       .then((data) => {
         setSettings(data);
+        setGeminiKeyInput(data.gemini_api_key || "");
+        setAnthropicKeyInput(data.anthropic_api_key || "");
         setLoading(false);
       });
     fetch("/api/provider")
@@ -45,6 +52,10 @@ export default function SettingsPage() {
       .then(setProvider)
       .catch(() => {});
   }, []);
+
+  function refreshProvider() {
+    fetch("/api/provider").then((r) => r.json()).then(setProvider).catch(() => {});
+  }
 
   async function save(patch: Partial<Settings>) {
     const next = { ...settings, ...patch };
@@ -59,6 +70,7 @@ export default function SettingsPage() {
       });
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
+      refreshProvider();
     } finally {
       setSaving(false);
     }
@@ -172,10 +184,49 @@ export default function SettingsPage() {
             </div>
 
             <p className="muted small" style={{ marginTop: 0 }}>
-              The provider is configured via environment variables in <code>.env.local</code>:{" "}
-              <code>GEMINI_API_KEY</code> selects the free Gemini tier (preferred),{" "}
-              <code>ANTHROPIC_API_KEY</code> selects Claude. Gemini wins if both are set.
+              Set a key below to use it instead of the <code>.env.local</code> environment variables.
+              Gemini (free tier) wins if both are set.
             </p>
+
+            <div className="field-row" style={{ marginTop: 12 }}>
+              <label className="muted small" htmlFor="gemini-key">Gemini API key</label>
+              <input
+                id="gemini-key"
+                type={showKeys ? "text" : "password"}
+                placeholder="AIza…"
+                value={geminiKeyInput}
+                onChange={(e) => setGeminiKeyInput(e.target.value)}
+                className="field-input"
+                autoComplete="off"
+                disabled={saving}
+              />
+            </div>
+            <div className="field-row" style={{ marginTop: 10 }}>
+              <label className="muted small" htmlFor="anthropic-key">Anthropic API key</label>
+              <input
+                id="anthropic-key"
+                type={showKeys ? "text" : "password"}
+                placeholder="sk-ant-…"
+                value={anthropicKeyInput}
+                onChange={(e) => setAnthropicKeyInput(e.target.value)}
+                className="field-input"
+                autoComplete="off"
+                disabled={saving}
+              />
+            </div>
+            <div className="action-row" style={{ marginTop: 10 }}>
+              <button
+                className="btn-primary"
+                disabled={saving}
+                onClick={() => save({ gemini_api_key: geminiKeyInput.trim(), anthropic_api_key: anthropicKeyInput.trim() })}
+              >
+                Save keys
+              </button>
+              <button className="btn-ghost" onClick={() => setShowKeys((s) => !s)}>
+                {showKeys ? "Hide" : "Show"}
+              </button>
+            </div>
+
             <div className="panel-link-row">
               <Link href="/quality" className="pill pill-accent">
                 Note quality →

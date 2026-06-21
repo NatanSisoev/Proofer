@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { unstable_cache } from "next/cache";
 import { db } from "@/lib/db";
 import { getNode } from "@/lib/queries";
-import { explainConcept, HAS_KEY, friendlyLLMError } from "@/lib/llm";
+import { explainConcept, hasKey, friendlyLLMError } from "@/lib/llm";
 import type { NodeRow } from "@/lib/db";
 
 export const maxDuration = 60;
@@ -17,7 +17,7 @@ const getExplanation = unstable_cache(
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  if (!HAS_KEY) return NextResponse.json({ error: "No AI provider configured" }, { status: 400 });
+  if (!hasKey()) return NextResponse.json({ error: "No AI provider configured" }, { status: 400 });
 
   const node = getNode(id);
   if (!node || node.exists_ === 0) return NextResponse.json({ error: "not found" }, { status: 404 });

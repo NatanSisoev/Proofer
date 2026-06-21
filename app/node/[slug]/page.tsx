@@ -17,7 +17,7 @@ import ReadingProgress from "@/app/components/ReadingProgress";
 import { getNode, edgesOf, isKnown, readiness, prerequisites, attemptCount, isBookmarked, nodeAttempts, nodeAttemptDetails, nextReviewDays, similarConcepts, nodeBlamedPrereqs } from "@/lib/queries";
 import { truncateMath } from "@/lib/text";
 import { getMasteryP } from "@/lib/mastery";
-import { HAS_KEY } from "@/lib/llm";
+import { hasKey } from "@/lib/llm";
 import type { EdgeRow } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
@@ -63,6 +63,7 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
   const id = decodeURIComponent(slug);
   const node = getNode(id);
   if (!node) notFound();
+  const llmAvailable = hasKey();
 
   const { outgoing, incoming } = edgesOf(id);
   const known = isKnown(id);
@@ -174,7 +175,7 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
                   </div>
                 )}
               </div>
-              {HAS_KEY && <WeaknessDiagnosis nodeId={id} attemptCount={attempts} />}
+              {llmAvailable && <WeaknessDiagnosis nodeId={id} attemptCount={attempts} />}
               {blamedPrereqs.length > 0 && (
                 <div className="blamed-prereqs">
                   <span className="muted small">Grader blamed: </span>
@@ -224,7 +225,7 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
                 </Link>
               )}
               <KnownButton slug={id} initial={known} />
-              <NodeActions nodeId={id} nodePath={node.path ?? null} hasLLM={HAS_KEY} />
+              <NodeActions nodeId={id} nodePath={node.path ?? null} hasLLM={llmAvailable} />
             </div>
           </div>
 
@@ -279,8 +280,8 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
                 </>
               )}
               <PersonalNotes nodeId={id} />
-              {HAS_KEY && <ReExplain nodeId={id} />}
-              {HAS_KEY && <CompareWith nodeId={id} nodeTitle={node.title} />}
+              {llmAvailable && <ReExplain nodeId={id} />}
+              {llmAvailable && <CompareWith nodeId={id} nodeTitle={node.title} />}
 
               {/* Past practice problems */}
               {attemptDetails.length > 0 && (

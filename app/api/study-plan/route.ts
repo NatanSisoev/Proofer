@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { areaMastery } from "@/lib/queries";
-import { generateStudyPlan, friendlyLLMError, HAS_KEY } from "@/lib/llm";
+import { generateStudyPlan, friendlyLLMError, hasKey } from "@/lib/llm";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
 export async function POST(req: NextRequest) {
-  if (!HAS_KEY) return NextResponse.json({ error: "No LLM key configured" }, { status: 503 });
+  if (!hasKey()) return NextResponse.json({ error: "No LLM key configured" }, { status: 503 });
 
   try {
     const { targetDate, focusArea } = await req.json() as { targetDate: string; focusArea?: string };

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import StudyPlanClient from "./StudyPlanClient";
 import { browseAreas, areaMastery } from "@/lib/queries";
-import { HAS_KEY } from "@/lib/llm";
+import { hasKey } from "@/lib/llm";
 
 export const dynamic = "force-dynamic";
 
@@ -25,9 +25,9 @@ export default function StudyPlanPage() {
         </div>
       </header>
 
-      {!HAS_KEY ? (
+      {!hasKey() ? (
         <div className="panel" style={{ marginTop: 20 }}>
-          <p className="muted">No LLM API key configured. Add <code>GEMINI_API_KEY</code> to <code>.env.local</code> to use this feature.</p>
+          <p className="muted">No LLM API key configured. Add one in <Link href="/settings">Settings</Link>, or set <code>GEMINI_API_KEY</code> in <code>.env.local</code>.</p>
         </div>
       ) : (
         <StudyPlanClient areas={areas} areaStats={areaStats} />

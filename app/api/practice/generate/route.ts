@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db, type NodeRow } from "@/lib/db";
 import { getNode } from "@/lib/queries";
 import { getMasteryP } from "@/lib/mastery";
-import { generateProblem, friendlyLLMError, HAS_KEY, type ProblemKind } from "@/lib/llm";
+import { generateProblem, friendlyLLMError, hasKey, type ProblemKind } from "@/lib/llm";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 120;
@@ -66,7 +66,7 @@ export async function POST(req: NextRequest) {
       gen.ideal_solution,
       JSON.stringify(gen.rubric),
       JSON.stringify(prereqs),
-      HAS_KEY ? "ai" : "demo",
+      hasKey() ? "ai" : "demo",
       new Date().toISOString()
     );
 
@@ -74,7 +74,7 @@ export async function POST(req: NextRequest) {
     problemId: Number(info.lastInsertRowid),
     problem: gen.problem,
     kind: gen.kind,
-    mode: HAS_KEY ? "ai" : "demo",
+    mode: hasKey() ? "ai" : "demo",
     masteryBefore: getMasteryP(nodeId),
     node: { id: node.id, title: node.title, type: node.type, area: node.area },
   });

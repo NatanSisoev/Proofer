@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { diagnoseWeakness, HAS_KEY } from "@/lib/llm";
+import { diagnoseWeakness, hasKey } from "@/lib/llm";
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  if (!HAS_KEY) return NextResponse.json({ diagnosis: "" });
+  if (!hasKey()) return NextResponse.json({ diagnosis: "" });
 
   const attempts = db()
     .prepare(

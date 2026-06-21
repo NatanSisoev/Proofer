@@ -99,7 +99,9 @@ CREATE TABLE IF NOT EXISTS node_notes (
 );
 
 -- User-configurable settings: key-value store.
--- Keys: daily_goal (integer), voice_lang (text)
+-- Keys: daily_goal (integer), voice_lang (text), gemini_api_key (text),
+-- anthropic_api_key (text) — when set, these override GEMINI_API_KEY /
+-- ANTHROPIC_API_KEY from the environment (see lib/llm.ts getLLMConfig).
 CREATE TABLE IF NOT EXISTS settings (
   key   TEXT PRIMARY KEY,
   value TEXT NOT NULL

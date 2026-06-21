@@ -54,18 +54,53 @@ export function clearLLMCache(): void {
 
 // Provider selection: Gemini (free tier) wins if its key is set; else Anthropic;
 // else a demo stub. The LLM layer is the only provider-aware part of the app.
-const GEMINI_KEY = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || "";
-const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY || "";
-export const PROVIDER: "gemini" | "anthropic" | "none" = GEMINI_KEY ? "gemini" : ANTHROPIC_KEY ? "anthropic" : "none";
-export const HAS_KEY = PROVIDER !== "none";
+// Keys can come from the Settings page (stored in the `settings` table) or
+// from .env.local — the settings table wins so the UI can override env vars
+// without a restart.
+function readSettings(): Record<string, string> {
+  try {
+    const rows = db().prepare("SELECT key, value FROM settings").all() as { key: string; value: string }[];
+    return Object.fromEntries(rows.map((r) => [r.key, r.value]));
+  } catch {
+    return {};
+  }
+}
 
 // Models. Gemini 2.5 Flash has free-tier quota (2.0-flash is limit:0 in some
 // regions, e.g. the EU) and is stronger at math reasoning.
-const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
 const ANTHROPIC_PROBLEM_MODEL = "claude-opus-4-8";
 const ANTHROPIC_GRADE_MODEL = "claude-opus-4-8";
 
-const anthropic = ANTHROPIC_KEY ? new Anthropic() : null;
+type LLMConfig = {
+  provider: "gemini" | "anthropic" | "none";
+  geminiKey: string;
+  geminiModel: string;
+  anthropic: Anthropic | null;
+};
+
+/** Re-reads keys from settings/env on every call so a key saved in Settings
+ *  takes effect immediately, with no server restart. Cheap: one sync SELECT. */
+function getLLMConfig(): LLMConfig {
+  const s = readSettings();
+  const geminiKey = (s.gemini_api_key || process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || "").trim();
+  const anthropicKey = (s.anthropic_api_key || process.env.ANTHROPIC_API_KEY || "").trim();
+  return {
+    provider: geminiKey ? "gemini" : anthropicKey ? "anthropic" : "none",
+    geminiKey,
+    geminiModel: process.env.GEMINI_MODEL || "gemini-2.5-flash",
+    anthropic: anthropicKey ? new Anthropic({ apiKey: anthropicKey }) : null,
+  };
+}
+
+/** The currently active LLM provider, derived from Settings/env. */
+export function getProvider(): "gemini" | "anthropic" | "none" {
+  return getLLMConfig().provider;
+}
+
+/** Whether any LLM key is currently configured (Settings or env). */
+export function hasKey(): boolean {
+  return getProvider() !== "none";
+}
 
 export type ProviderInfo = {
   provider: "gemini" | "anthropic" | "none";
@@ -77,8 +112,9 @@ export type ProviderInfo = {
 /** The currently active LLM provider + model, for surfacing in the UI so users
  *  know which tier (Gemini → Anthropic → demo stub) is answering. */
 export function providerInfo(): ProviderInfo {
-  if (PROVIDER === "gemini") return { provider: "gemini", label: "Google Gemini", model: GEMINI_MODEL, hasKey: true };
-  if (PROVIDER === "anthropic") return { provider: "anthropic", label: "Anthropic Claude", model: ANTHROPIC_PROBLEM_MODEL, hasKey: true };
+  const cfg = getLLMConfig();
+  if (cfg.provider === "gemini") return { provider: "gemini", label: "Google Gemini", model: cfg.geminiModel, hasKey: true };
+  if (cfg.provider === "anthropic") return { provider: "anthropic", label: "Anthropic Claude", model: ANTHROPIC_PROBLEM_MODEL, hasKey: true };
   return { provider: "none", label: "Demo mode", model: null, hasKey: false };
 }
 
@@ -172,8 +208,9 @@ function gradeUserText(a: {
 // Dispatch
 // ===========================================================================
 export async function generateProblem(node: NodeRow, prereqs: string[], recentGaps: string[] = [], preferKind?: ProblemKind): Promise<GeneratedProblem> {
-  if (PROVIDER === "gemini") return geminiGenerate(node, prereqs, recentGaps, preferKind);
-  if (PROVIDER === "anthropic") return anthropicGenerate(node, prereqs, recentGaps, preferKind);
+  const cfg = getLLMConfig();
+  if (cfg.provider === "gemini") return geminiGenerate(node, prereqs, recentGaps, preferKind, cfg);
+  if (cfg.provider === "anthropic") return anthropicGenerate(node, prereqs, recentGaps, preferKind, cfg.anthropic!);
   return stubProblem(node);
 }
 
@@ -185,9 +222,10 @@ export async function gradeAnswer(args: {
   answer: string;
   prereqs: string[];
 }): Promise<GradeResult> {
+  const cfg = getLLMConfig();
   let r: GradeResult;
-  if (PROVIDER === "gemini") r = await geminiGrade(args);
-  else if (PROVIDER === "anthropic") r = await anthropicGrade(args);
+  if (cfg.provider === "gemini") r = await geminiGrade(args, cfg);
+  else if (cfg.provider === "anthropic") r = await anthropicGrade(args, cfg.anthropic!);
   else r = stubGrade(args.answer);
   if (r.blamed_prerequisite === "none") r.blamed_prerequisite = "";
   r.mastery_evidence = Math.max(0, Math.min(1, r.mastery_evidence));
@@ -198,7 +236,8 @@ export async function explainConcept(
   node: import("./db").NodeRow,
   prereqs: string[]
 ): Promise<string> {
-  if (PROVIDER === "none") return "";
+  const cfg = getLLMConfig();
+  if (cfg.provider === "none") return "";
   const ck = cacheKey("explainConcept", { id: node.id, prereqs });
   const hit = cacheGet(ck);
   if (hit) return hit;
@@ -214,9 +253,9 @@ export async function explainConcept(
     .join("\n");
 
   let result = "";
-  if (PROVIDER === "gemini") {
+  if (cfg.provider === "gemini") {
     const resp = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/${cfg.geminiModel}:generateContent?key=${cfg.geminiKey}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -229,8 +268,8 @@ export async function explainConcept(
     if (!resp.ok) throw new Error(await resp.text());
     const data = await resp.json();
     result = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ?? "";
-  } else if (PROVIDER === "anthropic" && anthropic) {
-    const msg = await anthropic.messages.create({
+  } else if (cfg.provider === "anthropic" && cfg.anthropic) {
+    const msg = await cfg.anthropic.messages.create({
       model: ANTHROPIC_GRADE_MODEL,
       max_tokens: 1200,
       messages: [{ role: "user", content: prompt }],
@@ -259,7 +298,8 @@ export async function generateHint(args: {
   nodeType: string | null;
   idealSolution: string;
 }): Promise<string> {
-  if (PROVIDER === "none") return "No AI provider configured — set GEMINI_API_KEY for hints.";
+  const cfg = getLLMConfig();
+  if (cfg.provider === "none") return "No AI provider configured — set GEMINI_API_KEY for hints.";
   const prompt = [
     `A student is about to solve this problem:`,
     `\nCONCEPT: ${args.nodeTitle}${args.nodeType ? ` (${args.nodeType})` : ""}`,
@@ -271,18 +311,19 @@ export async function generateHint(args: {
     .filter(Boolean)
     .join("\n");
 
-  if (PROVIDER === "gemini") {
+  if (cfg.provider === "gemini") {
     const result = await geminiCall(
       "You are a Socratic math tutor. Give hints that guide, never answers that reveal.",
       prompt,
       HINT_SCHEMA_G,
-      0.6
+      0.6,
+      cfg
     );
     return result.hint as string;
   }
 
-  if (PROVIDER === "anthropic" && anthropic) {
-    const msg = await anthropic.messages.create({
+  if (cfg.provider === "anthropic" && cfg.anthropic) {
+    const msg = await cfg.anthropic.messages.create({
       model: ANTHROPIC_GRADE_MODEL,
       max_tokens: 200,
       messages: [{ role: "user", content: prompt }],
@@ -298,7 +339,8 @@ export async function diagnoseWeakness(
   gaps: string[],
   blamedPrereqs: string[]
 ): Promise<string> {
-  if (PROVIDER === "none") return "";
+  const cfg = getLLMConfig();
+  if (cfg.provider === "none") return "";
   const uniq = (arr: string[]) => [...new Set(arr.filter(Boolean))];
   const prompt = [
     `A student has attempted the concept "${nodeTitle}" ${gaps.length} time(s) without mastering it.`,
@@ -314,9 +356,9 @@ export async function diagnoseWeakness(
     .filter(Boolean)
     .join("\n");
 
-  if (PROVIDER === "gemini") {
+  if (cfg.provider === "gemini") {
     const resp = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/${cfg.geminiModel}:generateContent?key=${cfg.geminiKey}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -331,8 +373,8 @@ export async function diagnoseWeakness(
     return data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ?? "";
   }
 
-  if (PROVIDER === "anthropic" && anthropic) {
-    const msg = await anthropic.messages.create({
+  if (cfg.provider === "anthropic" && cfg.anthropic) {
+    const msg = await cfg.anthropic.messages.create({
       model: ANTHROPIC_GRADE_MODEL,
       max_tokens: 300,
       messages: [{ role: "user", content: prompt }],
@@ -383,11 +425,11 @@ function gGradeSchema(prereqs: string[]) {
   };
 }
 
-async function geminiCall(system: string, userText: string, schema: unknown, temperature: number): Promise<any> {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
+async function geminiCall(system: string, userText: string, schema: unknown, temperature: number, cfg: LLMConfig): Promise<any> {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${cfg.geminiModel}:generateContent`;
   const res = await fetch(url, {
     method: "POST",
-    headers: { "Content-Type": "application/json", "x-goog-api-key": GEMINI_KEY },
+    headers: { "Content-Type": "application/json", "x-goog-api-key": cfg.geminiKey },
     body: JSON.stringify({
       systemInstruction: { parts: [{ text: system }] },
       contents: [{ role: "user", parts: [{ text: userText }] }],
@@ -414,12 +456,12 @@ async function geminiCall(system: string, userText: string, schema: unknown, tem
   return JSON.parse(text);
 }
 
-async function geminiGenerate(node: NodeRow, prereqs: string[], recentGaps: string[] = [], preferKind?: ProblemKind): Promise<GeneratedProblem> {
-  return geminiCall(AUTHOR_SYSTEM, problemUserText(node, prereqs, recentGaps, preferKind), G_PROBLEM_SCHEMA, 0.8);
+async function geminiGenerate(node: NodeRow, prereqs: string[], recentGaps: string[] = [], preferKind: ProblemKind | undefined, cfg: LLMConfig): Promise<GeneratedProblem> {
+  return geminiCall(AUTHOR_SYSTEM, problemUserText(node, prereqs, recentGaps, preferKind), G_PROBLEM_SCHEMA, 0.8, cfg);
 }
 
-async function geminiGrade(a: Parameters<typeof gradeAnswer>[0]): Promise<GradeResult> {
-  return geminiCall(GRADER_SYSTEM, gradeUserText(a), gGradeSchema(a.prereqs), 0.2);
+async function geminiGrade(a: Parameters<typeof gradeAnswer>[0], cfg: LLMConfig): Promise<GradeResult> {
+  return geminiCall(GRADER_SYSTEM, gradeUserText(a), gGradeSchema(a.prereqs), 0.2, cfg);
 }
 
 // ===========================================================================
@@ -462,8 +504,8 @@ function firstJson<T>(msg: Anthropic.Message): T {
   return JSON.parse(raw) as T;
 }
 
-async function anthropicGenerate(node: NodeRow, prereqs: string[], recentGaps: string[] = [], preferKind?: ProblemKind): Promise<GeneratedProblem> {
-  const msg = await anthropic!.messages.create({
+async function anthropicGenerate(node: NodeRow, prereqs: string[], recentGaps: string[] = [], preferKind: ProblemKind | undefined, anthropic: Anthropic): Promise<GeneratedProblem> {
+  const msg = await anthropic.messages.create({
     model: ANTHROPIC_PROBLEM_MODEL,
     max_tokens: 4096,
     system: [{ type: "text", text: AUTHOR_SYSTEM + "\n\nIMPORTANT: Respond ONLY with a single valid JSON object — no markdown fences, no preamble.", cache_control: { type: "ephemeral" } }],
@@ -472,8 +514,8 @@ async function anthropicGenerate(node: NodeRow, prereqs: string[], recentGaps: s
   return firstJson<GeneratedProblem>(msg);
 }
 
-async function anthropicGrade(a: Parameters<typeof gradeAnswer>[0]): Promise<GradeResult> {
-  const msg = await anthropic!.messages.create({
+async function anthropicGrade(a: Parameters<typeof gradeAnswer>[0], anthropic: Anthropic): Promise<GradeResult> {
+  const msg = await anthropic.messages.create({
     model: ANTHROPIC_GRADE_MODEL,
     max_tokens: 2048,
     system: [{ type: "text", text: GRADER_SYSTEM + "\n\nIMPORTANT: Respond ONLY with a single valid JSON object — no markdown fences, no preamble.", cache_control: { type: "ephemeral" } }],
@@ -489,7 +531,8 @@ export async function compareConcepts(
   nodeA: NodeRow,
   nodeB: NodeRow
 ): Promise<string> {
-  if (PROVIDER === "none") return "";
+  const cfg = getLLMConfig();
+  if (cfg.provider === "none") return "";
   const ck = cacheKey("compareConcepts", { a: nodeA.id, b: nodeB.id });
   const hit = cacheGet(ck);
   if (hit) return hit;
@@ -514,9 +557,9 @@ export async function compareConcepts(
   ].filter(Boolean).join("\n");
 
   let result = "";
-  if (PROVIDER === "gemini") {
+  if (cfg.provider === "gemini") {
     const resp = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/${cfg.geminiModel}:generateContent?key=${cfg.geminiKey}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -529,8 +572,8 @@ export async function compareConcepts(
     if (!resp.ok) throw new Error(await resp.text());
     const data = await resp.json();
     result = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ?? "";
-  } else if (PROVIDER === "anthropic" && anthropic) {
-    const msg = await anthropic.messages.create({
+  } else if (cfg.provider === "anthropic" && cfg.anthropic) {
+    const msg = await cfg.anthropic.messages.create({
       model: ANTHROPIC_GRADE_MODEL,
       max_tokens: 2000,
       messages: [{ role: "user", content: prompt }],
@@ -559,7 +602,8 @@ export async function reExplainConcept(
   prereqs: string[],
   angle: ExplainAngle = "intuitive"
 ): Promise<string> {
-  if (PROVIDER === "none") return "";
+  const cfg = getLLMConfig();
+  if (cfg.provider === "none") return "";
   const ck = cacheKey("reExplainConcept", { id: node.id, prereqs, angle });
   const hit = cacheGet(ck);
   if (hit) return hit;
@@ -576,9 +620,9 @@ export async function reExplainConcept(
   ].filter(Boolean).join("\n");
 
   let result = "";
-  if (PROVIDER === "gemini") {
+  if (cfg.provider === "gemini") {
     const resp = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/${cfg.geminiModel}:generateContent?key=${cfg.geminiKey}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -591,8 +635,8 @@ export async function reExplainConcept(
     if (!resp.ok) throw new Error(await resp.text());
     const data = await resp.json();
     result = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ?? "";
-  } else if (PROVIDER === "anthropic" && anthropic) {
-    const msg = await anthropic.messages.create({
+  } else if (cfg.provider === "anthropic" && cfg.anthropic) {
+    const msg = await cfg.anthropic.messages.create({
       model: ANTHROPIC_GRADE_MODEL,
       max_tokens: 1500,
       messages: [{ role: "user", content: prompt }],
@@ -638,7 +682,8 @@ export async function classifyEdge(a: {
   tgt_title: string; tgt_type: string | null; tgt_area: string | null; tgt_overview: string | null;
   context: string | null;
 }): Promise<EdgeClassification> {
-  if (PROVIDER === "none") throw new Error("No AI provider configured");
+  const cfg = getLLMConfig();
+  if (cfg.provider === "none") throw new Error("No AI provider configured");
 
   const prompt = [
     `Classify the relationship between these two mathematical concepts:`,
@@ -653,12 +698,12 @@ export async function classifyEdge(a: {
     `What is the most accurate relationship FROM A TO B? Respond as JSON.`,
   ].filter(Boolean).join("\n");
 
-  if (PROVIDER === "gemini") {
-    return geminiCall(EDGE_CLASSIFY_SYSTEM, prompt, EDGE_SCHEMA_G, 0.2);
+  if (cfg.provider === "gemini") {
+    return geminiCall(EDGE_CLASSIFY_SYSTEM, prompt, EDGE_SCHEMA_G, 0.2, cfg);
   }
 
-  if (PROVIDER === "anthropic" && anthropic) {
-    const msg = await anthropic.messages.create({
+  if (cfg.provider === "anthropic" && cfg.anthropic) {
+    const msg = await cfg.anthropic.messages.create({
       model: ANTHROPIC_GRADE_MODEL,
       max_tokens: 300,
       system: EDGE_CLASSIFY_SYSTEM + "\n\nIMPORTANT: Respond ONLY with a single valid JSON object — no markdown fences, no preamble.",
@@ -690,13 +735,14 @@ const IMPROVE_SCHEMA_G = {
 };
 
 export async function improveNote(content: string, title: string, type: string | null): Promise<string> {
+  const cfg = getLLMConfig();
   const userText = `TITLE: ${title}\nTYPE: ${type || "note"}\n\nNOTE:\n${content}\n\nReturn the improved note.`;
-  if (PROVIDER === "gemini") {
-    const r = await geminiCall(IMPROVE_SYSTEM, userText, IMPROVE_SCHEMA_G, 0.4);
+  if (cfg.provider === "gemini") {
+    const r = await geminiCall(IMPROVE_SYSTEM, userText, IMPROVE_SCHEMA_G, 0.4, cfg);
     return r.improved_content as string;
   }
-  if (PROVIDER === "anthropic") {
-    const msg = await anthropic!.messages.create({
+  if (cfg.provider === "anthropic") {
+    const msg = await cfg.anthropic!.messages.create({
       model: ANTHROPIC_PROBLEM_MODEL,
       max_tokens: 8000,
       system: IMPROVE_SYSTEM,
@@ -723,7 +769,8 @@ export type StudyPlanInput = {
 
 /** Generate a markdown study plan for an upcoming exam/deadline. */
 export async function generateStudyPlan(input: StudyPlanInput): Promise<string> {
-  if (PROVIDER === "none") return "";
+  const cfg = getLLMConfig();
+  if (cfg.provider === "none") return "";
   // Cache key includes the date so a plan generated "today" for a given target
   // is reused on the same calendar day rather than burning an API call per page
   // load, but automatically invalidates the next day (mastery may have changed).
@@ -755,9 +802,9 @@ export async function generateStudyPlan(input: StudyPlanInput): Promise<string> 
   ].filter(Boolean).join("\n");
 
   let result = "";
-  if (PROVIDER === "gemini") {
+  if (cfg.provider === "gemini") {
     const resp = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/${cfg.geminiModel}:generateContent?key=${cfg.geminiKey}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -770,8 +817,8 @@ export async function generateStudyPlan(input: StudyPlanInput): Promise<string> 
     if (!resp.ok) throw new Error(await resp.text());
     const data = await resp.json();
     result = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ?? "";
-  } else if (PROVIDER === "anthropic" && anthropic) {
-    const msg = await anthropic.messages.create({
+  } else if (cfg.provider === "anthropic" && cfg.anthropic) {
+    const msg = await cfg.anthropic.messages.create({
       model: ANTHROPIC_GRADE_MODEL,
       max_tokens: 2000,
       messages: [{ role: "user", content: prompt }],
