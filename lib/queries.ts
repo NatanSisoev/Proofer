@@ -258,6 +258,43 @@ export function recurringWeakPrerequisites(limit = 8): WeakPrerequisite[] {
     .all(limit) as WeakPrerequisite[];
 }
 
+export type NodeBlamedPrereq = {
+  prereq: string;       // blamed prerequisite node id
+  blame_count: number;  // times it was blamed for THIS node specifically
+  exists_: number;      // 1 if the prereq has its own note, 0 if ghost
+  mastery_p: number;    // current mastery of the prerequisite
+};
+
+/**
+ * Per-node misconception signal: which prerequisites the grader blamed most
+ * often in failed/partial attempts on a SINGLE concept. Unlike
+ * recurringWeakPrerequisites (which looks cross-concept), this is the
+ * node-level view — "when you struggle with THIS concept, what's the
+ * underlying gap?" Shown on the node page so the student knows exactly
+ * which prerequisite to revisit before retrying.
+ */
+export function nodeBlamedPrereqs(nodeId: string, limit = 3): NodeBlamedPrereq[] {
+  return db()
+    .prepare(
+      `SELECT a.blamed_prereq AS prereq,
+              COUNT(*) AS blame_count,
+              COALESCE(n.exists_, 0) AS exists_,
+              COALESCE(m.p, 0) AS mastery_p
+         FROM attempts a
+         LEFT JOIN nodes n ON n.id = a.blamed_prereq
+         LEFT JOIN mastery m ON m.node_id = a.blamed_prereq
+        WHERE a.node_id = ?
+          AND a.blamed_prereq IS NOT NULL
+          AND a.blamed_prereq != ''
+          AND a.blamed_prereq != 'none'
+          AND a.verdict IN ('partial', 'incorrect')
+        GROUP BY a.blamed_prereq
+        ORDER BY blame_count DESC
+        LIMIT ?`
+    )
+    .all(nodeId, limit) as NodeBlamedPrereq[];
+}
+
 /** Time series of mastery for one concept, for sparklines. */
 export function masteryHistory(nodeId: string, limit = 30): { p: number; recorded_at: string }[] {
   return db()
@@ -564,13 +601,22 @@ export function weakSpots(limit = 20): BrowseNode[] {
     .all(limit) as BrowseNode[];
 }
 
-export function searchWithMastery(q: string, limit = 25): (NodeRow & { mastery_p: number })[] {
+// Subquery counting direct unmastered prerequisites for a node.
+// Used in search to surface readiness ("ready" vs "N prereqs away").
+const DIRECT_UNMASTERED_SQ = `(
+  SELECT COUNT(*) FROM edges e
+  LEFT JOIN mastery pm ON pm.node_id = e.dst
+  WHERE e.src = n.id AND e.type = 'depends_on'
+    AND COALESCE(pm.p, 0) < ${MASTERY_THRESHOLD}
+) AS direct_unmastered_prereqs`;
+
+export function searchWithMastery(q: string, limit = 25): (NodeRow & { mastery_p: number; direct_unmastered_prereqs: number })[] {
   const safe = q.replace(/[%_]/g, "");
   const like = `%${safe}%`;
   const prefix = `${safe}%`;
   const primary = db()
     .prepare(
-      `SELECT n.*, COALESCE(m.p, 0) AS mastery_p
+      `SELECT n.*, COALESCE(m.p, 0) AS mastery_p, ${DIRECT_UNMASTERED_SQ}
          FROM nodes n
          LEFT JOIN mastery m ON m.node_id = n.id
         WHERE n.exists_ = 1 AND (n.title LIKE ? OR n.overview LIKE ?)
@@ -581,14 +627,14 @@ export function searchWithMastery(q: string, limit = 25): (NodeRow & { mastery_p
         END, n.title ASC
         LIMIT ?`
     )
-    .all(like, like, safe, prefix, limit) as (NodeRow & { mastery_p: number })[];
+    .all(like, like, safe, prefix, limit) as (NodeRow & { mastery_p: number; direct_unmastered_prereqs: number })[];
 
   // If few primary hits, supplement with content matches
   if (primary.length < 5) {
     const seen = new Set(primary.map((r) => r.id));
     const secondary = db()
       .prepare(
-        `SELECT n.*, COALESCE(m.p, 0) AS mastery_p
+        `SELECT n.*, COALESCE(m.p, 0) AS mastery_p, ${DIRECT_UNMASTERED_SQ}
            FROM nodes n
            LEFT JOIN mastery m ON m.node_id = n.id
           WHERE n.exists_ = 1 AND n.content LIKE ?
@@ -596,7 +642,7 @@ export function searchWithMastery(q: string, limit = 25): (NodeRow & { mastery_p
           ORDER BY n.title ASC
           LIMIT ?`
       )
-      .all(like, ...[...seen], limit - primary.length) as (NodeRow & { mastery_p: number })[];
+      .all(like, ...[...seen], limit - primary.length) as (NodeRow & { mastery_p: number; direct_unmastered_prereqs: number })[];
     return [...primary, ...secondary];
   }
 
@@ -1056,16 +1102,3 @@ export function areaMastery(): { area: string; total: number; mastered: number; 
   return db()
     .prepare(
       `SELECT
-         n.area,
-         COUNT(*) AS total,
-         COUNT(CASE WHEN COALESCE(m.p, 0) >= 0.8 THEN 1 END) AS mastered,
-         AVG(COALESCE(m.p, 0)) AS avg_p,
-         COUNT(CASE WHEN COALESCE(m.attempts, 0) > 0 THEN 1 END) AS practiced
-       FROM nodes n
-       LEFT JOIN mastery m ON m.node_id = n.id
-       WHERE n.exists_ = 1 AND n.area IS NOT NULL
-       GROUP BY n.area
-       ORDER BY avg_p DESC, total DESC`
-    )
-    .all() as { area: string; total: number; mastered: number; avg_p: number; practiced: number }[];
-}

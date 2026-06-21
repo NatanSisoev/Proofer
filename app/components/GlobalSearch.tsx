@@ -11,6 +11,7 @@ type Hit = {
   area: string | null;
   overview: string | null;
   mastery_p: number;
+  direct_unmastered_prereqs: number;
 };
 
 export default function GlobalSearch() {
@@ -79,7 +80,7 @@ export default function GlobalSearch() {
     <div className="global-search-overlay" onClick={close}>
       <div className="global-search-panel" onClick={(e) => e.stopPropagation()}>
         <div className="global-search-header">
-          <span className="global-search-icon">🔍</span>
+          <span className="global-search-icon">⌕</span>
           <input
             ref={inputRef}
             value={q}
@@ -115,30 +116,17 @@ export default function GlobalSearch() {
                 </div>
                 <div className="global-search-hit-meta">
                   {h.area && <span className="muted small">{h.area}</span>}
+                  {h.mastery_p >= 0.8 ? (
+                    <span className="pill search-pill-mastered">mastered</span>
+                  ) : h.direct_unmastered_prereqs === 0 ? (
+                    <span className="pill search-pill-ready">ready</span>
+                  ) : (
+                    <span className="pill search-pill-prereqs" title="Unmastered direct prerequisites">
+                      {h.direct_unmastered_prereqs} prereq{h.direct_unmastered_prereqs !== 1 ? "s" : ""}
+                    </span>
+                  )}
                   <div className="bar" style={{ width: 40 }}>
                     <span style={{ width: `${Math.round(h.mastery_p * 100)}%` }} />
                   </div>
                   <span className="muted small global-search-hit-pct">
-                    {Math.round(h.mastery_p * 100)}%
-                  </span>
-                </div>
-              </Link>
-            ))}
-          </div>
-        )}
-
-        {q.trim().length >= 2 && hits.length === 0 && (
-          <div className="global-search-empty muted">
-            No results for &ldquo;{q}&rdquo;
-          </div>
-        )}
-
-        {q.trim().length < 2 && (
-          <div className="global-search-hint muted small">
-            Type at least 2 characters · ↑↓ navigate · Enter to open
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
+      

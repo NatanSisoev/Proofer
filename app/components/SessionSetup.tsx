@@ -7,7 +7,7 @@ import StudyQueue, { SESSION_KEY, type SavedSession } from "./StudyQueue";
 
 type QueueNode = { id: string; title: string; type: string | null; area: string | null; mastery_p?: number; reason?: string };
 
-type Mode = "smart" | "due" | "weak" | "area" | "bookmarks" | "custom";
+type Mode = "smart" | "due" | "weak" | "area" | "bookmarks" | "custom" | "exam";
 
 const MODES: { key: Mode; label: string; desc: string }[] = [
   { key: "smart", label: "Smart", desc: "Due reviews first, then your frontier, then weak spots" },
@@ -15,7 +15,15 @@ const MODES: { key: Mode; label: string; desc: string }[] = [
   { key: "weak", label: "Weak spots", desc: "Practiced but still below mastery threshold" },
   { key: "bookmarks", label: "★ Bookmarked", desc: "Drill your starred concepts" },
   { key: "area", label: "By topic", desc: "Focus on one area" },
+  { key: "exam",   label: "Exam",   desc: "Timed simulation — fixed questions, countdown clock" },
   { key: "custom",    label: "Custom",        desc: "Hand-pick the concepts to practice" },
+];
+
+const EXAM_TIME_OPTIONS = [
+  { label: "20 min", value: 20 },
+  { label: "30 min", value: 30 },
+  { label: "45 min", value: 45 },
+  { label: "60 min", value: 60 },
 ];
 
 type ModeCounts = { due: number; weak: number; frontier: number; bookmarks: number };
@@ -58,6 +66,7 @@ export default function SessionSetup({
   const [customSearch, setCustomSearch] = useState("");
   const [customResults, setCustomResults] = useState<QueueNode[]>([]);
   const [customPicked, setCustomPicked] = useState<QueueNode[]>([]);
+  const [examTimeLimitMin, setExamTimeLimitMin] = useState(30);
   const customDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Pre-populate custom queue from ?nodes=id1,id2,... URL param
@@ -76,7 +85,7 @@ export default function SessionSetup({
     if (!modeFromUrl && !nodesFromUrl) {
       try {
         const savedMode = localStorage.getItem("proofer-session-mode") as Mode | null;
-        const VALID: Mode[] = ["smart", "due", "weak", "area", "bookmarks", "custom"];
+        const VALID: Mode[] = ["smart", "due", "weak", "area", "bookmarks", "custom", "exam"];
         if (savedMode && VALID.includes(savedMode)) setMode(savedMode);
       } catch {}
     }
@@ -126,8 +135,10 @@ export default function SessionSetup({
     if (mode === "custom") { setPreview(customPicked); return; }
     setPreviewLoading(true);
     try {
-      const params = new URLSearchParams({ mode, limit: String(count) });
-      if (mode === "area" && area) params.set("area", area);
+      // exam mode: preview same queue as area mode (or smart if no area set)
+      const apiMode = mode === "exam" ? (area ? "area" : "smart") : mode;
+      const params = new URLSearchParams({ mode: apiMode, limit: String(count) });
+      if ((mode === "area" || mode === "exam") && area) params.set("area", area);
       const res = await fetch(`/api/session/queue?${params}`);
       const data = await res.json();
       setPreview(data.queue ?? []);
@@ -152,8 +163,10 @@ export default function SessionSetup({
     }
     setLoading(true);
     try {
-      const params = new URLSearchParams({ mode, limit: String(count) });
-      if (mode === "area" && area) params.set("area", area);
+      // exam mode: pull queue just like area/smart mode
+      const apiMode = mode === "exam" ? (area ? "area" : "smart") : mode;
+      const params = new URLSearchParams({ mode: apiMode, limit: String(count) });
+      if ((mode === "area" || mode === "exam") && area) params.set("area", area);
       const res = await fetch(`/api/session/queue?${params}`);
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to build queue");
@@ -170,7 +183,14 @@ export default function SessionSetup({
   }
 
   if (queue) {
-    return <StudyQueue queue={queue} preferKind={preferKind === "any" ? undefined : preferKind} savedState={resumeData} />;
+    return (
+      <StudyQueue
+        queue={queue}
+        preferKind={preferKind === "any" ? undefined : preferKind}
+        savedState={resumeData}
+        examMode={mode === "exam" ? { timeLimitSec: examTimeLimitMin * 60 } : undefined}
+      />
+    );
   }
 
   return (
@@ -254,9 +274,11 @@ export default function SessionSetup({
             })}
           </div>
 
-          {mode === "area" && (
+          {(mode === "area" || mode === "exam") && (
             <div style={{ marginTop: 14 }}>
-              <label className="muted small field-label">Area</label>
+              <label className="muted small field-label">
+                {mode === "exam" ? "Focus area (optional)" : "Area"}
+              </label>
               <select
                 value={area}
                 onChange={(e) => {
@@ -265,12 +287,32 @@ export default function SessionSetup({
                 }}
                 className="form-input"
               >
+                {mode === "exam" && <option value="">All areas</option>}
                 {areas.map((a) => (
                   <option key={a.area} value={a.area}>
                     {a.area} — {a.count} concepts, {Math.round(a.avg_mastery * 100)}% avg
                   </option>
                 ))}
               </select>
+            </div>
+          )}
+
+          {mode === "exam" && (
+            <div style={{ marginTop: 14 }}>
+              <label className="muted small field-label">Time limit</label>
+              <div className="btn-row">
+                {EXAM_TIME_OPTIONS.map((o) => (
+                  <button
+                    key={o.value}
+                    className={examTimeLimitMin === o.value ? "btn-primary" : "btn-ghost"}
+                    onClick={() => setExamTimeLimitMin(o.value)}
+                    style={{ minWidth: 60 }}
+                  >
+                    {o.label}
+                  </button>
+                ))}
+              </div>
+              <p className="muted small field-hint">Countdown starts when the first problem loads.</p>
             </div>
           )}
 
@@ -388,55 +430,6 @@ export default function SessionSetup({
         >
           {loading ? "Building queue…" : mode === "custom"
             ? `Start with ${customPicked.length} concept${customPicked.length !== 1 ? "s" : ""} →`
-            : "Start session →"}
-        </button>
-      </div>
-
-      {/* Right: queue preview */}
-      <div className="panel">
-        <h2>
-          {mode === "custom" ? "Your custom queue" : "Queue preview"}
-          {previewLoading && mode !== "custom" && <span className="muted small loading-tag">loading…</span>}
-        </h2>
-        {!previewLoading && preview.length === 0 && mode !== "custom" && (
-          <p className="muted">No concepts found for this mode.</p>
-        )}
-        {mode === "custom" && customPicked.length === 0 && (
-          <p className="muted small">Use the search on the left to pick concepts.</p>
-        )}
-        {preview.map((n, i) => (
-          <div key={n.id} className="session-result-row">
-            <span className="muted small row-index">{i + 1}</span>
-            {n.type && <span className={`type-badge t-${n.type}`}>{n.type}</span>}
-            <Link
-              href={`/node/${encodeURIComponent(n.id)}`}
-              target="_blank"
-              className="preview-link"
-            >
-              {n.title}
-            </Link>
-            {n.reason && (
-              <span className={`reason-tag reason-${n.reason.replace(/\s+/g, "-")}`}>
-                {n.reason}
-              </span>
-            )}
-            <div className="preview-mastery">
-              <div className="bar bar-mini">
-                <span style={{ width: `${Math.round((n.mastery_p ?? 0) * 100)}%` }} />
-              </div>
-              <span className="muted small preview-pct">
-                {Math.round((n.mastery_p ?? 0) * 100)}%
-              </span>
-            </div>
-          </div>
-        ))}
-        {preview.length > 0 && (
-          <p className="muted small panel-tip">
-            Click any concept to preview it · queue shuffles on start
-          </p>
-        )}
-      </div>
-    </div>
-    </>
-  );
-}
+            : mode === "exam"
+            ? `Start ${examTimeLimitMin}-min exam →`
+            : "Start session �

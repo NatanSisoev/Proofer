@@ -7,6 +7,7 @@ import Link from "next/link";
 type Hit = {
   id: string; title: string; type: string | null;
   area: string | null; overview: string | null; mastery_p: number;
+  direct_unmastered_prereqs: number;
 };
 
 export default function SearchBox() {
@@ -68,18 +69,10 @@ export default function SearchBox() {
                 {h.area && <span className="muted small" style={{ flexShrink: 0 }}>{h.area}</span>}
               </div>
               <div className="search-hit-right">
-                <div className="bar" style={{ width: 48 }}>
-                  <span style={{ width: `${Math.round(h.mastery_p * 100)}%` }} />
-                </div>
-                <span className="small muted">{Math.round(h.mastery_p * 100)}%</span>
-              </div>
-            </Link>
-          ))}
-          <p className="muted small search-hint">
-            ↑↓ navigate · Enter to open · Esc to close
-          </p>
-        </div>
-      )}
-    </div>
-  );
-}
+                {h.mastery_p >= 0.8 ? (
+                  <span className="pill search-pill-mastered">mastered</span>
+                ) : h.direct_unmastered_prereqs === 0 ? (
+                  <span className="pill search-pill-ready">ready</span>
+                ) : (
+                  <span className="pill search-pill-prereqs" title="Unmastered direct prerequisites">
+                    {h.direct_unmastered_prereqs} prereq{h.direct

@@ -11,6 +11,30 @@ not data volume. Fix architecture first; everything else compounds on top of it.
 
 ---
 
+## ✅ Status as of 2026-06-20
+
+Most P0–P2 items are complete. Summary of what's shipped:
+
+- **P0 #1** ✅ `/browse` ISR (revalidate=30), `/quality` ISR (revalidate=60/120). Remaining `force-dynamic` routes are correctly per-user (mastery, attempts).
+- **P0 #2** ✅ `loading.tsx` Suspense skeletons added for all 8 major routes.
+- **P0 #3** ✅ Vault sync is async (`execFileAsync`), module-scoped lock prevents double-sync.
+- **P0 #4** ✅ `thinkingConfig: { thinkingBudget: 0 }` on all 5 free-form LLM call sites.
+- **P0 #5** ✅ LLM response cache — SQLite-backed, 7-day TTL, cleared on vault sync.
+- **P0 #6** ✅ `/quality` ISR means `linkSuggestions` O(n²) runs at most once per 120s.
+- **P0 #7** ✅ Cytoscape layout positions persisted to localStorage per area.
+- **P1 #1** ✅ DB singleton race — stale handle left open on sync (WAL coexistence), no close.
+- **P1 #2** ✅ StudyQueue "Retry missed" uses `setActiveQueue` (no `window.location` reload).
+- **P2 #1** ✅ `/learn?node=X` is a 1-item `StudyQueue` — fully merged.
+- **P3 #3** ✅ AI edge-typing: `classifyEdge()` + `/api/quality/edges/classify` approval queue.
+- **P3 #4** ✅ Misconception signals: `nodeBlamedPrereqs` on node page, `recurringWeakPrerequisites` on `/progress`.
+- **P3 #5** ✅ `dependencyCycles()` query exists; DAG hygiene surfaced in `/quality`.
+- **P3 #6** ✅ Provider/model badge in `/settings` LLM panel.
+- **New** ✅ Exam mode: timed session with countdown clock, auto-finish, exam-branded summary.
+
+**Remaining backlog below.**
+
+---
+
 ## P0 — Performance (do these first)
 
 ### 1. Remove blanket `export const dynamic = "force-dynamic"`

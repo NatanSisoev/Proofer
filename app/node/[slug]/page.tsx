@@ -14,7 +14,7 @@ import PersonalNotes from "@/app/components/PersonalNotes";
 import ReExplain from "@/app/components/ReExplain";
 import CompareWith from "@/app/components/CompareWith";
 import ReadingProgress from "@/app/components/ReadingProgress";
-import { getNode, edgesOf, isKnown, readiness, prerequisites, attemptCount, isBookmarked, nodeAttempts, nodeAttemptDetails, nextReviewDays, similarConcepts } from "@/lib/queries";
+import { getNode, edgesOf, isKnown, readiness, prerequisites, attemptCount, isBookmarked, nodeAttempts, nodeAttemptDetails, nextReviewDays, similarConcepts, nodeBlamedPrereqs } from "@/lib/queries";
 import { truncateMath } from "@/lib/text";
 import { getMasteryP } from "@/lib/mastery";
 import { HAS_KEY } from "@/lib/llm";
@@ -75,6 +75,12 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
   const attemptDetails = nodeAttemptDetails(id, 6);
   const reviewDays = nextReviewDays(id);
   const similar = node.area ? similarConcepts(id, node.area, mastery, 6) : [];
+  const blamedPrereqs = attempts >= 2 ? nodeBlamedPrereqs(id, 3) : [];
+
+  // Most recent non-correct attempt gap — surfaced prominently near the CTA
+  const lastGapAttempt = attemptDetails.find(
+    (a) => a.verdict !== "correct" && a.gap && a.gap !== "none" && a.gap !== "(gave up — showed answer)"
+  ) ?? null;
 
   // group outgoing by semantic priority
   const order = ["depends_on", "generalizes", "equivalent_to", "instance_of", "contradicts", "related"];
@@ -169,12 +175,46 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
                 )}
               </div>
               {HAS_KEY && <WeaknessDiagnosis nodeId={id} attemptCount={attempts} />}
+              {blamedPrereqs.length > 0 && (
+                <div className="blamed-prereqs">
+                  <span className="muted small">Grader blamed: </span>
+                  {blamedPrereqs.map((b) => (
+                    <span key={b.prereq} className="blamed-prereq-chip">
+                      {b.exists_ ? (
+                        <Link href={`/node/${encodeURIComponent(b.prereq)}`} className="blamed-prereq-link">
+                          {b.prereq}
+                        </Link>
+                      ) : (
+                        <span className="muted">{b.prereq}</span>
+                      )}
+                      {b.blame_count > 1 && (
+                        <span className="blame-count">×{b.blame_count}</span>
+                      )}
+                    </span>
+                  ))}
+                  {blamedPrereqs.some((b) => b.exists_) && (
+                    <Link
+                      href={`/session?mode=custom&nodes=${blamedPrereqs.filter((b) => b.exists_).slice(0, 5).map((b) => encodeURIComponent(b.prereq)).join(",")}`}
+                      className="pill pill-accent pill-xs"
+                      style={{ marginLeft: 6 }}
+                    >
+                      Practice gaps →
+                    </Link>
+                  )}
+                </div>
+              )}
             </div>
             <div className="node-side-col">
               <div className="node-cta">
                 <Link href={`/learn?node=${encodeURIComponent(id)}`} className="cta">Practice this →</Link>
                 <BookmarkButton nodeId={id} initial={bookmarked} />
               </div>
+              {lastGapAttempt && (
+                <div className="last-gap-note">
+                  <span className="muted small last-gap-label">Last gap identified:</span>
+                  <MathText className="small last-gap-text">{lastGapAttempt.gap!.length > 140 ? lastGapAttempt.gap!.slice(0, 140) + "…" : lastGapAttempt.gap!}</MathText>
+                </div>
+              )}
               {node.area && (
                 <Link
                   href={`/session?mode=area&area=${encodeURIComponent(node.area)}`}
@@ -307,25 +347,3 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
                       <div className="preview-mastery">
                         <div className="bar" style={{ width: 40 }}>
                           <span style={{ width: `${Math.round(s.mastery_p * 100)}%` }} />
-                        </div>
-                        <span className="muted small preview-pct">
-                          {Math.round(s.mastery_p * 100)}%
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                  <Link
-                    href={`/browse?area=${encodeURIComponent(node.area!)}`}
-                    className="muted small browse-more"
-                  >
-                    Browse all {node.area} →
-                  </Link>
-                </div>
-              )}
-            </div>
-          </div>
-        </>
-      )}
-    </div>
-  );
-}

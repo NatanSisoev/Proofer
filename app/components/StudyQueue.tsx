@@ -41,10 +41,12 @@ export default function StudyQueue({
   queue,
   preferKind,
   savedState,
+  examMode,
 }: {
   queue: QueueNode[];
   preferKind?: string;
   savedState?: SavedSession | null;
+  examMode?: { timeLimitSec: number };
 }) {
   const [activeQueue, setActiveQueue] = useState<QueueNode[]>(savedState?.activeQueue ?? queue);
   const [index, setIndex] = useState(savedState?.index ?? 0);
@@ -66,6 +68,7 @@ export default function StudyQueue({
   const [hintBusy, setHintBusy] = useState(false);
   const [sessionElapsed, setSessionElapsed] = useState(0);
   const [sessionStart] = useState(() => Date.now());
+  const [examTimedOut, setExamTimedOut] = useState(false);
   const [copied, setCopied] = useState(false);
   const [unlockedNodes, setUnlockedNodes] = useState<{ id: string; title: string; area: string | null; type: string | null }[]>([]);
 
@@ -156,12 +159,20 @@ export default function StudyQueue({
     if (nextNode && !cardStatesRef.current[index + 1]?.problem) prefetch(nextNode.id);
   }, [problem, index, activeQueue, done, prefetch]);
 
-  // Session elapsed timer
+  // Session elapsed timer — also drives exam countdown
   useEffect(() => {
     if (done) return;
-    const id = setInterval(() => setSessionElapsed(Math.floor((Date.now() - sessionStart) / 1000)), 1000);
+    const id = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - sessionStart) / 1000);
+      setSessionElapsed(elapsed);
+      // Exam mode: auto-finish when time limit reached
+      if (examMode && elapsed >= examMode.timeLimitSec) {
+        setExamTimedOut(true);
+        setDone(true);
+      }
+    }, 1000);
     return () => clearInterval(id);
-  }, [done, sessionStart]);
+  }, [done, sessionStart, examMode]);
 
   // Fetch newly unlocked concepts when session completes
   useEffect(() => {
@@ -369,10 +380,17 @@ export default function StudyQueue({
     return (
       <div className="session-summary">
         <div style={{ marginBottom: 6 }}>
-          <h2>{isPerfect ? "Perfect session!" : "Session complete"}</h2>
+          {examMode ? (
+            <h2 style={{ color: examTimedOut ? "var(--amber)" : undefined }}>
+              {examTimedOut ? "Time's up!" : isPerfect ? "Perfect exam!" : "Exam complete"}
+            </h2>
+          ) : (
+            <h2>{isPerfect ? "Perfect session!" : "Session complete"}</h2>
+          )}
           <p className="muted session-subtitle">
-            {activeQueue.length} concept{activeQueue.length !== 1 ? "s" : ""} ·{" "}
-            {Math.floor(sessionElapsed / 60)}m {sessionElapsed % 60}s ·{" "}
+            {results.length} of {activeQueue.length} concept{activeQueue.length !== 1 ? "s" : ""} answered ·{" "}
+            {Math.floor(sessionElapsed / 60)}m {sessionElapsed % 60}s
+            {examMode && ` of ${examMode.timeLimitSec / 60}m`} ·{" "}
             {accuracy}% accuracy
             {avgTimeSec !== null && ` · ~${avgTimeSec}s/problem`}
             {totalMasteryGain > 0.01 && ` · +${Math.round(totalMasteryGain * 100)}pp avg mastery`}
@@ -515,9 +533,24 @@ export default function StudyQueue({
             ← Back
           </button>
           <span className="muted small">Concept {index + 1} of {activeQueue.length}</span>
-          <span className="muted small tabular">
-            {Math.floor(sessionElapsed / 60)}:{String(sessionElapsed % 60).padStart(2, "0")}
-          </span>
+          {examMode ? (() => {
+            const remaining = Math.max(0, examMode.timeLimitSec - sessionElapsed);
+            const mins = Math.floor(remaining / 60);
+            const secs = remaining % 60;
+            const warn = remaining < 5 * 60;
+            return (
+              <span
+                className={`exam-timer tabular${warn ? " exam-timer-warn" : ""}`}
+                title="Time remaining"
+              >
+                {mins}:{String(secs).padStart(2, "0")}
+              </span>
+            );
+          })() : (
+            <span className="muted small tabular">
+              {Math.floor(sessionElapsed / 60)}:{String(sessionElapsed % 60).padStart(2, "0")}
+            </span>
+          )}
           {(() => {
             const vals = Object.values(resultsByIndex);
             if (vals.length === 0) return null;
@@ -624,37 +657,4 @@ export default function StudyQueue({
               <button className="btn-ghost" onClick={advance} disabled={busy}>
                 Skip →
               </button>
-              <button className="btn-ghost btn-sm" onClick={reveal} disabled={busy} style={{ color: "var(--muted)" }}>
-                I don't know
-              </button>
-              <span className="muted small keyboard-hint" style={{ marginLeft: "auto" }}>Ctrl+Enter</span>
-            </div>
-          )}
-
-          {grade && (
-            <div className="panel feedback">
-              <GradeFeedback
-                grade={grade}
-                followUp={followUp}
-                onFollowUpChange={setFollowUp}
-                followUpBusy={followUpBusy}
-                onSubmitFollowUp={submitFollowUp}
-                followUpPlaceholder="Show the missing step, fix the misconception…"
-                followUpLeadText="Address the gap — no need to start over:"
-                followUpMinHeight={90}
-                unlockTarget="_blank"
-              />
-
-              <div className="practice-actions" style={{ marginTop: 12 }}>
-                <button className="btn-primary" onClick={advance} disabled={busy}>
-                  {index + 1 >= activeQueue.length ? "Finish session →" : "Next concept →"}
-                </button>
-                <span className="muted small keyboard-hint">Ctrl+Enter</span>
-              </div>
-            </div>
-          )}
-        </>
-      )}
-    </div>
-  );
-}
+              <button className="btn-ghost btn-sm" onCl

@@ -6,10 +6,10 @@ const DAYS = ["", "Mon", "", "Wed", "", "Fri", ""];
 
 function cellColor(count: number): string {
   if (count === 0) return "var(--bg-soft)";
-  if (count <= 2) return "#C5DCC0";
-  if (count <= 5) return "#9DC499";
-  if (count <= 10) return "#6DAA68";
-  return "#3D7A38";
+  if (count <= 2) return "var(--cal-1)";
+  if (count <= 5) return "var(--cal-2)";
+  if (count <= 10) return "var(--cal-3)";
+  return "var(--cal-4)";
 }
 
 export default function ActivityCalendar({ data }: { data: Day[] }) {

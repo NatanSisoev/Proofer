@@ -3,7 +3,9 @@ import { browseAreas, nodesInArea, nodeTypes, areaMastery } from "@/lib/queries"
 import type { BrowseNode } from "@/lib/queries";
 import BrowseFilters from "@/app/components/BrowseFilters";
 
-export const dynamic = "force-dynamic";
+// Mastery data is user-specific but 30s stale is perfectly acceptable for a
+// single-user local app. ISR avoids a full DB round-trip on every /browse nav.
+export const revalidate = 30;
 
 function MasteryBar({ p }: { p: number }) {
   return (

@@ -13,6 +13,4 @@ export async function GET(req: NextRequest) {
     area: n.area,
     overview: n.overview,
     mastery_p: n.mastery_p,
-  }));
-  return NextResponse.json(hits);
-}
+    direct_unmastered_prereqs: n.direct_unm
