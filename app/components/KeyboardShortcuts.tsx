@@ -65,7 +65,7 @@ export default function KeyboardShortcuts() {
 
   return (
     <div className="modal-overlay" onClick={() => setOpen(false)}>
-      <div className="panel shortcuts-panel" onClick={(e) => e.stopPropagation()}>
+      <div className="modal-panel shortcuts-panel" onClick={(e) => e.stopPropagation()}>
         <h2 className="shortcuts-heading">Keyboard shortcuts</h2>
         <table className="shortcuts-table">
           <tbody>
