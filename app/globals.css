@@ -334,9 +334,10 @@ button.know.on { background: var(--green-soft); border-color: var(--green-border
 .markdown blockquote { border-left: 3px solid var(--text); margin: 16px 0; padding: 4px 0 4px 18px; color: var(--text); background: none; border-radius: 0; }
 .markdown h2 { font-size: 16px; border-bottom: 1px solid var(--border); padding-bottom: 5px; margin-top: 28px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
 .markdown h3 { font-size: 14px; font-weight: 700; margin-top: 22px; color: var(--text); }
-.markdown code { background: var(--bg-soft); padding: 1px 5px; border-radius: 4px; font-size: 0.9em; font-family: ui-monospace, monospace; border: 1px solid var(--border); }
+.markdown code { background: var(--brand-soft); color: #A8503A; padding: 2px 7px; border-radius: 6px; font-size: 0.88em; font-family: ui-monospace, monospace; border: none; }
+[data-theme="dark"] .markdown code { background: var(--brand-soft); color: #E0A188; }
 .markdown pre { background: var(--bg-soft); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; overflow-x: auto; margin: 14px 0; }
-.markdown pre code { background: none; padding: 0; font-size: 13px; border: none; }
+.markdown pre code { background: none; color: var(--text); padding: 0; font-size: 13px; border: none; }
 /* Hide raw TikZ/LaTeX code blocks that start with \begin */
 .markdown pre:has(code[class*="tikz"]), .markdown pre:has(code[class*="latex"]) { display: none; }
 /* Tables */
