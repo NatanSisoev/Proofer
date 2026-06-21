@@ -1107,10 +1107,19 @@ details[open].practice-history > summary::before { transform: rotate(90deg); }
 .attempt-card { padding: 12px 16px; border-left-width: 3px; }
 
 /* Modal overlay */
-.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.45); backdrop-filter: blur(1px);
+  display: flex; align-items: center; justify-content: center; z-index: 1000;
+}
+.modal-panel {
+  background: var(--panel); border-radius: 20px;
+  border: 1px solid var(--border);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.18);
+  padding: 28px;
+}
 
 /* Keyboard shortcuts */
-.shortcuts-panel { min-width: 320px; padding: 24px; }
+.shortcuts-panel { min-width: 320px; }
 .shortcuts-heading { margin: 0 0 16px; }
 .shortcuts-table { width: 100%; border-collapse: collapse; }
 .shortcuts-row { border-bottom: 1px solid var(--border); }
