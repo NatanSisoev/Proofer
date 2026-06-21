@@ -657,4 +657,37 @@ export default function StudyQueue({
               <button className="btn-ghost" onClick={advance} disabled={busy}>
                 Skip →
               </button>
-              <button className="btn-ghost btn-sm" onCl
+              <button className="btn-ghost btn-sm" onClick={reveal} disabled={busy} style={{ color: "var(--muted)" }}>
+                I don't know
+              </button>
+              <span className="muted small keyboard-hint" style={{ marginLeft: "auto" }}>Ctrl+Enter</span>
+            </div>
+          )}
+
+          {grade && (
+            <div className="panel feedback">
+              <GradeFeedback
+                grade={grade}
+                followUp={followUp}
+                onFollowUpChange={setFollowUp}
+                followUpBusy={followUpBusy}
+                onSubmitFollowUp={submitFollowUp}
+                followUpPlaceholder="Show the missing step, fix the misconception…"
+                followUpLeadText="Address the gap — no need to start over:"
+                followUpMinHeight={90}
+                unlockTarget="_blank"
+              />
+
+              <div className="practice-actions" style={{ marginTop: 12 }}>
+                <button className="btn-primary" onClick={advance} disabled={busy}>
+                  {index + 1 >= activeQueue.length ? "Finish session →" : "Next concept →"}
+                </button>
+                <span className="muted small keyboard-hint">Ctrl+Enter</span>
+              </div>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+}

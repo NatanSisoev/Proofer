@@ -432,4 +432,55 @@ export default function SessionSetup({
             ? `Start with ${customPicked.length} concept${customPicked.length !== 1 ? "s" : ""} →`
             : mode === "exam"
             ? `Start ${examTimeLimitMin}-min exam →`
-            : "Start session �
+            : "Start session →"}
+        </button>
+      </div>
+
+      {/* Right: queue preview */}
+      <div className="panel">
+        <h2>
+          {mode === "custom" ? "Your custom queue" : "Queue preview"}
+          {previewLoading && mode !== "custom" && <span className="muted small loading-tag">loading…</span>}
+        </h2>
+        {!previewLoading && preview.length === 0 && mode !== "custom" && (
+          <p className="muted">No concepts found for this mode.</p>
+        )}
+        {mode === "custom" && customPicked.length === 0 && (
+          <p className="muted small">Use the search on the left to pick concepts.</p>
+        )}
+        {preview.map((n, i) => (
+          <div key={n.id} className="session-result-row">
+            <span className="muted small row-index">{i + 1}</span>
+            {n.type && <span className={`type-badge t-${n.type}`}>{n.type}</span>}
+            <Link
+              href={`/node/${encodeURIComponent(n.id)}`}
+              target="_blank"
+              className="preview-link"
+            >
+              {n.title}
+            </Link>
+            {n.reason && (
+              <span className={`reason-tag reason-${n.reason.replace(/\s+/g, "-")}`}>
+                {n.reason}
+              </span>
+            )}
+            <div className="preview-mastery">
+              <div className="bar bar-mini">
+                <span style={{ width: `${Math.round((n.mastery_p ?? 0) * 100)}%` }} />
+              </div>
+              <span className="muted small preview-pct">
+                {Math.round((n.mastery_p ?? 0) * 100)}%
+              </span>
+            </div>
+          </div>
+        ))}
+        {preview.length > 0 && (
+          <p className="muted small panel-tip">
+            Click any concept to preview it · queue shuffles on start
+          </p>
+        )}
+      </div>
+    </div>
+    </>
+  );
+}

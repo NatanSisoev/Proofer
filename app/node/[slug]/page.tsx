@@ -1,7 +1,7 @@
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { notFound } from "next/navigation";
 import Markdown from "@/app/components/Markdown";
-import EgoGraph from "@/app/components/EgoGraph";
 import KnownButton from "@/app/components/KnownButton";
 import NodeActions from "@/app/components/NodeActions";
 import LearningPath from "@/app/components/LearningPath";
@@ -347,3 +347,25 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
                       <div className="preview-mastery">
                         <div className="bar" style={{ width: 40 }}>
                           <span style={{ width: `${Math.round(s.mastery_p * 100)}%` }} />
+                        </div>
+                        <span className="muted small preview-pct">
+                          {Math.round(s.mastery_p * 100)}%
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                  <Link
+                    href={`/browse?area=${encodeURIComponent(node.area!)}`}
+                    className="muted small browse-more"
+                  >
+                    Browse all {node.area} →
+                  </Link>
+                </div>
+              )}
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}

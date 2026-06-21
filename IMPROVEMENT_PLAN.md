@@ -11,9 +11,9 @@ not data volume. Fix architecture first; everything else compounds on top of it.
 
 ---
 
-## ✅ Status as of 2026-06-20
+## ✅ Status as of 2026-06-21
 
-Most P0–P2 items are complete. Summary of what's shipped:
+Most P0–P3 items are complete. Summary of what's shipped:
 
 - **P0 #1** ✅ `/browse` ISR (revalidate=30), `/quality` ISR (revalidate=60/120). Remaining `force-dynamic` routes are correctly per-user (mastery, attempts).
 - **P0 #2** ✅ `loading.tsx` Suspense skeletons added for all 8 major routes.
@@ -25,10 +25,12 @@ Most P0–P2 items are complete. Summary of what's shipped:
 - **P1 #1** ✅ DB singleton race — stale handle left open on sync (WAL coexistence), no close.
 - **P1 #2** ✅ StudyQueue "Retry missed" uses `setActiveQueue` (no `window.location` reload).
 - **P2 #1** ✅ `/learn?node=X` is a 1-item `StudyQueue` — fully merged.
+- **P3 #1** ✅ Search results show readiness state per hit: "mastered" / "ready" (all prereqs known) / "N prereqs" badge via `DIRECT_UNMASTERED_SQ` correlated subquery in `searchWithMastery()`. Both `SearchBox` and `GlobalSearch` updated.
 - **P3 #3** ✅ AI edge-typing: `classifyEdge()` + `/api/quality/edges/classify` approval queue.
-- **P3 #4** ✅ Misconception signals: `nodeBlamedPrereqs` on node page, `recurringWeakPrerequisites` on `/progress`.
+- **P3 #4** ✅ Misconception signals: `nodeBlamedPrereqs` on node page, `recurringWeakPrerequisites` on `/progress`. **New (2026-06-21):** "Last gap identified" panel surfaced prominently in node page side column from most recent non-correct attempt — no longer buried in collapsed history.
 - **P3 #5** ✅ `dependencyCycles()` query exists; DAG hygiene surfaced in `/quality`.
 - **P3 #6** ✅ Provider/model badge in `/settings` LLM panel.
+- **P4 #2** ✅ (partial) `.t-Algorithm`, `.t-Example`, `.t-ghost` backgrounds now use `var(--green-soft)` / `var(--amber-soft)` / `var(--red-soft)`; `.t-ghost` color → `var(--red)`. Dark-mode bg overrides removed for these three (CSS vars carry dark values). Text colors for Algorithm/Example still hardcoded (no exact variable match exists yet).
 - **New** ✅ Exam mode: timed session with countdown clock, auto-finish, exam-branded summary.
 
 **Remaining backlog below.**

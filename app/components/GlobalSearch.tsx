@@ -129,4 +129,26 @@ export default function GlobalSearch() {
                     <span style={{ width: `${Math.round(h.mastery_p * 100)}%` }} />
                   </div>
                   <span className="muted small global-search-hit-pct">
-      
+                    {Math.round(h.mastery_p * 100)}%
+                  </span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
+
+        {q.trim().length >= 2 && hits.length === 0 && (
+          <div className="global-search-empty muted">
+            No results for &ldquo;{q}&rdquo;
+          </div>
+        )}
+
+        {q.trim().length < 2 && (
+          <div className="global-search-hint muted small">
+            Type at least 2 characters · ↑↓ navigate · Enter to open
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

@@ -75,4 +75,21 @@ export default function SearchBox() {
                   <span className="pill search-pill-ready">ready</span>
                 ) : (
                   <span className="pill search-pill-prereqs" title="Unmastered direct prerequisites">
-                    {h.direct_unmastered_prereqs} prereq{h.direct
+                    {h.direct_unmastered_prereqs} prereq{h.direct_unmastered_prereqs !== 1 ? "s" : ""}
+                  </span>
+                )}
+                <div className="bar" style={{ width: 40 }}>
+                  <span style={{ width: `${Math.round(h.mastery_p * 100)}%` }} />
+                </div>
+                <span className="small muted">{Math.round(h.mastery_p * 100)}%</span>
+              </div>
+            </Link>
+          ))}
+          <p className="muted small search-hint">
+            ↑↓ navigate · Enter to open · Esc to close
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}

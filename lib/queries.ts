@@ -1102,3 +1102,16 @@ export function areaMastery(): { area: string; total: number; mastered: number; 
   return db()
     .prepare(
       `SELECT
+         n.area,
+         COUNT(*) AS total,
+         COUNT(CASE WHEN COALESCE(m.p, 0) >= 0.8 THEN 1 END) AS mastered,
+         AVG(COALESCE(m.p, 0)) AS avg_p,
+         COUNT(CASE WHEN COALESCE(m.attempts, 0) > 0 THEN 1 END) AS practiced
+       FROM nodes n
+       LEFT JOIN mastery m ON m.node_id = n.id
+       WHERE n.exists_ = 1 AND n.area IS NOT NULL
+       GROUP BY n.area
+       ORDER BY avg_p DESC, total DESC`
+    )
+    .all() as { area: string; total: number; mastered: number; avg_p: number; practiced: number }[];
+}

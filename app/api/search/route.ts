@@ -13,4 +13,7 @@ export async function GET(req: NextRequest) {
     area: n.area,
     overview: n.overview,
     mastery_p: n.mastery_p,
-    direct_unmastered_prereqs: n.direct_unm
+    direct_unmastered_prereqs: n.direct_unmastered_prereqs,
+  }));
+  return NextResponse.json(hits);
+}
