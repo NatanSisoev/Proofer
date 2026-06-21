@@ -1,5 +1,11 @@
-import GlobalGraph from "@/app/components/GlobalGraph";
+import nextDynamic from "next/dynamic";
 import Link from "next/link";
+
+// cytoscape is a heavy client-only lib; defer it to its own chunk so it
+// doesn't bloat the JS this navigation has to download and parse.
+const GlobalGraph = nextDynamic(() => import("@/app/components/GlobalGraph"), {
+  loading: () => <div className="graph-shell graph-shell-loading" />,
+});
 
 export default async function GraphPage({
   searchParams,

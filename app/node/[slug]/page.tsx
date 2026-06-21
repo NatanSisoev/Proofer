@@ -1,5 +1,5 @@
 import Link from "next/link";
-import dynamic from "next/dynamic";
+import nextDynamic from "next/dynamic";
 import { notFound } from "next/navigation";
 import Markdown from "@/app/components/Markdown";
 import KnownButton from "@/app/components/KnownButton";
@@ -14,11 +14,17 @@ import PersonalNotes from "@/app/components/PersonalNotes";
 import ReExplain from "@/app/components/ReExplain";
 import CompareWith from "@/app/components/CompareWith";
 import ReadingProgress from "@/app/components/ReadingProgress";
-import { getNode, edgesOf, isKnown, readiness, prerequisites, attemptCount, isBookmarked, nodeAttempts, nodeAttemptDetails, nextReviewDays, similarConcepts, nodeBlamedPrereqs } from "@/lib/queries";
+import { getNode, edgesOf, isKnown, readiness, prerequisites, attemptCount, isBookmarked, nodeAttempts, nodeAttemptDetails, nextReviewDays, similarConcepts, nodeBlamedPrereqs, egoGraph } from "@/lib/queries";
 import { truncateMath } from "@/lib/text";
 import { getMasteryP } from "@/lib/mastery";
 import { hasKey } from "@/lib/llm";
 import type { EdgeRow } from "@/lib/db";
+
+// cytoscape is a heavy client-only lib; defer it to its own chunk so it
+// doesn't bloat the JS every node navigation has to download and parse.
+const EgoGraph = nextDynamic(() => import("@/app/components/EgoGraph"), {
+  loading: () => <div className="graph-shell graph-shell-loading" />,
+});
 
 export const dynamic = "force-dynamic";
 
@@ -68,8 +74,8 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
   const { outgoing, incoming } = edgesOf(id);
   const known = isKnown(id);
   const mastery = getMasteryP(id);
-  const ready = readiness(id);
-  const { depth } = prerequisites(id);
+  const { closure, depth } = prerequisites(id);
+  const ready = readiness(id, closure);
   const attempts = attemptCount(id);
   const bookmarked = isBookmarked(id);
   const history = nodeAttempts(id, 10);
@@ -77,6 +83,7 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
   const reviewDays = nextReviewDays(id);
   const similar = node.area ? similarConcepts(id, node.area, mastery, 6) : [];
   const blamedPrereqs = attempts >= 2 ? nodeBlamedPrereqs(id, 3) : [];
+  const ego = node.exists_ === 1 ? egoGraph(id, 1) : null;
 
   // Most recent non-correct attempt gap — surfaced prominently near the CTA
   const lastGapAttempt = attemptDetails.find(
@@ -324,7 +331,7 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
             <div>
               <div className="panel" style={{ marginBottom: 16 }}>
                 <h2>Neighborhood</h2>
-                <EgoGraph slug={id} depth={1} />
+                {ego && <EgoGraph slug={id} depth={1} initialData={ego} />}
               </div>
               <div className="panel" style={{ marginBottom: 16 }}>
                 <h2>Outgoing</h2>

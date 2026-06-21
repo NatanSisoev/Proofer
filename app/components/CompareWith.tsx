@@ -2,7 +2,10 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import Markdown from "./Markdown";
+import dynamic from "next/dynamic";
+import Spinner from "./Spinner";
+
+const Markdown = dynamic(() => import("./Markdown"));
 
 type SearchResult = { id: string; title: string; type: string | null; area: string | null; mastery_p: number };
 
@@ -134,7 +137,7 @@ export default function CompareWith({ nodeId, nodeTitle }: { nodeId: string; nod
         </div>
       )}
 
-      {busy && <div className="muted small" style={{ padding: "8px 0" }}>Generating comparison…</div>}
+      {busy && <div className="muted small" style={{ padding: "8px 0" }}><Spinner label="Generating comparison…" /></div>}
       {error && <div className="action-error">{error}</div>}
 
       {comparison && !busy && (

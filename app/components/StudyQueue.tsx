@@ -3,39 +3,16 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import VoiceInput from "./VoiceInput";
+import Spinner from "./Spinner";
 import { VERDICT } from "@/lib/verdict";
-import { ProblemPanel, GradeFeedback, type Problem, type Grade, type ProblemNode } from "./ProblemCard";
-
-type QueueNode = ProblemNode;
-
-type SessionResult = {
-  node: QueueNode;
-  verdict: "correct" | "partial" | "incorrect";
-  masteryBefore: number;
-  masteryAfter: number;
-  justMastered?: boolean;
-  elapsedSec?: number;
-};
-
-// Per-card snapshot for back-navigation and persistence
-export type CardState = {
-  problem: Problem | null;
-  answer: string;
-  grade: Grade | null;
-  revealed: string | null;
-  hint: string | null;
-  followUp: string;
-};
-
-export type SavedSession = {
-  activeQueue: QueueNode[];
-  index: number;
-  preferKind?: string;
-  resultsByIndex: Record<number, SessionResult>;
-  cardStates: Record<number, CardState>;
-};
-
-export const SESSION_KEY = "proofer-session";
+import { ProblemPanel, GradeFeedback, type Problem, type Grade } from "./ProblemCard";
+import {
+  SESSION_KEY,
+  type QueueNode,
+  type SessionResult,
+  type CardState,
+  type SavedSession,
+} from "./session-types";
 
 export default function StudyQueue({
   queue,
@@ -584,7 +561,17 @@ export default function StudyQueue({
         </div>
       </div>
 
-      {busy && !problem && <div className="panel muted">Generating a problem…</div>}
+      {busy && !problem && (
+        <div className="panel problem-skeleton">
+          <div className="skel skel-line" />
+          <div className="skel skel-line" style={{ width: "92%" }} />
+          <div className="skel skel-line" style={{ width: "86%" }} />
+          <div className="skel skel-line" style={{ width: "55%" }} />
+          <p className="muted small generating-label">
+            <Spinner label="Generating a problem…" />
+          </p>
+        </div>
+      )}
       {error && (
         <div className="panel error-notice">
           <div style={{ marginBottom: 8 }}>{error}</div>
@@ -639,7 +626,7 @@ export default function StudyQueue({
           {!grade && !revealed && (
             <div className="practice-actions">
               <button className="btn-primary" onClick={submit} disabled={busy || !answer.trim()}>
-                {busy ? "Grading…" : "Submit"}
+                {busy ? <Spinner label="Grading…" /> : "Submit"}
               </button>
               <VoiceInput
                 onTranscript={(t) => setAnswer((prev) => prev ? prev + " " + t : t)}

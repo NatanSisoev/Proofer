@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Spinner from "./Spinner";
 
 export default function WeaknessDiagnosis({ nodeId, attemptCount }: { nodeId: string; attemptCount: number }) {
   const [diagnosis, setDiagnosis] = useState<string | null>(null);
@@ -34,7 +35,7 @@ export default function WeaknessDiagnosis({ nodeId, attemptCount }: { nodeId: st
       disabled={loading}
       className="btn-ghost diagnosis-btn"
     >
-      {loading ? "Diagnosing…" : `Diagnose why you keep struggling (${attemptCount} attempts)`}
+      {loading ? <Spinner label="Diagnosing…" /> : `Diagnose why you keep struggling (${attemptCount} attempts)`}
     </button>
   );
 }

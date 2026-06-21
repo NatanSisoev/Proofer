@@ -3,7 +3,14 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import StudyQueue, { SESSION_KEY, type SavedSession } from "./StudyQueue";
+import dynamic from "next/dynamic";
+import Spinner from "./Spinner";
+import { SESSION_KEY, type SavedSession } from "./session-types";
+
+// StudyQueue (and the ProblemCard/Markdown/katex chain it pulls in) only
+// matters once a queue is actually started — keep it out of the setup
+// screen's initial bundle.
+const StudyQueue = dynamic(() => import("./StudyQueue"));
 
 type QueueNode = { id: string; title: string; type: string | null; area: string | null; mastery_p?: number; reason?: string };
 
@@ -428,7 +435,7 @@ export default function SessionSetup({
           onClick={start}
           disabled={loading || (mode === "custom" ? customPicked.length === 0 : preview.length === 0)}
         >
-          {loading ? "Building queue…" : mode === "custom"
+          {loading ? <Spinner label="Building queue…" /> : mode === "custom"
             ? `Start with ${customPicked.length} concept${customPicked.length !== 1 ? "s" : ""} →`
             : mode === "exam"
             ? `Start ${examTimeLimitMin}-min exam →`

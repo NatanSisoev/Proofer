@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import Markdown from "./Markdown";
+import dynamic from "next/dynamic";
+
+const Markdown = dynamic(() => import("./Markdown"));
 
 type Props = { nodeId: string };
 

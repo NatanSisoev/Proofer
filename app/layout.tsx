@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import "katex/dist/katex.min.css";
 import "./globals.css";
 import SyncButton from "./components/SyncButton";
 import KeyboardShortcuts from "./components/KeyboardShortcuts";
