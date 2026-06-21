@@ -1,7 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import Markdown from "@/app/components/Markdown";
+import dynamic from "next/dynamic";
+import Spinner from "@/app/components/Spinner";
+
+const Markdown = dynamic(() => import("@/app/components/Markdown"));
 
 type AreaStat = { area: string; total: number; mastered: number; avg_p: number; practiced: number };
 
@@ -86,7 +89,7 @@ export default function StudyPlanClient({
             onClick={generate}
             disabled={busy || daysLeft <= 0}
           >
-            {busy ? "Generating plan…" : "Generate study plan →"}
+            {busy ? <Spinner label="Generating plan…" /> : "Generate study plan →"}
           </button>
 
           {error && <p className="action-error" style={{ marginTop: 10 }}>{error}</p>}
@@ -117,7 +120,7 @@ export default function StudyPlanClient({
       <div>
         {busy && (
           <div className="panel center-panel">
-            <div className="muted">Generating your personalised study plan…</div>
+            <div className="muted"><Spinner label="Generating your personalised study plan…" /></div>
             <div className="muted small field-hint">This takes ~10–15 seconds</div>
           </div>
         )}

@@ -62,9 +62,8 @@ export function prerequisites(id: string): { closure: NodeRow[]; depth: number }
  * Readiness = fraction of the prerequisite closure you've already marked known.
  * This is the personalized signal ChatGPT structurally cannot provide.
  */
-export function readiness(id: string): { score: number; known: number; total: number; missing: NodeRow[] } {
-  const { closure } = prerequisites(id);
-  const real = closure.filter((n) => n.exists_ === 1);
+export function readiness(id: string, closure?: NodeRow[]): { score: number; known: number; total: number; missing: NodeRow[] } {
+  const real = (closure ?? prerequisites(id).closure).filter((n) => n.exists_ === 1);
   if (real.length === 0) return { score: 1, known: 0, total: 0, missing: [] };
   const knownSet = new Set(
     (db().prepare(MASTERED_SUBQUERY).all() as { node_id: string }[]).map((r) => r.node_id)

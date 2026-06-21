@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "import": "node --experimental-sqlite scripts/import-vault.mjs",
-    "dev": "cross-env NODE_OPTIONS=--experimental-sqlite next dev",
+    "dev": "cross-env NODE_OPTIONS=--experimental-sqlite next dev --turbo",
     "build": "cross-env NODE_OPTIONS=--experimental-sqlite next build",
     "start": "cross-env NODE_OPTIONS=--experimental-sqlite next start"
   },

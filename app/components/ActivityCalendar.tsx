@@ -1,5 +1,3 @@
-"use client";
-
 type Day = { date: string; count: number };
 
 const DAYS = ["", "Mon", "", "Wed", "", "Fri", ""];

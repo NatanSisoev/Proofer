@@ -1,9 +1,8 @@
-"use client";
-
 import ReactMarkdown from "react-markdown";
 import remarkMath from "remark-math";
 import remarkGfm from "remark-gfm";
 import rehypeKatex from "rehype-katex";
+import "katex/dist/katex.min.css";
 
 // Turn Obsidian-flavoured note bodies into standard markdown that react-markdown
 // can render: rewrite [[wikilinks]] to concept links, flatten callouts, drop

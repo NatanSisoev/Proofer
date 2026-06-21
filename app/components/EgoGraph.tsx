@@ -52,7 +52,15 @@ function readThemeColors() {
   };
 }
 
-export default function EgoGraph({ slug, depth = 1 }: { slug: string; depth?: number }) {
+export default function EgoGraph({
+  slug,
+  depth = 1,
+  initialData,
+}: {
+  slug: string;
+  depth?: number;
+  initialData?: Ego;
+}) {
   const ref = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
@@ -60,8 +68,7 @@ export default function EgoGraph({ slug, depth = 1 }: { slug: string; depth?: nu
     let cy: cytoscape.Core | undefined;
     let cancelled = false;
     (async () => {
-      const res = await fetch(`/api/ego/${encodeURIComponent(slug)}?depth=${depth}`);
-      const data: Ego = await res.json();
+      const data: Ego = initialData ?? (await (await fetch(`/api/ego/${encodeURIComponent(slug)}?depth=${depth}`)).json());
       if (cancelled || !ref.current) return;
 
       const theme = readThemeColors();
@@ -130,7 +137,7 @@ export default function EgoGraph({ slug, depth = 1 }: { slug: string; depth?: nu
       cancelled = true;
       cy?.destroy();
     };
-  }, [slug, depth, router]);
+  }, [slug, depth, initialData, router]);
 
   return (
     <div className="graph-shell">

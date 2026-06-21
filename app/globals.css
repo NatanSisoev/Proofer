@@ -114,6 +114,16 @@
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
+.spinner-row { display: inline-flex; align-items: center; gap: 7px; }
+.spinner {
+  width: 13px; height: 13px; flex-shrink: 0;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: sync-spin 0.7s linear infinite;
+}
+.problem-skeleton .skel-line:first-child { width: 35%; }
+.problem-skeleton .generating-label { display: flex; align-items: center; gap: 8px; margin-top: 14px; margin-bottom: 0; }
 .skel-title { height: 26px; width: 220px; margin-bottom: 6px; }
 .skel-tag { height: 14px; width: 320px; }
 .skel-line { height: 13px; width: 100%; margin: 8px 0; }

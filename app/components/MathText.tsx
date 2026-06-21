@@ -1,8 +1,7 @@
-"use client";
-
 import ReactMarkdown from "react-markdown";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
+import "katex/dist/katex.min.css";
 import type { ComponentPropsWithoutRef } from "react";
 
 // Renders inline LaTeX ($...$) and plain text without any block formatting.

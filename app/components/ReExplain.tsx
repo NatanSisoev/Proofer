@@ -1,7 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import Markdown from "./Markdown";
+import dynamic from "next/dynamic";
+import Spinner from "./Spinner";
+
+const Markdown = dynamic(() => import("./Markdown"));
 
 type Angle = "intuitive" | "formal" | "visual" | "historical" | "example";
 
@@ -86,7 +89,7 @@ export default function ReExplain({ nodeId }: { nodeId: string }) {
       {/* Output */}
       {busy && (
         <div className="muted small" style={{ padding: "12px 0" }}>
-          Generating {lastAngle} explanation…
+          <Spinner label={`Generating ${lastAngle} explanation…`} />
         </div>
       )}
       {error && (
