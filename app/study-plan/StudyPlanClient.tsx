@@ -86,7 +86,7 @@ export default function StudyPlanClient({
           </div>
 
           <button
-            className="btn-primary btn-full btn-lg icon-label"
+            className="btn-primary btn-full icon-label"
             onClick={generate}
             disabled={busy || daysLeft <= 0}
             style={{ justifyContent: "center" }}
