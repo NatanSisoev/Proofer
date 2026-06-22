@@ -331,7 +331,7 @@ button.know.on { background: var(--green-soft); border-color: var(--green-border
 .markdown p { margin: 0 0 12px; }
 .markdown h1 { font-size: 20px; font-weight: 700; letter-spacing: -0.02em; margin: 24px 0 10px; }
 .markdown blockquote { border-left: 3px solid var(--text); margin: 16px 0; padding: 4px 0 4px 18px; color: var(--text); background: none; border-radius: 0; }
-.markdown h2 { font-size: 16px; border-bottom: 1px solid var(--border); padding-bottom: 5px; margin-top: 28px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+.markdown h2 { font-size: 18px; font-weight: 700; border-bottom: 1px solid var(--border); padding-bottom: 5px; margin-top: 28px; color: var(--text); text-transform: none; letter-spacing: normal; }
 .markdown h3 { font-size: 14px; font-weight: 700; margin-top: 22px; color: var(--text); }
 .markdown code { background: var(--brand-soft); color: #A8503A; padding: 2px 7px; border-radius: 8px; font-size: 0.88em; font-family: ui-monospace, monospace; border: none; }
 [data-theme="dark"] .markdown code { background: var(--brand-soft); color: #E0A188; }
@@ -341,7 +341,7 @@ button.know.on { background: var(--green-soft); border-color: var(--green-border
 .markdown pre:has(code[class*="tikz"]), .markdown pre:has(code[class*="latex"]) { display: none; }
 /* Tables */
 .markdown table { border-collapse: collapse; width: 100%; margin: 14px 0; font-size: 13.5px; }
-.markdown th { background: var(--bg-soft); padding: 8px 12px; text-align: left; border: 1px solid var(--border); font-weight: 600; color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; }
+.markdown th { background: var(--bg-soft); padding: 8px 12px; text-align: left; border: 1px solid var(--border); font-weight: 600; color: var(--muted); font-size: 12.5px; text-transform: none; letter-spacing: normal; }
 .markdown td { padding: 7px 12px; border: 1px solid var(--border); }
 .markdown tr:hover td { background: var(--bg-soft); }
 .markdown ul, .markdown ol { padding-left: 24px; }
