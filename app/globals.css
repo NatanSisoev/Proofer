@@ -127,7 +127,7 @@
 .spinner {
   width: 13px; height: 13px; flex-shrink: 0;
   border: 2px solid var(--border);
-  border-top-color: var(--accent);
+  border-top-color: currentColor;
   border-radius: 50%;
   animation: sync-spin 0.7s linear infinite;
 }
