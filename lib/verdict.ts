@@ -9,13 +9,12 @@ export type Verdict = "correct" | "partial" | "incorrect";
 export type VerdictStyle = {
   label: string; // long form shown in feedback panels ("Partially there")
   short: string; // lowercase tag form ("partial")
-  icon: string;  // compact glyph for dense rows (✓ ~ ✗)
   color: string; // text/dot color token
   bg: string;    // soft background token for the verdict banner
 };
 
 export const VERDICT: Record<Verdict, VerdictStyle> = {
-  correct:   { label: "Correct",         short: "correct",   icon: "✓", color: "var(--green)", bg: "var(--green-soft)" },
-  partial:   { label: "Partially there", short: "partial",   icon: "~", color: "var(--amber)", bg: "var(--amber-soft)" },
-  incorrect: { label: "Not yet",         short: "incorrect", icon: "✗", color: "var(--red)",   bg: "var(--red-soft)" },
+  correct:   { label: "Correct",         short: "correct",   color: "var(--green)", bg: "var(--green-soft)" },
+  partial:   { label: "Partially there", short: "partial",   color: "var(--amber)", bg: "var(--amber-soft)" },
+  incorrect: { label: "Not yet",         short: "incorrect", color: "var(--red)",   bg: "var(--red-soft)" },
 };
