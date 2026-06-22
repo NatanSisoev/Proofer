@@ -626,29 +626,33 @@ export default function StudyQueue({
 
           {!grade && !revealed && (
             <div className="practice-actions">
-              <button className="btn-primary" onClick={submit} disabled={busy || !answer.trim()}>
-                {busy ? <Spinner label="Grading…" /> : "Submit"}
-              </button>
-              <VoiceInput
-                onTranscript={(t) => setAnswer((prev) => prev ? prev + " " + t : t)}
-                disabled={busy}
-              />
-              {problem.mode !== "demo" && !hint && (
-                <button
-                  className="btn-ghost btn-sm btn-warn"
-                  onClick={getHint}
-                  disabled={busy || hintBusy}
-                >
-                  {hintBusy ? "…" : "Hint"}
+              <div className="practice-actions-group">
+                <button className="btn-primary" onClick={submit} disabled={busy || !answer.trim()}>
+                  {busy ? <Spinner label="Grading…" /> : "Submit"}
                 </button>
-              )}
-              <button className="btn-ghost icon-label" onClick={advance} disabled={busy}>
-                Skip <ArrowRight size={13} />
-              </button>
-              <button className="btn-ghost btn-sm" onClick={reveal} disabled={busy} style={{ color: "var(--muted)" }}>
-                I don't know
-              </button>
-              <span className="muted small keyboard-hint" style={{ marginLeft: "auto" }}>Ctrl+Enter</span>
+                <VoiceInput
+                  onTranscript={(t) => setAnswer((prev) => prev ? prev + " " + t : t)}
+                  disabled={busy}
+                />
+              </div>
+              <div className="practice-actions-group practice-actions-secondary">
+                {problem.mode !== "demo" && !hint && (
+                  <button
+                    className="btn-ghost btn-sm btn-warn"
+                    onClick={getHint}
+                    disabled={busy || hintBusy}
+                  >
+                    {hintBusy ? "…" : "Hint"}
+                  </button>
+                )}
+                <button className="btn-ghost btn-sm icon-label" onClick={advance} disabled={busy}>
+                  Skip <ArrowRight size={12} />
+                </button>
+                <button className="btn-ghost btn-sm" onClick={reveal} disabled={busy} style={{ color: "var(--muted)" }}>
+                  I don't know
+                </button>
+                <span className="muted small keyboard-hint">Ctrl+Enter</span>
+              </div>
             </div>
           )}
 
