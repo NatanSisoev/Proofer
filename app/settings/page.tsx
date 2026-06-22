@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import SyncButton from "@/app/components/SyncButton";
 import ThemeToggle from "@/app/components/ThemeToggle";
-import { Download } from "@/app/components/Icons";
+import { Download, ArrowLeft } from "@/app/components/Icons";
 
 type Settings = {
   daily_goal: string;
@@ -86,7 +86,7 @@ export default function SettingsPage() {
           <h1>Settings</h1>
           <p className="muted small" style={{ marginTop: 4 }}>Preferences for your study sessions</p>
         </div>
-        <Link href="/" className="muted small">← home</Link>
+        <Link href="/" className="muted small icon-label"><ArrowLeft size={12} /> home</Link>
       </div>
 
       {loading ? (

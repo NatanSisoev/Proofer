@@ -2,6 +2,7 @@ import Link from "next/link";
 import { browseAreas, nodesInArea, nodeTypes, areaMastery } from "@/lib/queries";
 import type { BrowseNode } from "@/lib/queries";
 import BrowseFilters from "@/app/components/BrowseFilters";
+import { ArrowLeft, ArrowRight } from "@/app/components/Icons";
 
 // Mastery data is user-specific but 30s stale is perfectly acceptable for a
 // single-user local app. ISR avoids a full DB round-trip on every /browse nav.
@@ -37,7 +38,7 @@ export default async function BrowsePage({
     return (
       <div className="wrap">
         <div className="breadcrumb">
-          <Link href="/browse">← Topics</Link> · <strong>{area}</strong>
+          <Link href="/browse" className="icon-label"><ArrowLeft size={12} /> Topics</Link> · <strong>{area}</strong>
         </div>
 
         {/* Area header: mastery summary + actions */}
@@ -65,10 +66,10 @@ export default async function BrowsePage({
           </div>
           <Link
             href={`/session?mode=area&area=${encodeURIComponent(area)}`}
-            className="cta"
+            className="cta icon-label"
             style={{ flexShrink: 0 }}
           >
-            Practice {area} →
+            Practice {area} <ArrowRight size={13} />
           </Link>
         </div>
 
@@ -94,7 +95,7 @@ export default async function BrowsePage({
             {areas.length} topics · click any to see concepts sorted by your mastery
           </p>
         </div>
-        <Link href="/" className="muted small">← home</Link>
+        <Link href="/" className="muted small icon-label"><ArrowLeft size={12} /> home</Link>
       </div>
 
       <div className="area-grid">
@@ -129,8 +130,8 @@ function NodeRow({ node }: { node: BrowseNode }) {
       </div>
       <div className="browse-row-right">
         <MasteryBar p={node.mastery_p} />
-        <Link href={`/learn?node=${encodeURIComponent(node.id)}`} className="pill pill-accent" style={{ flexShrink: 0 }}>
-          practice →
+        <Link href={`/learn?node=${encodeURIComponent(node.id)}`} className="pill pill-accent icon-label" style={{ flexShrink: 0 }}>
+          practice <ArrowRight size={10} />
         </Link>
       </div>
     </div>

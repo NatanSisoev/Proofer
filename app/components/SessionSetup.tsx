@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import Spinner from "./Spinner";
-import { Plus, Minus } from "./Icons";
+import { Plus, Minus, Star, ArrowRight } from "./Icons";
 import { SESSION_KEY, type SavedSession } from "./session-types";
 
 const MIN_COUNT = 1;
@@ -24,7 +24,7 @@ const MODES: { key: Mode; label: string; desc: string }[] = [
   { key: "smart", label: "Smart", desc: "Due reviews first, then your frontier, then weak spots" },
   { key: "due", label: "Due for review", desc: "Concepts whose mastery is decaying — review them now" },
   { key: "weak", label: "Weak spots", desc: "Practiced but still below mastery threshold" },
-  { key: "bookmarks", label: "★ Bookmarked", desc: "Drill your starred concepts" },
+  { key: "bookmarks", label: "Bookmarked", desc: "Drill your starred concepts" },
   { key: "area", label: "By topic", desc: "Focus on one area" },
   { key: "exam",   label: "Exam",   desc: "Timed simulation — fixed questions, countdown clock" },
   { key: "custom",    label: "Custom",        desc: "Hand-pick the concepts to practice" },
@@ -222,14 +222,14 @@ export default function SessionSetup({
           </div>
           <div className="resume-actions">
             <button
-              className="btn-primary"
+              className="btn-primary icon-label"
               onClick={() => {
                 setQueue(savedSession.activeQueue);
                 setResumeData(savedSession);
                 setSavedSession(null);
               }}
             >
-              Resume →
+              Resume <ArrowRight size={13} />
             </button>
             <button
               className="btn-ghost btn-sm"
@@ -275,7 +275,10 @@ export default function SessionSetup({
                 />
                 <div className="mode-body">
                   <div className="mode-label-row">
-                    <span className="mode-label-text">{m.label}</span>
+                    <span className="mode-label-text icon-label">
+                      {m.key === "bookmarks" && <Star size={12} filled={mode === "bookmarks"} />}
+                      {m.label}
+                    </span>
                     {modeCount !== null && (
                       <span className="pill pill-sm" style={{
                         color: isEmpty ? "var(--muted)" : m.key === "due" ? "var(--amber)" : "var(--text)",
@@ -459,15 +462,21 @@ export default function SessionSetup({
         )}
 
         <button
-          className="btn-primary btn-full"
+          className="btn-primary btn-full icon-label"
+          style={{ justifyContent: "center" }}
           onClick={start}
           disabled={loading || (mode === "custom" ? customPicked.length === 0 : preview.length === 0)}
         >
-          {loading ? <Spinner label="Building queue…" /> : mode === "custom"
-            ? `Start with ${customPicked.length} concept${customPicked.length !== 1 ? "s" : ""} →`
-            : mode === "exam"
-            ? `Start ${examTimeLimitMin}-min exam →`
-            : "Start session →"}
+          {loading ? <Spinner label="Building queue…" /> : (
+            <>
+              {mode === "custom"
+                ? `Start with ${customPicked.length} concept${customPicked.length !== 1 ? "s" : ""}`
+                : mode === "exam"
+                ? `Start ${examTimeLimitMin}-min exam`
+                : "Start session"}
+              <ArrowRight size={14} />
+            </>
+          )}
         </button>
       </div>
 

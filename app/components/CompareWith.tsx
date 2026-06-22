@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import Spinner from "./Spinner";
-import { Scale, X } from "./Icons";
+import { Scale, X, ArrowRight } from "./Icons";
 
 const Markdown = dynamic(() => import("./Markdown"));
 
@@ -147,11 +147,11 @@ export default function CompareWith({ nodeId, nodeTitle }: { nodeId: string; nod
             <Markdown>{comparison}</Markdown>
           </div>
           <button
-            className="btn-ghost btn-sm"
+            className="btn-ghost btn-sm icon-label"
             onClick={() => { setSelected(null); setComparison(null); setError(null); setQuery(""); }}
             style={{ marginTop: 10 }}
           >
-            Compare with another →
+            Compare with another <ArrowRight size={12} />
           </button>
         </div>
       )}

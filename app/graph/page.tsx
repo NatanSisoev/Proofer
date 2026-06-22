@@ -1,5 +1,6 @@
 import nextDynamic from "next/dynamic";
 import Link from "next/link";
+import { ArrowLeft } from "@/app/components/Icons";
 
 // cytoscape is a heavy client-only lib; defer it to its own chunk so it
 // doesn't bloat the JS this navigation has to download and parse.
@@ -23,7 +24,7 @@ export default async function GraphPage({
             Your entire graph, colored by mastery. Larger nodes unlock more concepts.
           </p>
         </div>
-        <Link href="/" className="muted small">← home</Link>
+        <Link href="/" className="muted small icon-label"><ArrowLeft size={12} /> home</Link>
       </div>
       <div style={{ flex: 1 }}>
         <GlobalGraph initialArea={area} />

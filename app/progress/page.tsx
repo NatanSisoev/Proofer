@@ -3,7 +3,7 @@ import { masteryHistogram, recentAttemptsGlobal, weakSpots, stats, todayStats, r
 import ActivityCalendar from "@/app/components/ActivityCalendar";
 import { getDailyGoal } from "@/lib/settings";
 import { VERDICT, type Verdict } from "@/lib/verdict";
-import { VerdictIcon } from "@/app/components/Icons";
+import { VerdictIcon, ArrowRight, ArrowLeft, Download } from "@/app/components/Icons";
 
 export const dynamic = "force-dynamic";
 
@@ -43,16 +43,16 @@ export default function ProgressPage() {
           <p className="muted small" style={{ marginTop: 4 }}>Your mastery across {s.real} concepts</p>
         </div>
         <div className="page-actions">
-          <Link href="/session" className="pill pill-accent">
-            Start session →
+          <Link href="/session" className="pill pill-accent icon-label">
+            Start session <ArrowRight size={11} />
           </Link>
-          <a href="/api/export/mastery" download="proofer-mastery.csv" className="muted small" style={{ textDecoration: "none" }}>
-            ↓ CSV
+          <a href="/api/export/mastery" download="proofer-mastery.csv" className="muted small icon-label" style={{ textDecoration: "none" }}>
+            <Download size={12} /> CSV
           </a>
-          <a href="/api/export/anki?mastered=false" download="proofer-anki.txt" className="muted small" style={{ textDecoration: "none" }}>
-            ↓ Anki deck
+          <a href="/api/export/anki?mastered=false" download="proofer-anki.txt" className="muted small icon-label" style={{ textDecoration: "none" }}>
+            <Download size={12} /> Anki deck
           </a>
-          <Link href="/" className="muted small">← home</Link>
+          <Link href="/" className="muted small icon-label"><ArrowLeft size={12} /> home</Link>
         </div>
       </div>
 
@@ -182,8 +182,8 @@ export default function ProgressPage() {
           <div className="panel">
             <div className="panel-header">
               <h2>Recent attempts</h2>
-              <Link href="/history" className="small accent-link">
-                Full history →
+              <Link href="/history" className="small accent-link icon-label">
+                Full history <ArrowRight size={11} />
               </Link>
             </div>
             {recent.length === 0 && <p className="muted">No attempts yet — start practicing!</p>}
@@ -216,8 +216,8 @@ export default function ProgressPage() {
                   </div>
                   <div className="attempt-meta-col">
                     <span className="small muted">{timeAgo(a.created_at)}</span>
-                    <Link href={`/learn?node=${encodeURIComponent(a.node_id)}`} className="pill pill-accent">
-                      retry →
+                    <Link href={`/learn?node=${encodeURIComponent(a.node_id)}`} className="pill pill-accent icon-label">
+                      retry <ArrowRight size={10} />
                     </Link>
                   </div>
                 </div>
@@ -236,10 +236,10 @@ export default function ProgressPage() {
                 {areas.length > 0 && (
                   <Link
                     href={`/session?mode=area&area=${encodeURIComponent(areas[areas.length - 1].area)}`}
-                    className="pill pill-red pill-sm"
+                    className="pill pill-red pill-sm icon-label"
                     title={`Weakest area: ${areas[areas.length - 1].area}`}
                   >
-                    Drill weakest →
+                    Drill weakest <ArrowRight size={10} />
                   </Link>
                 )}
               </div>
@@ -303,8 +303,8 @@ export default function ProgressPage() {
                           </span>
                         </div>
                         {w.exists_ === 1 && (
-                          <Link href={`/learn?node=${encodeURIComponent(w.prereq)}`} className="pill pill-accent" style={{ flexShrink: 0 }}>
-                            drill →
+                          <Link href={`/learn?node=${encodeURIComponent(w.prereq)}`} className="pill pill-accent icon-label" style={{ flexShrink: 0 }}>
+                            drill <ArrowRight size={10} />
                           </Link>
                         )}
                       </div>
@@ -389,8 +389,8 @@ export default function ProgressPage() {
                     <span style={{ width: `${Math.round(n.mastery_p * 100)}%` }} />
                   </div>
                   <span className="small muted">{Math.round(n.mastery_p * 100)}%</span>
-                  <Link href={`/learn?node=${encodeURIComponent(n.id)}`} className="pill pill-accent">
-                    drill →
+                  <Link href={`/learn?node=${encodeURIComponent(n.id)}`} className="pill pill-accent icon-label">
+                    drill <ArrowRight size={10} />
                   </Link>
                 </div>
               </div>

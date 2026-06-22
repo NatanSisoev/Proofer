@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { learningPath } from "@/lib/queries";
+import { ArrowRight } from "./Icons";
 
 export default function LearningPath({ nodeId }: { nodeId: string }) {
   const path = learningPath(nodeId);
@@ -15,9 +16,9 @@ export default function LearningPath({ nodeId }: { nodeId: string }) {
         <h2>Learning path — {path.length} unmastered prerequisite{path.length !== 1 ? "s" : ""}</h2>
         <Link
           href={`/session?mode=custom&nodes=${sessionIds}`}
-          className="pill pill-accent"
+          className="pill pill-accent icon-label"
         >
-          Practice all →
+          Practice all <ArrowRight size={11} />
         </Link>
       </div>
       <p className="muted small path-subtitle">
@@ -39,10 +40,10 @@ export default function LearningPath({ nodeId }: { nodeId: string }) {
             </span>
             <Link
               href={`/learn?node=${encodeURIComponent(n.id)}`}
-              className="pill pill-accent"
+              className="pill pill-accent icon-label"
               style={{ flexShrink: 0 }}
             >
-              drill →
+              drill <ArrowRight size={10} />
             </Link>
           </div>
         ))}

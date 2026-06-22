@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import StudyQueue from "@/app/components/StudyQueue";
 import { getNode } from "@/lib/queries";
+import { ArrowLeft } from "@/app/components/Icons";
 
 export default async function LearnPage({
   searchParams,
@@ -32,7 +33,7 @@ export default async function LearnPage({
   return (
     <div className="wrap">
       <div className="breadcrumb">
-        <Link href={`/node/${encodeURIComponent(node)}`}>← {nodeData.title}</Link> · practice
+        <Link href={`/node/${encodeURIComponent(node)}`} className="icon-label"><ArrowLeft size={12} /> {nodeData.title}</Link> · practice
       </div>
       <StudyQueue queue={[queueNode]} />
     </div>

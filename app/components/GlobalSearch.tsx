@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { ArrowUp, ArrowDown } from "./Icons";
 
 type Hit = {
   id: string;
@@ -144,8 +145,8 @@ export default function GlobalSearch() {
         )}
 
         {q.trim().length < 2 && (
-          <div className="global-search-hint muted small">
-            Type at least 2 characters · ↑↓ navigate · Enter to open
+          <div className="global-search-hint muted small icon-label">
+            Type at least 2 characters · <ArrowUp size={11} /><ArrowDown size={11} /> navigate · Enter to open
           </div>
         )}
       </div>
