@@ -2,14 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Inter, Lora } from "next/font/google";
 import "./globals.css";
-import SyncButton from "./components/SyncButton";
 import KeyboardShortcuts from "./components/KeyboardShortcuts";
 import GlobalSearch from "./components/GlobalSearch";
 import SearchTrigger from "./components/SearchTrigger";
 import ShortcutsTrigger from "./components/ShortcutsTrigger";
 import DailyGoalIndicator from "./components/DailyGoalIndicator";
 import NavLinks from "./components/NavLinks";
-import ThemeToggle from "./components/ThemeToggle";
 
 export const metadata: Metadata = {
   title: "Proofer — a map of mathematics",
@@ -46,8 +44,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <DailyGoalIndicator />
               <SearchTrigger />
               <Link href="/settings" className="nav-link" title="Settings">Settings</Link>
-              <SyncButton />
-              <ThemeToggle />
               <ShortcutsTrigger />
             </div>
           </div>

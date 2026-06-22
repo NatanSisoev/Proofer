@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { toggleTheme } from "./ThemeToggle";
 
 const SHORTCUTS = [
   { key: "s / /", desc: "Focus search" },
@@ -14,6 +15,7 @@ const SHORTCUTS = [
   { key: "n",     desc: "Study plan" },
   { key: "q",     desc: "Note quality" },
   { key: "h",     desc: "Home" },
+  { key: "d",     desc: "Toggle dark mode" },
   { key: "?",     desc: "Toggle this help" },
   { key: "Esc",   desc: "Close help" },
 ];
@@ -56,6 +58,7 @@ export default function KeyboardShortcuts() {
       if (e.key === "n") { router.push("/study-plan"); return; }
       if (e.key === "q") { router.push("/quality"); return; }
       if (e.key === "h") { router.push("/"); return; }
+      if (e.key === "d") { toggleTheme(); return; }
     }
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);

@@ -1037,6 +1037,7 @@ details[open].practice-history > summary::before { transform: rotate(90deg); }
 /* settings page */
 .wrap-narrow { max-width: 640px; }
 .panel-stack { display: flex; flex-direction: column; gap: 16px; }
+.settings-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
 .panel-desc { margin-top: -4px; margin-bottom: 16px; }
 .provider-banner { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 10px 14px; border-radius: 10px; margin-top: 4px; margin-bottom: 14px; border: 1px solid var(--border); }
 .panel-link-row { display: flex; gap: 10px; margin-top: 12px; }
