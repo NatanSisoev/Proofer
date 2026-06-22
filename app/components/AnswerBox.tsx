@@ -92,30 +92,32 @@ export default function AnswerBox({
         autoFocus={autoFocus}
       />
 
-      {!disabled && (
-        <div className="latex-toolbar" onMouseDown={(e) => e.preventDefault()}>
-          {LATEX_SNIPPETS.map(({ label, insert }) => (
-            <button
-              key={label}
-              type="button"
-              tabIndex={-1}
-              onClick={() => {
-                if (!ref.current) return;
-                onChange(insertSnippet(ref.current, insert));
-              }}
-              className="latex-snippet-btn"
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-      )}
+      <div className="answer-toolbar-row">
+        {!disabled && (
+          <div className="latex-toolbar" onMouseDown={(e) => e.preventDefault()}>
+            {LATEX_SNIPPETS.map(({ label, insert }) => (
+              <button
+                key={label}
+                type="button"
+                tabIndex={-1}
+                onClick={() => {
+                  if (!ref.current) return;
+                  onChange(insertSnippet(ref.current, insert));
+                }}
+                className="latex-snippet-btn"
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        )}
 
-      {wordCount > 0 && (
-        <div className="word-count">
-          <span className="muted small">{wordCount} word{wordCount !== 1 ? "s" : ""}</span>
-        </div>
-      )}
+        {wordCount > 0 && (
+          <div className="word-count">
+            <span className="muted small">{wordCount} word{wordCount !== 1 ? "s" : ""}</span>
+          </div>
+        )}
+      </div>
 
       {showPreview && (
         <div className="notes-preview" style={{ marginTop: 4 }}>

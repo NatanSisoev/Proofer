@@ -224,7 +224,6 @@ export function GradeFeedback({
               {followUpBusy ? "Checking…" : "Submit follow-up"}
             </button>
             <VoiceInput onTranscript={(t) => onFollowUpChange(followUp ? followUp + " " + t : t)} disabled={followUpBusy} />
-            <span className="muted small keyboard-hint">Ctrl+Enter</span>
           </div>
         </div>
       )}

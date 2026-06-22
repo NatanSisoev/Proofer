@@ -6,7 +6,7 @@ import VoiceInput from "./VoiceInput";
 import Spinner from "./Spinner";
 import { VERDICT } from "@/lib/verdict";
 import { ProblemPanel, GradeFeedback, type Problem, type Grade } from "./ProblemCard";
-import { ArrowLeft, ArrowRight, Check, X, VerdictIcon } from "./Icons";
+import { ArrowLeft, ArrowRight, Check, X, VerdictIcon, CircularProgress } from "./Icons";
 import {
   SESSION_KEY,
   type QueueNode,
@@ -497,9 +497,6 @@ export default function StudyQueue({
   // ─── Active session ──────────────────────────────────────────────────────────
   return (
     <div className="practice">
-      <div className="session-progress">
-        <div className="session-progress-bar" style={{ width: `${(index / activeQueue.length) * 100}%` }} />
-      </div>
       <div className="session-progress-header">
         <div className="session-progress-left">
           <button
@@ -510,7 +507,10 @@ export default function StudyQueue({
           >
             <ArrowLeft size={13} /> Back
           </button>
-          <span className="muted small">Concept {index + 1} of {activeQueue.length}</span>
+          <span className="session-progress-ring" title={`${index} of ${activeQueue.length} concepts complete`}>
+            <CircularProgress value={index / activeQueue.length} size={22} strokeWidth={2.5} />
+            <span className="muted small">Concept {index + 1} of {activeQueue.length}</span>
+          </span>
           {examMode ? (() => {
             const remaining = Math.max(0, examMode.timeLimitSec - sessionElapsed);
             const mins = Math.floor(remaining / 60);
@@ -651,7 +651,6 @@ export default function StudyQueue({
                 <button className="btn-ghost btn-sm" onClick={reveal} disabled={busy} style={{ color: "var(--muted)" }}>
                   I don't know
                 </button>
-                <span className="muted small keyboard-hint">Ctrl+Enter</span>
               </div>
             </div>
           )}
@@ -674,7 +673,6 @@ export default function StudyQueue({
                 <button className="btn-primary icon-label" onClick={advance} disabled={busy}>
                   {index + 1 >= activeQueue.length ? "Finish session" : "Next concept"} <ArrowRight size={13} />
                 </button>
-                <span className="muted small keyboard-hint">Ctrl+Enter</span>
               </div>
             </div>
           )}
