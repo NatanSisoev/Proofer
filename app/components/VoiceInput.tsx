@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { Mic } from "./Icons";
 
 type Props = {
   onTranscript: (text: string) => void;
@@ -105,7 +106,7 @@ export default function VoiceInput({ onTranscript, disabled, lang = "en-US" }: P
           animation: listening ? "micPulse 1.5s ease-in-out infinite" : "none",
         }}
       >
-        🎤
+        <Mic size={13} />
         <span className="voice-btn-label">
           {listening ? "Stop" : "Speak"}
         </span>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Check, ExternalLink } from "./Icons";
 
 type Props = { nodeId: string; nodeTitle: string; nodeArea: string | null };
 
@@ -26,8 +27,8 @@ export default function GhostCreate({ nodeId, nodeTitle, nodeArea }: Props) {
   if (state === "done" && result?.obsidianHref) {
     return (
       <div className="ghost-actions">
-        <p className="action-success">✓ Note created</p>
-        <a href={result.obsidianHref} className="btn-ghost btn-sm">Open in Obsidian ↗</a>
+        <p className="action-success icon-label"><Check size={13} /> Note created</p>
+        <a href={result.obsidianHref} className="btn-ghost btn-sm icon-label">Open in Obsidian <ExternalLink size={13} /></a>
         <p className="muted small" style={{ margin: 0 }}>Sync vault after editing to refresh the graph.</p>
       </div>
     );

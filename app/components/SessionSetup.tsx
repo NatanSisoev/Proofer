@@ -268,7 +268,7 @@ export default function SessionSetup({
                     <span className="mode-label-text">{m.label}</span>
                     {modeCount !== null && (
                       <span className="pill pill-sm" style={{
-                        color: isEmpty ? "var(--muted)" : m.key === "due" ? "var(--amber)" : "var(--accent)",
+                        color: isEmpty ? "var(--muted)" : m.key === "due" ? "var(--amber)" : "var(--text)",
                       }}>
                         {modeCount}
                       </span>

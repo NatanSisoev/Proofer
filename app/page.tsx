@@ -80,7 +80,7 @@ export default function Home() {
         <div className="bar" style={{ height: 6 }}>
           <span style={{
             width: `${Math.min(100, Math.round((today.today_concepts / DAILY_GOAL) * 100))}%`,
-            background: today.today_concepts >= DAILY_GOAL ? "var(--green)" : "var(--accent)",
+            background: today.today_concepts >= DAILY_GOAL ? "var(--green)" : "var(--accent-strong)",
           }} />
         </div>
       </div>

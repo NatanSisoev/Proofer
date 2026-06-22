@@ -1,5 +1,7 @@
 "use client";
 
+import { Search } from "./Icons";
+
 /**
  * Nav-bar button that opens the global search overlay.
  * Dispatches a synthetic "/" keydown so GlobalSearch handles it.
@@ -23,7 +25,7 @@ export default function SearchTrigger() {
         display: "flex", alignItems: "center",
       }}
     >
-      🔍
+      <Search size={16} />
     </button>
   );
 }

@@ -3,6 +3,7 @@ import { masteryHistogram, recentAttemptsGlobal, weakSpots, stats, todayStats, r
 import ActivityCalendar from "@/app/components/ActivityCalendar";
 import { getDailyGoal } from "@/lib/settings";
 import { VERDICT, type Verdict } from "@/lib/verdict";
+import { VerdictIcon } from "@/app/components/Icons";
 
 export const dynamic = "force-dynamic";
 
@@ -190,10 +191,10 @@ export default function ProgressPage() {
               {recent.map((a) => (
                 <div key={a.id} className="attempt-row">
                   <span
-                    className="verdict-dot"
+                    className="verdict-dot icon-label"
                     style={{ color: VERDICT[a.verdict as Verdict]?.color || "var(--muted)" }}
                   >
-                    {VERDICT[a.verdict as Verdict]?.icon || "?"}
+                    {a.verdict in VERDICT ? <VerdictIcon verdict={a.verdict as Verdict} size={11} /> : "?"}
                   </span>
                   <div className="attempt-body">
                     <Link
@@ -349,7 +350,7 @@ export default function ProgressPage() {
                               className="forecast-bar"
                               style={{
                                 height: barH,
-                                background: isToday ? "var(--amber)" : "var(--accent)",
+                                background: isToday ? "var(--amber)" : "var(--accent-strong)",
                                 opacity: d.count === 0 ? 0.2 : 0.85,
                               }}
                             />

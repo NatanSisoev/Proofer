@@ -3,6 +3,7 @@
 import { useState, useCallback } from "react";
 import Link from "next/link";
 import type { RelatedEdge } from "@/lib/queries";
+import { Check, ArrowRight, ArrowLeftRight } from "./Icons";
 
 type EdgeClassification = {
   src_id: string; tgt_id: string;
@@ -118,7 +119,9 @@ export default function RelatedEdges({ initial, hasKey }: { initial: RelatedEdge
               disabled={classifyingAll}
               onClick={() => classifyBatch(notYetClassified.slice(0, batchSize))}
             >
-              {classifyingAll ? "Classifying…" : `AI classify next ${Math.min(batchSize, notYetClassified.length)} →`}
+              {classifyingAll ? "Classifying…" : (
+                <span className="icon-label">{`AI classify next ${Math.min(batchSize, notYetClassified.length)}`} <ArrowRight size={12} /></span>
+              )}
             </button>
           </div>
         )}
@@ -134,8 +137,8 @@ export default function RelatedEdges({ initial, hasKey }: { initial: RelatedEdge
       )}
 
       {visible.length === 0 && (
-        <p className="muted empty-state">
-          All related edges have been reclassified. ✓
+        <p className="muted empty-state icon-label">
+          All related edges have been reclassified. <Check size={13} />
         </p>
       )}
 
@@ -177,7 +180,7 @@ function EdgeRow({
           {edge.src_title}
         </Link>
         {edge.src_type && <span className={`type-badge t-${edge.src_type}`}>{edge.src_type}</span>}
-        <span className="muted" style={{ fontSize: 12 }}>→ related →</span>
+        <span className="muted icon-label" style={{ fontSize: 12 }}><ArrowLeftRight size={12} /> related</span>
         <Link href={`/node/${encodeURIComponent(edge.tgt_id)}`} className="concept-link text-link">
           {edge.tgt_title}
         </Link>
@@ -232,7 +235,7 @@ function EdgeRow({
           onClick={() => onRetype(edge.src_id, edge.tgt_id, selected)}
           title={selected === "related" ? "Choose a more specific type first" : `Retype as "${selected}"`}
         >
-          {edge.retying ? "Saving…" : "Apply →"}
+          {edge.retying ? "Saving…" : <span className="icon-label">Apply <ArrowRight size={12} /></span>}
         </button>
 
         {hasKey && !edge.suggestion && !edge.classifying && (

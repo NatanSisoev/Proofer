@@ -108,7 +108,7 @@ export default function StudyPlanClient({
                 <div className="bar" style={{ height: 5 }}>
                   <span style={{
                     width: `${Math.round(a.avg_p * 100)}%`,
-                    background: a.avg_p >= 0.8 ? "var(--green)" : a.avg_p >= 0.4 ? "var(--accent)" : "var(--red)",
+                    background: a.avg_p >= 0.8 ? "var(--green)" : a.avg_p >= 0.4 ? "var(--amber)" : "var(--red)",
                   }} />
                 </div>
               </div>

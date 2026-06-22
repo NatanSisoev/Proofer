@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { Check } from "./Icons";
 
 export default function QuickKnown({ nodeId }: { nodeId: string }) {
   const [done, setDone] = useState(false);
@@ -21,7 +22,7 @@ export default function QuickKnown({ nodeId }: { nodeId: string }) {
   }
 
   if (done) {
-    return <span className="quick-known-done">✓ known</span>;
+    return <span className="quick-known-done icon-label"><Check size={12} /> known</span>;
   }
 
   return (

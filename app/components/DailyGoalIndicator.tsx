@@ -26,14 +26,14 @@ export default function DailyGoalIndicator() {
       href="/progress"
       title={`Today: ${today_concepts}/${daily_goal} concepts${streak_days > 0 ? ` · ${streak_days} day streak` : ""}`}
       className="goal-pill"
-      style={{ background: done ? "var(--accent-soft)" : "var(--bg-soft)" }}
+      style={{ background: done ? "var(--green-soft)" : "var(--bg-soft)" }}
     >
       <div className="goal-pill-track">
         <div
           className="goal-pill-fill"
           style={{
             width: `${pct}%`,
-            background: done ? "var(--green)" : "var(--accent)",
+            background: done ? "var(--green)" : "var(--accent-strong)",
           }}
         />
       </div>

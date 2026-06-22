@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { RefreshCw } from "./Icons";
 
 export default function SyncButton() {
   const [state, setState] = useState<"idle" | "syncing" | "done" | "error">("idle");
@@ -45,11 +46,13 @@ export default function SyncButton() {
       >
         {state === "syncing" ? (
           <>
-            <span className="sync-spin" aria-hidden style={{ display: "inline-block" }}>↻</span>
+            <RefreshCw size={13} className="sync-spin" style={{ display: "inline-block" }} />
             Syncing… {elapsed}s
           </>
         ) : (
-          "↺ Sync vault"
+          <>
+            <RefreshCw size={13} style={{ display: "inline-block" }} /> Sync vault
+          </>
         )}
       </button>
       {msg && (

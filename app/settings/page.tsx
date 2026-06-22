@@ -227,14 +227,6 @@ export default function SettingsPage() {
               </button>
             </div>
 
-            <div className="panel-link-row">
-              <Link href="/quality" className="pill pill-accent">
-                Note quality →
-              </Link>
-              <Link href="/progress" className="pill pill-accent">
-                Progress →
-              </Link>
-            </div>
           </div>
 
         </div>

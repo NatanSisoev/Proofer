@@ -3,17 +3,19 @@
 import { useState } from "react";
 import dynamic from "next/dynamic";
 import Spinner from "./Spinner";
+import { Sparkles, X, RefreshCw, Lightbulb, Triangle, Palette, BookOpen, Hash } from "./Icons";
+import type { ComponentType } from "react";
 
 const Markdown = dynamic(() => import("./Markdown"));
 
 type Angle = "intuitive" | "formal" | "visual" | "historical" | "example";
 
-const ANGLES: { value: Angle; label: string; emoji: string; desc: string }[] = [
-  { value: "intuitive",  label: "Intuitive",  emoji: "💡", desc: "Plain language & analogies" },
-  { value: "formal",     label: "Formal",     emoji: "📐", desc: "Rigorous & precise" },
-  { value: "visual",     label: "Visual",     emoji: "🎨", desc: "Geometric & spatial" },
-  { value: "historical", label: "Historical", emoji: "📜", desc: "Origin & motivation" },
-  { value: "example",    label: "Example",    emoji: "🔢", desc: "Worked example first" },
+const ANGLES: { value: Angle; label: string; icon: ComponentType<{ size?: number }>; desc: string }[] = [
+  { value: "intuitive",  label: "Intuitive",  icon: Lightbulb, desc: "Plain language & analogies" },
+  { value: "formal",     label: "Formal",     icon: Triangle, desc: "Rigorous & precise" },
+  { value: "visual",     label: "Visual",     icon: Palette, desc: "Geometric & spatial" },
+  { value: "historical", label: "Historical", icon: BookOpen, desc: "Origin & motivation" },
+  { value: "example",    label: "Example",    icon: Hash, desc: "Worked example first" },
 ];
 
 export default function ReExplain({ nodeId }: { nodeId: string }) {
@@ -49,10 +51,10 @@ export default function ReExplain({ nodeId }: { nodeId: string }) {
   if (!open) {
     return (
       <button
-        className="btn-ghost btn-sm reexplain-trigger"
+        className="btn-ghost btn-sm reexplain-trigger icon-label"
         onClick={() => { setOpen(true); generate("intuitive"); }}
       >
-        ✨ Explain differently
+        <Sparkles size={13} /> Explain differently
       </button>
     );
   }
@@ -60,30 +62,33 @@ export default function ReExplain({ nodeId }: { nodeId: string }) {
   return (
     <div className="inset-panel">
       <div className="panel-header">
-        <span className="panel-label" style={{ color: "var(--accent)" }}>
-          ✨ Explain differently
+        <span className="panel-label icon-label" style={{ color: "var(--accent)" }}>
+          <Sparkles size={13} /> Explain differently
         </span>
         <button
           className="btn-ghost close-btn"
           onClick={() => setOpen(false)}
         >
-          ✕
+          <X size={13} />
         </button>
       </div>
 
       {/* Angle selector */}
       <div className="angle-selector">
-        {ANGLES.map((a) => (
-          <button
-            key={a.value}
-            onClick={() => { setAngle(a.value); generate(a.value); }}
-            disabled={busy}
-            title={a.desc}
-            className={`angle-btn${angle === a.value ? " active" : ""}`}
-          >
-            {a.emoji} {a.label}
-          </button>
-        ))}
+        {ANGLES.map((a) => {
+          const Icon = a.icon;
+          return (
+            <button
+              key={a.value}
+              onClick={() => { setAngle(a.value); generate(a.value); }}
+              disabled={busy}
+              title={a.desc}
+              className={`angle-btn icon-label${angle === a.value ? " active" : ""}`}
+            >
+              <Icon size={13} /> {a.label}
+            </button>
+          );
+        })}
       </div>
 
       {/* Output */}
@@ -99,20 +104,23 @@ export default function ReExplain({ nodeId }: { nodeId: string }) {
       )}
       {explanation && !busy && (
         <div className="divider-top">
-          <div className="panel-label label-xs" style={{ marginBottom: 8 }}>
-            {ANGLES.find((a) => a.value === lastAngle)?.emoji}{" "}
+          <div className="panel-label label-xs icon-label" style={{ marginBottom: 8 }}>
+            {(() => {
+              const Icon = ANGLES.find((a) => a.value === lastAngle)?.icon;
+              return Icon ? <Icon size={12} /> : null;
+            })()}
             {ANGLES.find((a) => a.value === lastAngle)?.label} angle
           </div>
           <div className="markdown" style={{ fontSize: 14 }}>
             <Markdown>{explanation}</Markdown>
           </div>
           <button
-            className="btn-ghost btn-sm"
+            className="btn-ghost btn-sm icon-label"
             onClick={() => generate(angle)}
             disabled={busy}
             style={{ marginTop: 10 }}
           >
-            ↻ Regenerate
+            <RefreshCw size={13} /> Regenerate
           </button>
         </div>
       )}
