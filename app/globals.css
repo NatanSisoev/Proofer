@@ -391,7 +391,7 @@ button.know.on { background: var(--green-soft); border-color: var(--green-border
 }
 .btn-ghost:hover:not(:disabled) { background: var(--bg-soft); border-color: var(--muted); text-decoration: none; }
 .btn-ghost:disabled { opacity: 0.4; cursor: default; }
-.btn-xs { font-size: 12px; padding: 3px 10px; border-radius: 8px; }
+.btn-xs { font-size: 12px; padding: 3px 10px; border-radius: 999px; }
 .btn-sm { font-size: 13px; }
 .btn-lg { font-size: 15px; padding: 10px 0; }
 .btn-warn { color: var(--amber); }
