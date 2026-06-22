@@ -21,8 +21,23 @@ export default function MathText({
         remarkPlugins={[remarkMath]}
         rehypePlugins={[[rehypeKatex, { strict: false, throwOnError: false }]]}
         components={{
-          // Unwrap the paragraph ReactMarkdown adds so it stays inline
+          // Unwrap every block-level element ReactMarkdown might emit (a
+          // numbered list in a problem statement, a stray heading, etc.)
+          // so the output truly never contains block markup, regardless
+          // of what wrapper element the caller puts this in (often a <p>,
+          // which can't legally contain <ol>/<ul>/<h1-6> and would
+          // otherwise trigger a hydration mismatch).
           p: ({ children }) => <>{children}</>,
+          ol: ({ children }) => <>{children}</>,
+          ul: ({ children }) => <>{children}</>,
+          li: ({ children }) => <>{children} </>,
+          blockquote: ({ children }) => <>{children}</>,
+          h1: ({ children }) => <>{children}</>,
+          h2: ({ children }) => <>{children}</>,
+          h3: ({ children }) => <>{children}</>,
+          h4: ({ children }) => <>{children}</>,
+          h5: ({ children }) => <>{children}</>,
+          h6: ({ children }) => <>{children}</>,
         }}
       >
         {children}
