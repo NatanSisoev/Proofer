@@ -16,6 +16,31 @@ function base(size: number) {
   };
 }
 
+/** Small ring progress indicator, like Claude desktop's context-window meter. */
+export function CircularProgress({
+  value, size = 22, strokeWidth = 2.5, className, style,
+}: { value: number; size?: number; strokeWidth?: number; className?: string; style?: React.CSSProperties }) {
+  const r = (size - strokeWidth) / 2;
+  const c = 2 * Math.PI * r;
+  const pct = Math.max(0, Math.min(1, value));
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className={className} style={style}>
+      <circle
+        cx={size / 2} cy={size / 2} r={r} fill="none"
+        stroke="var(--border)" strokeWidth={strokeWidth}
+      />
+      <circle
+        cx={size / 2} cy={size / 2} r={r} fill="none"
+        stroke="var(--accent-strong)" strokeWidth={strokeWidth}
+        strokeDasharray={c} strokeDashoffset={c * (1 - pct)}
+        strokeLinecap="round"
+        transform={`rotate(-90 ${size / 2} ${size / 2})`}
+        style={{ transition: "stroke-dashoffset 0.4s ease" }}
+      />
+    </svg>
+  );
+}
+
 export function ArrowRight({ size = 14, className, style }: IconProps) {
   return (
     <svg {...base(size)} className={className} style={style}>

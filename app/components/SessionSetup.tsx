@@ -10,6 +10,7 @@ import { SESSION_KEY, type SavedSession } from "./session-types";
 
 const MIN_COUNT = 1;
 const MAX_COUNT = 30;
+const PRESET_COUNTS = [3, 5, 8, 10, 15, 20];
 
 // StudyQueue (and the ProblemCard/Markdown/katex chain it pulls in) only
 // matters once a queue is actually started — keep it out of the setup
@@ -390,17 +391,7 @@ export default function SessionSetup({
         <div className="panel" style={{ marginBottom: 16 }}>
           <h2>Session length</h2>
           <div className="btn-row">
-            {[3, 5, 8, 10, 15, 20].map((n) => (
-              <button
-                key={n}
-                onClick={() => setCountClamped(n)}
-                className={count === n ? "btn-primary" : "btn-ghost"}
-                style={{ minWidth: 44 }}
-              >
-                {n}
-              </button>
-            ))}
-            <div className="stepper">
+            <div className={`stepper${!PRESET_COUNTS.includes(count) ? " active" : ""}`}>
               <button
                 type="button"
                 className="stepper-btn"
@@ -421,6 +412,16 @@ export default function SessionSetup({
                 <Plus size={12} />
               </button>
             </div>
+            {PRESET_COUNTS.map((n) => (
+              <button
+                key={n}
+                onClick={() => setCountClamped(n)}
+                className={count === n ? "btn-primary" : "btn-ghost"}
+                style={{ minWidth: 44 }}
+              >
+                {n}
+              </button>
+            ))}
           </div>
           <p className="muted small field-hint">
             {count} concept{count !== 1 ? "s" : ""} · ~{count * 3}–{count * 5} min
