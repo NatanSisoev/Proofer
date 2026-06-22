@@ -5,7 +5,11 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import Spinner from "./Spinner";
+import { Plus, Minus } from "./Icons";
 import { SESSION_KEY, type SavedSession } from "./session-types";
+
+const MIN_COUNT = 1;
+const MAX_COUNT = 30;
 
 // StudyQueue (and the ProblemCard/Markdown/katex chain it pulls in) only
 // matters once a queue is actually started — keep it out of the setup
@@ -137,6 +141,12 @@ export default function SessionSetup({
     }, 120);
     return () => { if (customDebounce.current) clearTimeout(customDebounce.current); };
   }, [customSearch, mode, customPicked]);
+
+  function setCountClamped(n: number) {
+    const clamped = Math.min(MAX_COUNT, Math.max(MIN_COUNT, n));
+    setCount(clamped);
+    try { localStorage.setItem("proofer-session-count", String(clamped)); } catch {}
+  }
 
   const loadPreview = useCallback(async () => {
     if (mode === "custom") { setPreview(customPicked); return; }
@@ -380,16 +390,34 @@ export default function SessionSetup({
             {[3, 5, 8, 10, 15, 20].map((n) => (
               <button
                 key={n}
-                onClick={() => {
-                  setCount(n);
-                  try { localStorage.setItem("proofer-session-count", String(n)); } catch {}
-                }}
+                onClick={() => setCountClamped(n)}
                 className={count === n ? "btn-primary" : "btn-ghost"}
                 style={{ minWidth: 44 }}
               >
                 {n}
               </button>
             ))}
+            <div className="stepper">
+              <button
+                type="button"
+                className="stepper-btn"
+                onClick={() => setCountClamped(count - 1)}
+                disabled={count <= MIN_COUNT}
+                aria-label="Decrease session length"
+              >
+                <Minus size={12} />
+              </button>
+              <span className="stepper-value tabular">{count}</span>
+              <button
+                type="button"
+                className="stepper-btn"
+                onClick={() => setCountClamped(count + 1)}
+                disabled={count >= MAX_COUNT}
+                aria-label="Increase session length"
+              >
+                <Plus size={12} />
+              </button>
+            </div>
           </div>
           <p className="muted small field-hint">
             {count} concept{count !== 1 ? "s" : ""} · ~{count * 3}–{count * 5} min

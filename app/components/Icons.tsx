@@ -258,6 +258,22 @@ export function Sun({ size = 14, className, style }: IconProps) {
   );
 }
 
+export function Plus({ size = 14, className, style }: IconProps) {
+  return (
+    <svg {...base(size)} className={className} style={style}>
+      <path d="M12 5v14M5 12h14" />
+    </svg>
+  );
+}
+
+export function Minus({ size = 14, className, style }: IconProps) {
+  return (
+    <svg {...base(size)} className={className} style={style}>
+      <path d="M5 12h14" />
+    </svg>
+  );
+}
+
 export function Pencil({ size = 14, className, style }: IconProps) {
   return (
     <svg {...base(size)} className={className} style={style}>
