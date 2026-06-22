@@ -208,7 +208,7 @@ header.top .tag { color: var(--muted); font-size: 14px; margin-top: 0; }
 .panel {
   background: var(--panel); border: 1px solid var(--border);
   border-radius: 10px; padding: 20px;
-  box-shadow: var(--panel-shadow, 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04));
+  box-shadow: var(--panel-shadow);
   transition: border-color 0.15s;
 }
 .panel h2 { font-size: 14px; font-weight: 700; color: var(--text); text-transform: none; letter-spacing: normal; margin: 0 0 14px; }
@@ -504,7 +504,7 @@ button.know.on { background: var(--green-soft); border-color: var(--green-border
   display: block; padding: 18px; background: var(--panel); border: 1px solid var(--border);
   border-radius: 10px; text-decoration: none;
   transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
-  box-shadow: var(--panel-shadow, 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04));
+  box-shadow: var(--panel-shadow);
 }
 .area-card:hover {
   border-color: var(--muted); text-decoration: none;
@@ -594,7 +594,7 @@ select.filter-btn { appearance: none; padding-right: 20px; }
   display: flex; flex-direction: column; align-items: center;
   border: 1px solid var(--border); border-radius: 10px; padding: 14px 24px; min-width: 100px;
   background: var(--panel);
-  box-shadow: var(--panel-shadow, 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04));
+  box-shadow: var(--panel-shadow);
 }
 .score-n { font-size: 32px; font-weight: 700; line-height: 1; }
 .score-l { font-size: 12px; color: var(--muted); margin-top: 4px; }
@@ -751,20 +751,20 @@ details[open].practice-history > summary::before { transform: rotate(90deg); }
 .daily-goal-bar {
   background: var(--panel); border: 1px solid var(--border);
   border-radius: 10px; padding: 14px 16px;
-  box-shadow: var(--panel-shadow, 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04));
+  box-shadow: var(--panel-shadow);
 }
 
 /* GlobalSearch command-palette modal */
 .global-search-overlay {
   position: fixed; inset: 0; z-index: 2000;
-  background: rgba(0,0,0,0.55); backdrop-filter: blur(2px);
+  background: rgba(0,0,0,0.45); backdrop-filter: blur(1px);
   display: flex; align-items: flex-start; justify-content: center;
   padding-top: 10vh;
 }
 .global-search-panel {
   width: min(640px, 90vw); background: var(--bg);
   border: 1px solid var(--border); border-radius: 20px;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.5); overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.18); overflow: hidden;
 }
 .global-search-header {
   display: flex; align-items: center; padding: 12px 16px;
