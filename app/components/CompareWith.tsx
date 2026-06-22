@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import Spinner from "./Spinner";
+import { Scale, X, ArrowRight } from "./Icons";
 
 const Markdown = dynamic(() => import("./Markdown"));
 
@@ -60,11 +61,11 @@ export default function CompareWith({ nodeId, nodeTitle }: { nodeId: string; nod
   if (!open) {
     return (
       <button
-        className="btn-ghost btn-sm"
+        className="btn-ghost btn-sm icon-label"
         onClick={() => setOpen(true)}
         style={{ marginTop: 8 }}
       >
-        ⚖ Compare with…
+        <Scale size={13} /> Compare with…
       </button>
     );
   }
@@ -72,14 +73,14 @@ export default function CompareWith({ nodeId, nodeTitle }: { nodeId: string; nod
   return (
     <div className="inset-panel">
       <div className="panel-header">
-        <span className="panel-label">
-          ⚖ Compare {nodeTitle} with…
+        <span className="panel-label icon-label">
+          <Scale size={13} /> Compare {nodeTitle} with…
         </span>
         <button
           className="btn-ghost close-btn"
           onClick={() => { setOpen(false); setSelected(null); setComparison(null); setError(null); }}
         >
-          ✕
+          <X size={13} />
         </button>
       </div>
 
@@ -146,11 +147,11 @@ export default function CompareWith({ nodeId, nodeTitle }: { nodeId: string; nod
             <Markdown>{comparison}</Markdown>
           </div>
           <button
-            className="btn-ghost btn-sm"
+            className="btn-ghost btn-sm icon-label"
             onClick={() => { setSelected(null); setComparison(null); setError(null); setQuery(""); }}
             style={{ marginTop: 10 }}
           >
-            Compare with another →
+            Compare with another <ArrowRight size={12} />
           </button>
         </div>
       )}

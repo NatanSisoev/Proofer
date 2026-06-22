@@ -5,7 +5,11 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import Spinner from "./Spinner";
+import { Plus, Minus, Star, ArrowRight } from "./Icons";
 import { SESSION_KEY, type SavedSession } from "./session-types";
+
+const MIN_COUNT = 1;
+const MAX_COUNT = 30;
 
 // StudyQueue (and the ProblemCard/Markdown/katex chain it pulls in) only
 // matters once a queue is actually started — keep it out of the setup
@@ -20,7 +24,7 @@ const MODES: { key: Mode; label: string; desc: string }[] = [
   { key: "smart", label: "Smart", desc: "Due reviews first, then your frontier, then weak spots" },
   { key: "due", label: "Due for review", desc: "Concepts whose mastery is decaying — review them now" },
   { key: "weak", label: "Weak spots", desc: "Practiced but still below mastery threshold" },
-  { key: "bookmarks", label: "★ Bookmarked", desc: "Drill your starred concepts" },
+  { key: "bookmarks", label: "Bookmarked", desc: "Drill your starred concepts" },
   { key: "area", label: "By topic", desc: "Focus on one area" },
   { key: "exam",   label: "Exam",   desc: "Timed simulation — fixed questions, countdown clock" },
   { key: "custom",    label: "Custom",        desc: "Hand-pick the concepts to practice" },
@@ -138,6 +142,12 @@ export default function SessionSetup({
     return () => { if (customDebounce.current) clearTimeout(customDebounce.current); };
   }, [customSearch, mode, customPicked]);
 
+  function setCountClamped(n: number) {
+    const clamped = Math.min(MAX_COUNT, Math.max(MIN_COUNT, n));
+    setCount(clamped);
+    try { localStorage.setItem("proofer-session-count", String(clamped)); } catch {}
+  }
+
   const loadPreview = useCallback(async () => {
     if (mode === "custom") { setPreview(customPicked); return; }
     setPreviewLoading(true);
@@ -212,14 +222,14 @@ export default function SessionSetup({
           </div>
           <div className="resume-actions">
             <button
-              className="btn-primary"
+              className="btn-primary icon-label"
               onClick={() => {
                 setQueue(savedSession.activeQueue);
                 setResumeData(savedSession);
                 setSavedSession(null);
               }}
             >
-              Resume →
+              Resume <ArrowRight size={13} />
             </button>
             <button
               className="btn-ghost btn-sm"
@@ -265,10 +275,13 @@ export default function SessionSetup({
                 />
                 <div className="mode-body">
                   <div className="mode-label-row">
-                    <span className="mode-label-text">{m.label}</span>
+                    <span className="mode-label-text icon-label">
+                      {m.key === "bookmarks" && <Star size={12} filled={mode === "bookmarks"} />}
+                      {m.label}
+                    </span>
                     {modeCount !== null && (
                       <span className="pill pill-sm" style={{
-                        color: isEmpty ? "var(--muted)" : m.key === "due" ? "var(--amber)" : "var(--accent)",
+                        color: isEmpty ? "var(--muted)" : m.key === "due" ? "var(--amber)" : "var(--text)",
                       }}>
                         {modeCount}
                       </span>
@@ -380,16 +393,34 @@ export default function SessionSetup({
             {[3, 5, 8, 10, 15, 20].map((n) => (
               <button
                 key={n}
-                onClick={() => {
-                  setCount(n);
-                  try { localStorage.setItem("proofer-session-count", String(n)); } catch {}
-                }}
+                onClick={() => setCountClamped(n)}
                 className={count === n ? "btn-primary" : "btn-ghost"}
                 style={{ minWidth: 44 }}
               >
                 {n}
               </button>
             ))}
+            <div className="stepper">
+              <button
+                type="button"
+                className="stepper-btn"
+                onClick={() => setCountClamped(count - 1)}
+                disabled={count <= MIN_COUNT}
+                aria-label="Decrease session length"
+              >
+                <Minus size={12} />
+              </button>
+              <span className="stepper-value tabular">{count}</span>
+              <button
+                type="button"
+                className="stepper-btn"
+                onClick={() => setCountClamped(count + 1)}
+                disabled={count >= MAX_COUNT}
+                aria-label="Increase session length"
+              >
+                <Plus size={12} />
+              </button>
+            </div>
           </div>
           <p className="muted small field-hint">
             {count} concept{count !== 1 ? "s" : ""} · ~{count * 3}–{count * 5} min
@@ -431,15 +462,21 @@ export default function SessionSetup({
         )}
 
         <button
-          className="btn-primary btn-full"
+          className="btn-primary btn-full icon-label"
+          style={{ justifyContent: "center" }}
           onClick={start}
           disabled={loading || (mode === "custom" ? customPicked.length === 0 : preview.length === 0)}
         >
-          {loading ? <Spinner label="Building queue…" /> : mode === "custom"
-            ? `Start with ${customPicked.length} concept${customPicked.length !== 1 ? "s" : ""} →`
-            : mode === "exam"
-            ? `Start ${examTimeLimitMin}-min exam →`
-            : "Start session →"}
+          {loading ? <Spinner label="Building queue…" /> : (
+            <>
+              {mode === "custom"
+                ? `Start with ${customPicked.length} concept${customPicked.length !== 1 ? "s" : ""}`
+                : mode === "exam"
+                ? `Start ${examTimeLimitMin}-min exam`
+                : "Start session"}
+              <ArrowRight size={14} />
+            </>
+          )}
         </button>
       </div>
 

@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { ArrowUp, ArrowDown } from "./Icons";
 
 type Hit = {
   id: string; title: string; type: string | null;
@@ -85,8 +86,8 @@ export default function SearchBox() {
               </div>
             </Link>
           ))}
-          <p className="muted small search-hint">
-            ↑↓ navigate · Enter to open · Esc to close
+          <p className="muted small search-hint icon-label">
+            <ArrowUp size={11} /><ArrowDown size={11} /> navigate · Enter to open · Esc to close
           </p>
         </div>
       )}

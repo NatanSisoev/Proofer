@@ -18,6 +18,7 @@ import { getNode, edgesOf, isKnown, readiness, prerequisites, attemptCount, isBo
 import { truncateMath } from "@/lib/text";
 import { getMasteryP } from "@/lib/mastery";
 import { hasKey } from "@/lib/llm";
+import { ArrowLeft, ArrowRight } from "@/app/components/Icons";
 import type { EdgeRow } from "@/lib/db";
 
 // cytoscape is a heavy client-only lib; defer it to its own chunk so it
@@ -100,7 +101,7 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
     <div className="wrap">
       <ReadingProgress />
       <div className="breadcrumb">
-        <Link href="/">← map</Link>
+        <Link href="/" className="icon-label"><ArrowLeft size={12} /> map</Link>
         {node.area && (
           <> · <Link href={`/browse?area=${encodeURIComponent(node.area)}`}>{node.area}</Link></>
         )}
@@ -203,10 +204,10 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
                   {blamedPrereqs.some((b) => b.exists_) && (
                     <Link
                       href={`/session?mode=custom&nodes=${blamedPrereqs.filter((b) => b.exists_).slice(0, 5).map((b) => encodeURIComponent(b.prereq)).join(",")}`}
-                      className="pill pill-accent pill-xs"
+                      className="pill pill-accent pill-xs icon-label"
                       style={{ marginLeft: 6 }}
                     >
-                      Practice gaps →
+                      Practice gaps <ArrowRight size={10} />
                     </Link>
                   )}
                 </div>
@@ -214,7 +215,7 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
             </div>
             <div className="node-side-col">
               <div className="node-cta">
-                <Link href={`/learn?node=${encodeURIComponent(id)}`} className="cta">Practice this →</Link>
+                <Link href={`/learn?node=${encodeURIComponent(id)}`} className="cta icon-label">Practice this <ArrowRight size={13} /></Link>
                 <BookmarkButton nodeId={id} initial={bookmarked} />
               </div>
               {lastGapAttempt && (
@@ -259,9 +260,9 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
                   </p>
                   <Link
                     href={`/session?mode=custom&nodes=${ready.missing.slice(0, 10).map((m) => encodeURIComponent(m.id)).join(",")}`}
-                    className="pill pill-accent"
+                    className="pill pill-accent icon-label"
                   >
-                    Practice prerequisites →
+                    Practice prerequisites <ArrowRight size={11} />
                   </Link>
                 </div>
               )}
@@ -321,8 +322,8 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
                         </div>
                       );
                     })}
-                    <Link href={`/learn?node=${encodeURIComponent(id)}`} className="btn-ghost btn-sm" style={{ alignSelf: "flex-start" }}>
-                      Practice again →
+                    <Link href={`/learn?node=${encodeURIComponent(id)}`} className="btn-ghost btn-sm icon-label" style={{ alignSelf: "flex-start" }}>
+                      Practice again <ArrowRight size={12} />
                     </Link>
                   </div>
                 </details>
@@ -364,9 +365,9 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
                   ))}
                   <Link
                     href={`/browse?area=${encodeURIComponent(node.area!)}`}
-                    className="muted small browse-more"
+                    className="muted small browse-more icon-label"
                   >
-                    Browse all {node.area} →
+                    Browse all {node.area} <ArrowRight size={11} />
                   </Link>
                 </div>
               )}

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import dynamic from "next/dynamic";
+import { Pencil, ChevronUp, ChevronDown } from "./Icons";
 
 const Markdown = dynamic(() => import("./Markdown"));
 
@@ -95,9 +96,9 @@ export default function PersonalNotes({ nodeId }: Props) {
           fontWeight: content ? 600 : 400,
         }}
       >
-        <span style={{ fontSize: 15 }}>📝</span>
+        <Pencil size={14} />
         {content ? "My notes" : "Add personal notes"}
-        <span className="muted" style={{ fontSize: 11 }}>{open ? "↑" : "↓"}</span>
+        <span className="muted" style={{ display: "inline-flex" }}>{open ? <ChevronUp size={11} /> : <ChevronDown size={11} />}</span>
       </button>
 
       {open && (

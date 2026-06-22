@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import type { LinkSuggestion } from "@/lib/queries";
+import { Check, X } from "./Icons";
 
 export default function LinkSuggestions({ initial }: { initial: LinkSuggestion[] }) {
   const [suggestions, setSuggestions] = useState(initial);
@@ -76,7 +77,7 @@ export default function LinkSuggestions({ initial }: { initial: LinkSuggestion[]
                 </div>
                 <div className="item-actions">
                   {isAdded ? (
-                    <span className="link-added-badge">✓ added</span>
+                    <span className="link-added-badge icon-label"><Check size={12} /> added</span>
                   ) : (
                     <>
                       <button
@@ -90,7 +91,7 @@ export default function LinkSuggestions({ initial }: { initial: LinkSuggestion[]
                         onClick={() => dismiss(s)}
                         className="dismiss-btn"
                       >
-                        ✕
+                        <X size={12} />
                       </button>
                     </>
                   )}

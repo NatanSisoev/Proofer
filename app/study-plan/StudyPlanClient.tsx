@@ -3,6 +3,7 @@
 import { useState } from "react";
 import dynamic from "next/dynamic";
 import Spinner from "@/app/components/Spinner";
+import { ArrowRight, X, RefreshCw } from "@/app/components/Icons";
 
 const Markdown = dynamic(() => import("@/app/components/Markdown"));
 
@@ -85,11 +86,12 @@ export default function StudyPlanClient({
           </div>
 
           <button
-            className="btn-primary btn-full btn-lg"
+            className="btn-primary btn-full btn-lg icon-label"
             onClick={generate}
             disabled={busy || daysLeft <= 0}
+            style={{ justifyContent: "center" }}
           >
-            {busy ? <Spinner label="Generating plan…" /> : "Generate study plan →"}
+            {busy ? <Spinner label="Generating plan…" /> : <>Generate study plan <ArrowRight size={14} /></>}
           </button>
 
           {error && <p className="action-error" style={{ marginTop: 10 }}>{error}</p>}
@@ -108,7 +110,7 @@ export default function StudyPlanClient({
                 <div className="bar" style={{ height: 5 }}>
                   <span style={{
                     width: `${Math.round(a.avg_p * 100)}%`,
-                    background: a.avg_p >= 0.8 ? "var(--green)" : a.avg_p >= 0.4 ? "var(--accent)" : "var(--red)",
+                    background: a.avg_p >= 0.8 ? "var(--green)" : a.avg_p >= 0.4 ? "var(--amber)" : "var(--red)",
                   }} />
                 </div>
               </div>
@@ -129,16 +131,16 @@ export default function StudyPlanClient({
           <div className="panel">
             <div className="panel-header">
               <h2>Your study plan</h2>
-              <button className="btn-ghost btn-sm" onClick={() => { setPlan(null); }}>
-                ✕ clear
+              <button className="btn-ghost btn-sm icon-label" onClick={() => { setPlan(null); }}>
+                <X size={12} /> clear
               </button>
             </div>
             <div className="markdown">
               <Markdown>{plan}</Markdown>
             </div>
             <div className="regen-row">
-              <button className="btn-ghost btn-sm" onClick={generate}>
-                ↻ Regenerate
+              <button className="btn-ghost btn-sm icon-label" onClick={generate}>
+                <RefreshCw size={12} /> Regenerate
               </button>
             </div>
           </div>

@@ -5,6 +5,7 @@ import QualityFilters from "@/app/components/QualityFilters";
 import LinkSuggestions from "@/app/components/LinkSuggestions";
 import RelatedEdges from "@/app/components/RelatedEdges";
 import { hasKey } from "@/lib/llm";
+import { Check, ArrowRight, ArrowLeftRight } from "@/app/components/Icons";
 
 // All queries on this page are graph-structural (don't vary per user request),
 // so we can use Next.js ISR instead of force-dynamic. Each tab URL is cached
@@ -86,9 +87,9 @@ export default async function QualityPage({
     <div className="wrap">
       <header className="top">
         <h1>Note quality</h1>
-        <span className="tag">
+        <span className="tag icon-label">
           {structural.length === 0
-            ? "Your knowledge graph looks solid ✓"
+            ? <>Your knowledge graph looks solid <Check size={13} /></>
             : topIssue
               ? `Top action: fix "${topIssue[0]}" (${topIssue[1]} notes${topArea ? ` — especially ${topArea[0]}` : ""})`
               : "scan for gaps in your knowledge graph"}
@@ -189,7 +190,7 @@ export default async function QualityPage({
             <code>related</code> or <code>generalizes</code>) in the source note.
           </p>
           {cycles.length === 0 ? (
-            <p className="muted">No dependency cycles — your prerequisite graph is a clean DAG. ✓</p>
+            <p className="muted icon-label">No dependency cycles — your prerequisite graph is a clean DAG. <Check size={13} /></p>
           ) : (
             <div className="flex-col" style={{ gap: 8 }}>
               {cycles.map((c, i) => (
@@ -203,14 +204,14 @@ export default async function QualityPage({
                   <span className="cycle-nodes">
                     {c.nodes.map((n, j) => (
                       <span key={j} className="cycle-node-pair">
-                        {j > 0 && <span className="muted" style={{ fontSize: 12 }}>{c.mutual ? "⇄" : "→"}</span>}
+                        {j > 0 && <span className="muted" style={{ display: "inline-flex" }}>{c.mutual ? <ArrowLeftRight size={12} /> : <ArrowRight size={12} />}</span>}
                         <Link href={`/node/${encodeURIComponent(n)}`}>{n}</Link>
                       </span>
                     ))}
                     {/* close the loop for cycles longer than a mutual pair */}
                     {!c.mutual && (
                       <span className="cycle-node-pair">
-                        <span className="muted cycle-arrow">→</span>
+                        <span className="muted cycle-arrow" style={{ display: "inline-flex" }}><ArrowRight size={12} /></span>
                         <Link href={`/node/${encodeURIComponent(c.nodes[0])}`} className="muted">{c.nodes[0]}</Link>
                       </span>
                     )}

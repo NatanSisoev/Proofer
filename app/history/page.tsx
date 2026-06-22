@@ -4,6 +4,7 @@ import { VERDICT, type Verdict } from "@/lib/verdict";
 import HistoryAreaFilter from "@/app/components/HistoryAreaFilter";
 import MathText from "@/app/components/MathText";
 import { truncateMath } from "@/lib/text";
+import { ArrowLeft, ArrowRight } from "@/app/components/Icons";
 
 export const dynamic = "force-dynamic";
 
@@ -66,7 +67,7 @@ export default async function HistoryPage({
             {total.toLocaleString()} attempt{total !== 1 ? "s" : ""} total
           </p>
         </div>
-        <Link href="/progress" className="muted small">← progress</Link>
+        <Link href="/progress" className="muted small icon-label"><ArrowLeft size={12} /> progress</Link>
       </div>
 
       {/* Filter bar */}
@@ -160,9 +161,9 @@ export default async function HistoryPage({
                   <span className="muted small" style={{ fontSize: 11 }}>{timeAgo(a.created_at)}</span>
                   <Link
                     href={`/learn?node=${encodeURIComponent(a.node_id)}`}
-                    className="pill pill-accent label-xs"
+                    className="pill pill-accent label-xs icon-label"
                   >
-                    practice →
+                    practice <ArrowRight size={10} />
                   </Link>
                 </div>
               </div>
@@ -192,16 +193,16 @@ export default async function HistoryPage({
       {totalPages > 1 && (
         <div className="pagination">
           {page > 1 && (
-            <Link href={buildUrl({ page: page - 1 })} className="btn-ghost btn-sm">
-              ← prev
+            <Link href={buildUrl({ page: page - 1 })} className="btn-ghost btn-sm icon-label">
+              <ArrowLeft size={13} /> prev
             </Link>
           )}
           <span className="muted small">
             page {page} of {totalPages} · {total} total
           </span>
           {page < totalPages && (
-            <Link href={buildUrl({ page: page + 1 })} className="btn-ghost btn-sm">
-              next →
+            <Link href={buildUrl({ page: page + 1 })} className="btn-ghost btn-sm icon-label">
+              next <ArrowRight size={13} />
             </Link>
           )}
         </div>

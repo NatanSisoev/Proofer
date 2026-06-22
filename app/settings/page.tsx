@@ -2,6 +2,9 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import SyncButton from "@/app/components/SyncButton";
+import ThemeToggle from "@/app/components/ThemeToggle";
+import { Download, ArrowLeft } from "@/app/components/Icons";
 
 type Settings = {
   daily_goal: string;
@@ -83,7 +86,7 @@ export default function SettingsPage() {
           <h1>Settings</h1>
           <p className="muted small" style={{ marginTop: 4 }}>Preferences for your study sessions</p>
         </div>
-        <Link href="/" className="muted small">← home</Link>
+        <Link href="/" className="muted small icon-label"><ArrowLeft size={12} /> home</Link>
       </div>
 
       {loading ? (
@@ -119,7 +122,7 @@ export default function SettingsPage() {
           <div className="panel">
             <h2>Voice input language</h2>
             <p className="muted small panel-desc">
-              Language for the 🎤 Speak button. Used by the Web Speech API in your browser.
+              Language for the Speak button. Used by the Web Speech API in your browser.
             </p>
             <select
               value={settings.voice_lang}
@@ -147,10 +150,29 @@ export default function SettingsPage() {
             <a
               href="/api/notes/export"
               download="proofer-notes.md"
-              className="btn-ghost btn-download"
+              className="btn-ghost btn-download icon-label"
             >
-              ⬇ Download notes.md
+              <Download size={13} /> Download notes.md
             </a>
+          </div>
+
+          {/* Appearance & vault */}
+          <div className="panel">
+            <h2>Appearance &amp; vault</h2>
+            <div className="settings-row">
+              <div>
+                <strong>Theme</strong>
+                <p className="muted small" style={{ margin: "2px 0 0" }}>Light or dark mode. Press <kbd className="kbd">d</kbd> to toggle from anywhere.</p>
+              </div>
+              <ThemeToggle />
+            </div>
+            <div className="settings-row" style={{ marginTop: 14 }}>
+              <div>
+                <strong>Vault sync</strong>
+                <p className="muted small" style={{ margin: "2px 0 0" }}>Re-import the Obsidian vault to refresh the knowledge graph.</p>
+              </div>
+              <SyncButton />
+            </div>
           </div>
 
           {/* Info: LLM provider */}
@@ -227,14 +249,6 @@ export default function SettingsPage() {
               </button>
             </div>
 
-            <div className="panel-link-row">
-              <Link href="/quality" className="pill pill-accent">
-                Note quality →
-              </Link>
-              <Link href="/progress" className="pill pill-accent">
-                Progress →
-              </Link>
-            </div>
           </div>
 
         </div>

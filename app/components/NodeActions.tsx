@@ -3,6 +3,7 @@
 import { useState } from "react";
 import dynamic from "next/dynamic";
 import Spinner from "./Spinner";
+import { ExternalLink, Sparkles, Check } from "./Icons";
 
 // Markdown pulls in katex + react-markdown + remark; defer it out of this
 // component's initial chunk since it only renders after "Explain this" is clicked.
@@ -87,8 +88,8 @@ export default function NodeActions({ nodeId, nodePath, hasLLM }: Props) {
     <div className="actions-col">
       <div className="action-row">
         {obsidianHref && (
-          <a href={obsidianHref} className="btn-ghost btn-sm">
-            Open in Obsidian ↗
+          <a href={obsidianHref} className="btn-ghost btn-sm icon-label">
+            Open in Obsidian <ExternalLink size={13} />
           </a>
         )}
         {hasLLM && (
@@ -97,7 +98,9 @@ export default function NodeActions({ nodeId, nodePath, hasLLM }: Props) {
             className="btn-ghost btn-sm"
             disabled={explainLoading}
           >
-            {explainLoading ? <Spinner label="Thinking…" /> : explanation ? "Hide explanation" : "Explain this ✦"}
+            {explainLoading ? <Spinner label="Thinking…" /> : explanation ? "Hide explanation" : (
+              <span className="icon-label">Explain this <Sparkles size={13} /></span>
+            )}
           </button>
         )}
         {hasLLM && nodePath && (
@@ -125,7 +128,7 @@ export default function NodeActions({ nodeId, nodePath, hasLLM }: Props) {
       )}
 
       {improveState === "done" && (
-        <p className="action-success">✓ Note updated in Obsidian. Re-sync vault to refresh.</p>
+        <p className="action-success icon-label"><Check size={13} /> Note updated in Obsidian. Re-sync vault to refresh.</p>
       )}
 
       {improveState === "preview" && preview && (

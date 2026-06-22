@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Dice } from "./Icons";
 
-export default function RandomConceptButton({ mastered = "false", label = "🎲 Explore random" }: {
+export default function RandomConceptButton({ mastered = "false", label = "Explore random" }: {
   mastered?: "false" | "true" | "any";
   label?: string;
 }) {
@@ -23,13 +24,13 @@ export default function RandomConceptButton({ mastered = "false", label = "🎲 
 
   return (
     <button
-      className="btn-ghost"
+      className="btn-ghost icon-label"
       onClick={go}
       disabled={busy}
       style={{ fontSize: 13 }}
       title="Jump to a random unmastered concept"
     >
-      {busy ? "…" : label}
+      {busy ? "…" : <><Dice size={13} /> {label}</>}
     </button>
   );
 }

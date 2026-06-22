@@ -5,6 +5,7 @@ import QuickKnown from "./components/QuickKnown";
 import SnoozeButton from "./components/SnoozeButton";
 import { frontier, stats, dueForReview, todayStats, recentlyPracticed, bookmarkedNodes, conceptOfDay, areaMastery } from "@/lib/queries";
 import { getDailyGoal } from "@/lib/settings";
+import { ArrowRight, ArrowDown, Star } from "./components/Icons";
 
 export const dynamic = "force-dynamic";
 
@@ -17,7 +18,7 @@ function DueBar({ decayed, original }: { decayed: number; original: number }) {
       <span className="small" style={{ color: "var(--amber)" }}>
         {Math.round(decayed * 100)}%
       </span>
-      <span className="small muted">↓ {Math.round(original * 100)}%</span>
+      <span className="small muted icon-label"><ArrowDown size={10} /> {Math.round(original * 100)}%</span>
     </div>
   );
 }
@@ -43,7 +44,7 @@ export default function Home() {
           </p>
         </div>
         <span className="cta-slot">
-          <Link href="/session" className="cta">Start session →</Link>
+          <Link href="/session" className="cta icon-label">Start session <ArrowRight size={13} /></Link>
         </span>
       </header>
 
@@ -72,15 +73,15 @@ export default function Home() {
                 {today.streak_days} day{today.streak_days !== 1 ? "s" : ""} streak
               </span>
             )}
-            <Link href="/session" className="pill pill-accent">
-              start session →
+            <Link href="/session" className="pill pill-accent icon-label">
+              start session <ArrowRight size={11} />
             </Link>
           </span>
         </div>
         <div className="bar" style={{ height: 6 }}>
           <span style={{
             width: `${Math.min(100, Math.round((today.today_concepts / DAILY_GOAL) * 100))}%`,
-            background: today.today_concepts >= DAILY_GOAL ? "var(--green)" : "var(--accent)",
+            background: today.today_concepts >= DAILY_GOAL ? "var(--green)" : "var(--accent-strong)",
           }} />
         </div>
       </div>
@@ -120,9 +121,9 @@ export default function Home() {
             <div className="spotlight-actions">
               <Link
                 href={`/learn?node=${encodeURIComponent(spotlight.id)}`}
-                className="cta cta-sm"
+                className="cta cta-sm icon-label"
               >
-                Practice →
+                Practice <ArrowRight size={12} />
               </Link>
               <Link
                 href={`/node/${encodeURIComponent(spotlight.id)}`}
@@ -148,9 +149,9 @@ export default function Home() {
             <h2 className="amber">Due for review</h2>
             <Link
               href="/session?mode=due"
-              className="cta"
+              className="cta icon-label"
             >
-              Review all {due.length} →
+              Review all {due.length} <ArrowRight size={13} />
             </Link>
           </div>
           {due.map((n) => (
@@ -165,9 +166,9 @@ export default function Home() {
                 <SnoozeButton nodeId={n.id} />
                 <Link
                   href={`/learn?node=${encodeURIComponent(n.id)}`}
-                  className="pill pill-amber"
+                  className="pill pill-amber icon-label"
                 >
-                  review →
+                  review <ArrowRight size={10} />
                 </Link>
               </div>
             </div>
@@ -182,7 +183,7 @@ export default function Home() {
             <div className="panel" style={{ marginBottom: 16 }}>
               <div className="panel-header">
                 <h2>Jump back in</h2>
-                <Link href="/progress" className="small accent-link">All activity →</Link>
+                <Link href="/progress" className="small accent-link icon-label">All activity <ArrowRight size={11} /></Link>
               </div>
               <div className="action-row">
                 {recent.map((n) => (
@@ -226,9 +227,9 @@ export default function Home() {
                 <QuickKnown nodeId={n.id} />
                 <Link
                   href={`/learn?node=${encodeURIComponent(n.id)}`}
-                  className="pill pill-accent"
+                  className="pill pill-accent icon-label"
                 >
-                  practice →
+                  practice <ArrowRight size={10} />
                 </Link>
               </div>
             </div>
@@ -239,7 +240,7 @@ export default function Home() {
         <div className="progress-right-col">
           {bookmarks.length > 0 && (
             <div className="panel">
-              <h2>★ Bookmarked</h2>
+              <h2 className="icon-label"><Star size={14} filled /> Bookmarked</h2>
               {bookmarks.map((n) => (
                 <div className="frontier-item" key={n.id}>
                   <div>
@@ -250,8 +251,8 @@ export default function Home() {
                     <div className="bar" style={{ width: 50 }}>
                       <span style={{ width: `${Math.round(n.mastery_p * 100)}%` }} />
                     </div>
-                    <Link href={`/learn?node=${encodeURIComponent(n.id)}`} className="pill pill-accent">
-                      practice →
+                    <Link href={`/learn?node=${encodeURIComponent(n.id)}`} className="pill pill-accent icon-label">
+                      practice <ArrowRight size={10} />
                     </Link>
                   </div>
                 </div>
@@ -262,7 +263,7 @@ export default function Home() {
           <div className="panel">
             <div className="panel-header">
               <h2>Areas</h2>
-              <Link href="/browse" className="small">Browse all →</Link>
+              <Link href="/browse" className="small icon-label">Browse all <ArrowRight size={11} /></Link>
             </div>
             {areas.map((a) => {
               const pct = Math.round(a.avg_p * 100);

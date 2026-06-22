@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { Star } from "./Icons";
 
 export default function BookmarkButton({ nodeId, initial }: { nodeId: string; initial: boolean }) {
   const [bookmarked, setBookmarked] = useState(initial);
@@ -29,7 +30,7 @@ export default function BookmarkButton({ nodeId, initial }: { nodeId: string; in
         opacity: pending ? 0.5 : 1,
       }}
     >
-      {bookmarked ? "★" : "☆"}
+      <Star size={15} filled={bookmarked} />
     </button>
   );
 }

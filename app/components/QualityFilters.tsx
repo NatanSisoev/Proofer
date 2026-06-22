@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import type { QualityIssue } from "@/lib/queries";
+import { ArrowRight } from "./Icons";
 
 const ISSUE_COLOR: Record<string, string> = {
   "no content": "var(--red)",
@@ -142,10 +143,10 @@ export default function QualityFilters({
                   </div>
                   <Link
                     href={`/learn?node=${encodeURIComponent(n.node_id)}`}
-                    className="pill pill-accent"
+                    className="pill pill-accent icon-label"
                     style={{ fontSize: 11 }}
                   >
-                    practice →
+                    practice <ArrowRight size={11} />
                   </Link>
                 </div>
               ))}

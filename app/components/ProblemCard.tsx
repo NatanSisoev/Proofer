@@ -3,6 +3,7 @@ import Markdown from "./Markdown";
 import AnswerBox from "./AnswerBox";
 import VoiceInput from "./VoiceInput";
 import { VERDICT } from "@/lib/verdict";
+import { Check, Copy, ChevronUp, ChevronDown, X, ArrowRight } from "./Icons";
 
 export type ProblemNode = { id: string; title: string; type: string | null; area: string | null };
 
@@ -70,7 +71,7 @@ export function ProblemPanel({
       <div className="panel" style={{ position: "relative" }}>
         <Markdown>{problem.problem}</Markdown>
         <button type="button" onClick={onCopy} title="Copy problem" className="copy-btn">
-          {copied ? "✓" : "⎘"}
+          {copied ? <Check size={13} /> : <Copy size={13} />}
         </button>
       </div>
 
@@ -78,11 +79,11 @@ export function ProblemPanel({
         <div>
           <button
             type="button"
-            className="btn-ghost muted"
+            className="btn-ghost muted icon-label"
             onClick={onToggleReminder}
             style={{ fontSize: 12, marginBottom: reminderOpen ? 4 : 0 }}
           >
-            {reminderOpen ? "Hide reminder ↑" : "Concept reminder ↓"}
+            {reminderOpen ? <>Hide reminder <ChevronUp size={12} /></> : <>Concept reminder <ChevronDown size={12} /></>}
           </button>
           {reminderOpen && (
             <div className="panel reminder-panel">
@@ -106,7 +107,7 @@ export function ProblemPanel({
           <div className="panel-header" style={{ marginBottom: 6 }}>
             <h2 className="amber">Hint</h2>
             <button className="btn-ghost close-btn" onClick={onDismissHint}>
-              ✕
+              <X size={13} />
             </button>
           </div>
           <div className="markdown" style={{ fontSize: 14 }}><Markdown>{hint}</Markdown></div>
@@ -163,8 +164,8 @@ export function GradeFeedback({
       <div className="mastery-move">
         <span className="muted small">Mastery</span>
         <div className="bar"><span style={{ width: `${Math.round(grade.masteryAfter * 100)}%` }} /></div>
-        <span className="small">
-          {Math.round(grade.masteryBefore * 100)}% → <strong>{Math.round(grade.masteryAfter * 100)}%</strong>
+        <span className="small icon-label">
+          {Math.round(grade.masteryBefore * 100)}% <ArrowRight size={11} /> <strong>{Math.round(grade.masteryAfter * 100)}%</strong>
         </span>
         {grade.halfLife && (
           <span className="muted small review-hint">
@@ -195,7 +196,7 @@ export function GradeFeedback({
       </div>
 
       <div className="fb-block">
-        <h4 className="accent">Hint (not the answer)</h4>
+        <h4 className="purple">Hint (not the answer)</h4>
         <div className="markdown"><Markdown>{grade.socratic_hint}</Markdown></div>
       </div>
 

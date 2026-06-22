@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { Check } from "./Icons";
 
 export default function KnownButton({ slug, initial }: { slug: string; initial: boolean }) {
   const [known, setKnown] = useState(initial);
@@ -22,8 +23,8 @@ export default function KnownButton({ slug, initial }: { slug: string; initial: 
   }
 
   return (
-    <button className={`know${known ? " on" : ""}`} onClick={toggle} disabled={pending}>
-      {known ? "✓ I know this" : "Mark as known"}
+    <button className={`know icon-label${known ? " on" : ""}`} onClick={toggle} disabled={pending}>
+      {known ? <><Check size={14} /> I know this</> : "Mark as known"}
     </button>
   );
 }

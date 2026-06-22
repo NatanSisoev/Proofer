@@ -1,39 +1,34 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Sun, Moon } from "./Icons";
+
+export function toggleTheme() {
+  const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  localStorage.setItem("theme", next);
+  window.dispatchEvent(new Event("proofer-theme-change"));
+}
 
 export default function ThemeToggle() {
   const [dark, setDark] = useState(false);
 
   useEffect(() => {
-    setDark(document.documentElement.getAttribute("data-theme") === "dark");
+    const sync = () => setDark(document.documentElement.getAttribute("data-theme") === "dark");
+    sync();
+    window.addEventListener("proofer-theme-change", sync);
+    return () => window.removeEventListener("proofer-theme-change", sync);
   }, []);
-
-  function toggle() {
-    const next = !dark;
-    setDark(next);
-    document.documentElement.setAttribute("data-theme", next ? "dark" : "light");
-    localStorage.setItem("theme", next ? "dark" : "light");
-  }
 
   return (
     <button
       type="button"
-      onClick={toggle}
+      onClick={toggleTheme}
       className="theme-toggle"
-      title={dark ? "Switch to light mode" : "Switch to dark mode"}
+      title={dark ? "Switch to light mode (d)" : "Switch to dark mode (d)"}
       aria-label="Toggle dark mode"
     >
-      {dark ? (
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="12" cy="12" r="4" />
-          <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
-        </svg>
-      ) : (
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-        </svg>
-      )}
+      {dark ? <Moon size={15} /> : <Sun size={15} />}
     </button>
   );
 }

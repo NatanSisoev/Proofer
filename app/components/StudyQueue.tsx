@@ -6,6 +6,7 @@ import VoiceInput from "./VoiceInput";
 import Spinner from "./Spinner";
 import { VERDICT } from "@/lib/verdict";
 import { ProblemPanel, GradeFeedback, type Problem, type Grade } from "./ProblemCard";
+import { ArrowLeft, ArrowRight, Check, X, VerdictIcon } from "./Icons";
 import {
   SESSION_KEY,
   type QueueNode,
@@ -444,21 +445,21 @@ export default function StudyQueue({
             .map(([qi, r]) => (
               <div key={qi} className="session-result-row">
                 <span
-                  className="verdict-dot"
+                  className="verdict-dot icon-label"
                   style={{ background: VERDICT[r.verdict]?.bg, color: VERDICT[r.verdict]?.color }}
                 >
-                  {VERDICT[r.verdict]?.icon}
+                  <VerdictIcon verdict={r.verdict} size={11} />
                 </span>
                 <Link href={`/node/${encodeURIComponent(r.node.id)}`} className="text-link">
                   {r.node.title}
                 </Link>
                 {r.node.area && <span className="muted small"> · {r.node.area}</span>}
                 {r.justMastered && <span className="mastered-badge">mastered</span>}
-                <span className="muted small result-mastery">
+                <span className="muted small result-mastery icon-label">
                   {r.elapsedSec !== undefined && (
                     <span className="label-xs" style={{ opacity: 0.6 }}>{r.elapsedSec}s</span>
                   )}
-                  {Math.round(r.masteryBefore * 100)}% → <strong>{Math.round(r.masteryAfter * 100)}%</strong>
+                  {Math.round(r.masteryBefore * 100)}% <ArrowRight size={11} /> <strong>{Math.round(r.masteryAfter * 100)}%</strong>
                 </span>
               </div>
             ))}
@@ -502,12 +503,12 @@ export default function StudyQueue({
       <div className="session-progress-header">
         <div className="session-progress-left">
           <button
-            className="btn-ghost btn-sm"
+            className="btn-ghost btn-sm icon-label"
             onClick={goBack}
             disabled={index === 0}
             title="Go back to previous concept"
           >
-            ← Back
+            <ArrowLeft size={13} /> Back
           </button>
           <span className="muted small">Concept {index + 1} of {activeQueue.length}</span>
           {examMode ? (() => {
@@ -536,9 +537,9 @@ export default function StudyQueue({
             const w = vals.filter(r => r.verdict === "incorrect").length;
             return (
               <span className="session-live-score">
-                {c > 0 && <span style={{ color: "var(--green)" }}>{c}✓</span>}
+                {c > 0 && <span className="icon-label" style={{ color: "var(--green)" }}>{c}<Check size={11} /></span>}
                 {p > 0 && <span style={{ color: "var(--amber)" }}>{p}~</span>}
-                {w > 0 && <span style={{ color: "var(--red)" }}>{w}✗</span>}
+                {w > 0 && <span className="icon-label" style={{ color: "var(--red)" }}>{w}<X size={11} /></span>}
               </span>
             );
           })()}
@@ -551,7 +552,7 @@ export default function StudyQueue({
               style={{
                 background: resultsByIndex[i]
                   ? VERDICT[resultsByIndex[i].verdict]?.color
-                  : i === index ? "var(--accent)" : "var(--border)",
+                  : i === index ? "var(--accent-strong)" : "var(--border)",
                 cursor: i === index ? "default" : "pointer",
               }}
               title={node.title}
@@ -617,37 +618,41 @@ export default function StudyQueue({
             onDismissHint={() => setHint(null)}
             revealed={revealed}
             revealedFooter={
-              <button className="btn-ghost btn-sm" onClick={advance} disabled={busy} style={{ marginTop: 10 }}>
-                {index + 1 >= activeQueue.length ? "Finish session →" : "Next concept →"}
+              <button className="btn-ghost btn-sm icon-label" onClick={advance} disabled={busy} style={{ marginTop: 10 }}>
+                {index + 1 >= activeQueue.length ? "Finish session" : "Next concept"} <ArrowRight size={13} />
               </button>
             }
           />
 
           {!grade && !revealed && (
             <div className="practice-actions">
-              <button className="btn-primary" onClick={submit} disabled={busy || !answer.trim()}>
-                {busy ? <Spinner label="Grading…" /> : "Submit"}
-              </button>
-              <VoiceInput
-                onTranscript={(t) => setAnswer((prev) => prev ? prev + " " + t : t)}
-                disabled={busy}
-              />
-              {problem.mode !== "demo" && !hint && (
-                <button
-                  className="btn-ghost btn-sm btn-warn"
-                  onClick={getHint}
-                  disabled={busy || hintBusy}
-                >
-                  {hintBusy ? "…" : "Hint"}
+              <div className="practice-actions-group">
+                <button className="btn-primary" onClick={submit} disabled={busy || !answer.trim()}>
+                  {busy ? <Spinner label="Grading…" /> : "Submit"}
                 </button>
-              )}
-              <button className="btn-ghost" onClick={advance} disabled={busy}>
-                Skip →
-              </button>
-              <button className="btn-ghost btn-sm" onClick={reveal} disabled={busy} style={{ color: "var(--muted)" }}>
-                I don't know
-              </button>
-              <span className="muted small keyboard-hint" style={{ marginLeft: "auto" }}>Ctrl+Enter</span>
+                <VoiceInput
+                  onTranscript={(t) => setAnswer((prev) => prev ? prev + " " + t : t)}
+                  disabled={busy}
+                />
+              </div>
+              <div className="practice-actions-group practice-actions-secondary">
+                {problem.mode !== "demo" && !hint && (
+                  <button
+                    className="btn-ghost btn-sm btn-warn"
+                    onClick={getHint}
+                    disabled={busy || hintBusy}
+                  >
+                    {hintBusy ? "…" : "Hint"}
+                  </button>
+                )}
+                <button className="btn-ghost btn-sm icon-label" onClick={advance} disabled={busy}>
+                  Skip <ArrowRight size={12} />
+                </button>
+                <button className="btn-ghost btn-sm" onClick={reveal} disabled={busy} style={{ color: "var(--muted)" }}>
+                  I don't know
+                </button>
+                <span className="muted small keyboard-hint">Ctrl+Enter</span>
+              </div>
             </div>
           )}
 
@@ -666,8 +671,8 @@ export default function StudyQueue({
               />
 
               <div className="practice-actions" style={{ marginTop: 12 }}>
-                <button className="btn-primary" onClick={advance} disabled={busy}>
-                  {index + 1 >= activeQueue.length ? "Finish session →" : "Next concept →"}
+                <button className="btn-primary icon-label" onClick={advance} disabled={busy}>
+                  {index + 1 >= activeQueue.length ? "Finish session" : "Next concept"} <ArrowRight size={13} />
                 </button>
                 <span className="muted small keyboard-hint">Ctrl+Enter</span>
               </div>
