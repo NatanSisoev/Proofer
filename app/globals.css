@@ -580,7 +580,6 @@ button.know.on { background: var(--green-soft); border-color: var(--green-border
 .blamed-prereq-link { color: var(--amber); font-weight: 500; text-decoration: none; }
 .blamed-prereq-link:hover { text-decoration: underline; }
 .blame-count { color: var(--muted); font-size: 11px; }
-.pill-xs { font-size: 11px; padding: 2px 8px; }
 
 /* progress page */
 .attempt-row {
