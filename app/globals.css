@@ -1292,6 +1292,7 @@ details[open].practice-history > .attempt-list { animation: accordion-fade 0.25s
 .reason-in-progress { background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent); }
 .reason-ready-to-learn { background: var(--green-soft); color: var(--green); border: 1px solid var(--green-border); }
 .reason-weak-spot { background: var(--red-soft); color: var(--red); border: 1px solid var(--red); }
+.reason-near-your-edge { background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent); }
 .reason-bookmarked { background: var(--amber-soft); color: var(--amber); border: 1px solid var(--amber); }
 
 /* Session summary — unlocked concepts banner */
