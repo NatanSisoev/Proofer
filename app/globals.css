@@ -624,7 +624,12 @@ details.practice-history > summary {
   user-select: none; list-style: none; display: flex; align-items: center; gap: 6px;
 }
 details.practice-history > summary::-webkit-details-marker { display: none; }
-details.practice-history > summary::before { content: "▶"; font-size: 9px; transition: transform 0.15s; }
+details.practice-history > summary::before {
+  content: ""; width: 0; height: 0;
+  border-top: 4px solid transparent; border-bottom: 4px solid transparent;
+  border-left: 5px solid currentColor;
+  transition: transform 0.15s;
+}
 details[open].practice-history > summary::before { transform: rotate(90deg); }
 .practice-attempt {
   padding: 10px 12px; border-radius: 8px;
@@ -993,6 +998,18 @@ details[open].practice-history > summary::before { transform: rotate(90deg); }
 .field-label { display: block; margin-bottom: 6px; }
 .search-wrapper { position: relative; margin-bottom: 8px; }
 .chips-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.selected-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 6px 4px 10px; border-radius: 20px;
+  background: var(--accent-soft); color: var(--accent);
+  font-size: 12px;
+}
+.chip-remove {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 16px; height: 16px; padding: 0; border: none; border-radius: 50%;
+  background: transparent; color: inherit; cursor: pointer; opacity: 0.7;
+}
+.chip-remove:hover { opacity: 1; background: rgba(0, 0, 0, 0.08); }
 .btn-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 .stepper {
   display: inline-flex; align-items: center; gap: 2px;

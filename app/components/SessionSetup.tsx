@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import Spinner from "./Spinner";
-import { Plus, Minus, Star, ArrowRight } from "./Icons";
+import { Plus, Minus, Star, ArrowRight, X } from "./Icons";
 import { SESSION_KEY, type SavedSession } from "./session-types";
 
 const MIN_COUNT = 1;
@@ -375,7 +375,13 @@ export default function SessionSetup({
                   {customPicked.map(c => (
                     <div key={c.id} className="selected-chip">
                       <span>{c.title}</span>
-                      <button onClick={() => setCustomPicked(p => p.filter(x => x.id !== c.id))}>×</button>
+                      <button
+                        className="chip-remove"
+                        aria-label={`Remove ${c.title}`}
+                        onClick={() => setCustomPicked(p => p.filter(x => x.id !== c.id))}
+                      >
+                        <X size={11} />
+                      </button>
                     </div>
                   ))}
                 </div>

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import type { QualityIssue } from "@/lib/queries";
-import { ArrowRight } from "./Icons";
+import { ArrowRight, ChevronUp, ChevronDown } from "./Icons";
 
 const ISSUE_COLOR: Record<string, string> = {
   "no content": "var(--red)",
@@ -124,7 +124,7 @@ export default function QualityFilters({
           className="collapse-btn"
         >
           <span>Practice gaps — {practiceOnly.length} never-practiced notes</span>
-          <span>{showPractice ? "▲" : "▼"}</span>
+          {showPractice ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
         </button>
         {showPractice && (
           <div style={{ marginTop: 12 }}>
