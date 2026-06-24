@@ -4,7 +4,8 @@ import ActivityCalendar from "@/app/components/ActivityCalendar";
 import ProgressTabs from "@/app/components/ProgressTabs";
 import { getDailyGoal } from "@/lib/settings";
 import { VERDICT, type Verdict } from "@/lib/verdict";
-import { VerdictIcon, ArrowRight, Download } from "@/app/components/Icons";
+import { VerdictIcon, ArrowRight, Download, Sparkles } from "@/app/components/Icons";
+import EmptyState from "@/app/components/EmptyState";
 
 export const dynamic = "force-dynamic";
 
@@ -185,7 +186,7 @@ export default function ProgressPage() {
             <div className="panel-header">
               <h2>Recent attempts</h2>
             </div>
-            {recent.length === 0 && <p className="muted">No attempts yet — start practicing!</p>}
+            {recent.length === 0 && <EmptyState icon={<Sparkles size={18} />}>No attempts yet — start practicing!</EmptyState>}
             <div className="recent-list">
               {recent.map((a) => (
                 <div key={a.id} className="attempt-row">

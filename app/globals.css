@@ -199,7 +199,7 @@ header.top {
 header.top.borderless { border-bottom: none; }
 h1 { font-family: var(--font-serif, Georgia), serif; font-size: 26px; font-weight: 600; letter-spacing: -0.01em; margin: 0; }
 header.top h1 { font-size: 26px; margin: 0; letter-spacing: -0.03em; font-weight: 700; }
-header.top .tag { color: var(--muted); font-size: 14px; margin-top: 0; }
+header.top .tag { color: var(--muted); font-size: 13.5px; letter-spacing: 0.005em; margin-top: 0; }
 .panel h2.accent { color: var(--accent); }
 
 /* minmax(0, 1fr) — not 1fr — so the main column can shrink below its
@@ -363,7 +363,7 @@ button.know.on { background: var(--green-soft); border-color: var(--green-border
 .muted { color: var(--muted); }
 .icon-label { display: inline-flex; align-items: center; gap: 5px; }
 .icon-label svg { flex-shrink: 0; }
-.small { font-size: 12.5px; }
+.small { font-size: 12.5px; line-height: 1.45; letter-spacing: 0.005em; }
 
 /* practice */
 .practice { display: flex; flex-direction: column; gap: 18px; margin-top: 20px; }
@@ -486,6 +486,12 @@ button.know.on { background: var(--green-soft); border-color: var(--green-border
   height: 2px; background: var(--accent); border-radius: 1px;
 }
 .nav-spacer { height: 48px; }
+.nav-icon-btn {
+  display: flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; border-radius: 8px; flex-shrink: 0;
+  color: var(--muted); transition: color 0.2s var(--ease), background 0.2s var(--ease);
+}
+.nav-icon-btn:hover { color: var(--text); background: var(--bg-soft); text-decoration: none; }
 
 .theme-toggle {
   display: flex; align-items: center; justify-content: center;
@@ -970,6 +976,16 @@ details[open].practice-history > .attempt-list { animation: accordion-fade 0.25s
 .edge-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
 .edge-actions { display: flex; align-items: center; gap: 8px; margin-left: auto; }
 .empty-state { text-align: center; padding: 32px 0; }
+.empty-state-block {
+  text-align: center; padding: 32px 20px;
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+}
+.empty-state-icon {
+  display: flex; align-items: center; justify-content: center;
+  width: 40px; height: 40px; border-radius: 50%;
+  background: var(--bg-soft); color: var(--muted);
+}
+.empty-state-block p { margin: 0; }
 .edge-pair { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 14px; }
 .ai-suggestion { display: flex; align-items: center; gap: 8px; font-size: 13px; }
 .ai-suggest-type { font-weight: 600; color: var(--accent); }
@@ -1268,3 +1284,15 @@ details[open].practice-history > .attempt-list { animation: accordion-fade 0.25s
 .unlocked-banner-title { font-size: 13px; font-weight: 700; color: var(--accent); text-transform: none; letter-spacing: normal; margin-bottom: 8px; }
 .unlocked-node-chip { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 20px; font-size: 13px; font-weight: 500; background: var(--panel); border: 1px solid var(--accent); color: var(--accent); text-decoration: none; transition: background 0.15s; }
 .unlocked-node-chip:hover { background: var(--accent); color: white; }
+
+/* mobile: tighten nav, collapse secondary chrome, stack rows that assumed wide viewports */
+@media (max-width: 640px) {
+  .wrap { padding: 20px 16px 64px; }
+  .app-nav-inner { padding: 0 12px; }
+  .goal-pill-streak { display: none; }
+  .page-top { flex-direction: column; align-items: flex-start; gap: 10px; }
+  .settings-row { flex-direction: column; align-items: flex-start; gap: 8px; }
+  .panel { padding: 16px; }
+  header.top { flex-wrap: wrap; }
+  .node-head { flex-direction: column; }
+}

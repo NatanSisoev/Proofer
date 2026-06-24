@@ -8,6 +8,7 @@ import SearchTrigger from "./components/SearchTrigger";
 import ShortcutsTrigger from "./components/ShortcutsTrigger";
 import DailyGoalIndicator from "./components/DailyGoalIndicator";
 import NavLinks from "./components/NavLinks";
+import { Settings } from "./components/Icons";
 
 export const metadata: Metadata = {
   title: "Proofer — a map of mathematics",
@@ -43,7 +44,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <div className="nav-actions">
               <DailyGoalIndicator />
               <SearchTrigger />
-              <Link href="/settings" className="nav-link" title="Settings">Settings</Link>
+              <Link href="/settings" className="nav-icon-btn" title="Settings">
+                <Settings size={16} />
+              </Link>
               <ShortcutsTrigger />
             </div>
           </div>

@@ -5,7 +5,8 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import Spinner from "./Spinner";
-import { Plus, Minus, Star, ArrowRight, X } from "./Icons";
+import { Plus, Minus, Star, ArrowRight, X, Search } from "./Icons";
+import EmptyState from "./EmptyState";
 import { SESSION_KEY, type SavedSession } from "./session-types";
 
 const MIN_COUNT = 1;
@@ -494,7 +495,7 @@ export default function SessionSetup({
           {previewLoading && mode !== "custom" && <span className="muted small loading-tag">loading…</span>}
         </h2>
         {!previewLoading && preview.length === 0 && mode !== "custom" && (
-          <p className="muted">No concepts found for this mode.</p>
+          <EmptyState icon={<Search size={18} />}>No concepts found for this mode.</EmptyState>
         )}
         {mode === "custom" && customPicked.length === 0 && (
           <p className="muted small">Use the search on the left to pick concepts.</p>

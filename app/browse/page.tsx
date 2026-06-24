@@ -2,7 +2,8 @@ import Link from "next/link";
 import { browseAreas, nodesInArea, nodeTypes, areaMastery } from "@/lib/queries";
 import type { BrowseNode } from "@/lib/queries";
 import BrowseFilters from "@/app/components/BrowseFilters";
-import { ArrowLeft, ArrowRight } from "@/app/components/Icons";
+import { ArrowLeft, ArrowRight, Search } from "@/app/components/Icons";
+import EmptyState from "@/app/components/EmptyState";
 
 // Mastery data is user-specific but 30s stale is perfectly acceptable for a
 // single-user local app. ISR avoids a full DB round-trip on every /browse nav.
@@ -79,7 +80,7 @@ export default async function BrowsePage({
           {nodes.map((n) => (
             <NodeRow key={n.id} node={n} />
           ))}
-          {nodes.length === 0 && <p className="muted">No concepts match this filter.</p>}
+          {nodes.length === 0 && <EmptyState icon={<Search size={18} />}>No concepts match this filter.</EmptyState>}
         </div>
       </div>
     );

@@ -3,7 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import type { QualityIssue } from "@/lib/queries";
-import { ArrowRight, ChevronUp, ChevronDown } from "./Icons";
+import { ArrowRight, ChevronUp, ChevronDown, Check } from "./Icons";
+import EmptyState from "./EmptyState";
 
 const ISSUE_COLOR: Record<string, string> = {
   "no content": "var(--red)",
@@ -82,7 +83,7 @@ export default function QualityFilters({
         <h2>
           {filter ? `"${filter}" — ${baseList.length}` : `Structural issues — ${structuralOnly.length}`}
         </h2>
-        {baseList.length === 0 && <p className="muted">No structural issues found.</p>}
+        {baseList.length === 0 && <EmptyState icon={<Check size={18} />}>No structural issues found.</EmptyState>}
         <div className="quality-list">
           {baseList.map((n) => (
             <div key={n.node_id} className="quality-row">
