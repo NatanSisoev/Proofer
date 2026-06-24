@@ -81,7 +81,13 @@ CREATE TABLE IF NOT EXISTS attempts (
   mode          TEXT             -- 'ai' (real grading) | 'demo' (no API key)
 );
 
-CREATE INDEX IF NOT EXISTS idx_attempts_node ON attempts(node_id);
+CREATE INDEX IF NOT EXISTS idx_attempts_node       ON attempts(node_id);
+CREATE INDEX IF NOT EXISTS idx_attempts_created_at ON attempts(created_at DESC);
+
+-- mastery(p) speeds up weak-spot and frontier queries (filter by p range).
+-- mastery(last_seen) speeds up due-for-review queries (julianday diff).
+CREATE INDEX IF NOT EXISTS idx_mastery_p         ON mastery(p);
+CREATE INDEX IF NOT EXISTS idx_mastery_last_seen ON mastery(last_seen);
 
 -- User-bookmarked concepts (starred for focused study).
 CREATE TABLE IF NOT EXISTS bookmarks (
@@ -89,8 +95,6 @@ CREATE TABLE IF NOT EXISTS bookmarks (
   created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
 );
 
--- Generated problems live here so the ideal solution / rubric stay server-side
--- (the student grades against a problemId, never sees the answer key).
 -- Personal annotations on concepts: free-form notes the student adds to any node.
 CREATE TABLE IF NOT EXISTS node_notes (
   node_id    TEXT PRIMARY KEY,
