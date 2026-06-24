@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db, MASTERY_THRESHOLD } from "@/lib/db";
 import { P_INIT, infoGainRanked } from "@/lib/mastery";
+import { overconfidentConcepts } from "@/lib/queries";
 import { getSelectionPolicy } from "@/lib/settings";
 
 export const dynamic = "force-dynamic";
@@ -63,6 +64,10 @@ export async function GET(req: NextRequest) {
       ORDER BY COALESCE(m.p, 0) ASC
       LIMIT ?
     `).all(limit) as QueueNode[]).map((r) => ({ ...r, reason: "bookmarked" }));
+  } else if (mode === "blindspots") {
+    rows = overconfidentConcepts(limit).map((c) => ({
+      id: c.id, title: c.title, type: c.type, area: c.area, reason: "blind spot",
+    }));
   } else if (mode === "area" && area) {
     rows = (db().prepare(`
       SELECT n.id, n.title, n.type, n.area
@@ -99,7 +104,9 @@ export async function GET(req: NextRequest) {
         if (seen.has(c.id)) continue;
         seen.add(c.id);
         // Surface *why* this concept was chosen — the policy made visible.
-        const reason = c.attempts === 0 ? "ready to learn" : "near your edge";
+        const reason = c.overconf > 0 ? "blind spot"
+          : c.attempts === 0 ? "ready to learn"
+          : "near your edge";
         combined.push({ id: c.id, title: c.title, type: c.type, area: c.area, reason });
       }
       rows = combined; // falls through to the shared mastery-attach + return below

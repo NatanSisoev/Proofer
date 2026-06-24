@@ -19,12 +19,13 @@ const StudyQueue = dynamic(() => import("./StudyQueue"));
 
 type QueueNode = { id: string; title: string; type: string | null; area: string | null; mastery_p?: number; reason?: string };
 
-type Mode = "smart" | "due" | "weak" | "area" | "bookmarks" | "custom" | "exam";
+type Mode = "smart" | "due" | "weak" | "blindspots" | "area" | "bookmarks" | "custom" | "exam";
 
 const MODES: { key: Mode; label: string; desc: string }[] = [
   { key: "smart", label: "Smart", desc: "Due reviews first, then your frontier, then weak spots" },
   { key: "due", label: "Due for review", desc: "Concepts whose mastery is decaying — review them now" },
   { key: "weak", label: "Weak spots", desc: "Practiced but still below mastery threshold" },
+  { key: "blindspots", label: "Blind spots", desc: "Concepts you rate higher than your results justify" },
   { key: "bookmarks", label: "Bookmarked", desc: "Drill your starred concepts" },
   { key: "area", label: "By topic", desc: "Focus on one area" },
   { key: "exam",   label: "Exam",   desc: "Timed simulation — fixed questions, countdown clock" },
@@ -38,7 +39,7 @@ const EXAM_TIME_OPTIONS = [
   { label: "60 min", value: 60 },
 ];
 
-type ModeCounts = { due: number; weak: number; frontier: number; bookmarks: number };
+type ModeCounts = { due: number; weak: number; frontier: number; bookmarks: number; blindspots: number };
 type ProblemKind = "any" | "compute" | "prove" | "counterexample" | "explain";
 const KIND_OPTIONS: { key: ProblemKind; label: string; desc: string }[] = [
   { key: "any",           label: "Any",          desc: "Mix of all problem types" },
@@ -99,7 +100,7 @@ export default function SessionSetup({
     if (!modeFromUrl && !nodesFromUrl) {
       try {
         const savedMode = localStorage.getItem("proofer-session-mode") as Mode | null;
-        const VALID: Mode[] = ["smart", "due", "weak", "area", "bookmarks", "custom", "exam"];
+        const VALID: Mode[] = ["smart", "due", "weak", "blindspots", "area", "bookmarks", "custom", "exam"];
         if (savedMode && VALID.includes(savedMode)) setMode(savedMode);
       } catch {}
     }
@@ -259,6 +260,7 @@ export default function SessionSetup({
                   : m.key === "weak" ? counts.weak
                   : m.key === "smart" ? counts.frontier + counts.due
                   : m.key === "bookmarks" ? counts.bookmarks
+                  : m.key === "blindspots" ? counts.blindspots
                   : null
                 : null;
               const isEmpty = modeCount === 0;

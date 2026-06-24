@@ -1100,6 +1100,8 @@ details[open].practice-history > summary::before { transform: rotate(90deg); }
 .spotlight-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 4px; }
 .due-actions { display: flex; gap: 8px; align-items: center; }
 .panel-due { border-left: 3px solid var(--amber); }
+.panel h2.red { color: var(--red); }
+.panel-blindspots { border-left: 3px solid var(--red); }
 .item-actions { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
 
 /* quality filters */
@@ -1264,6 +1266,7 @@ details[open].practice-history > summary::before { transform: rotate(90deg); }
 .reason-ready-to-learn { background: var(--green-soft); color: var(--green); border: 1px solid var(--green-border); }
 .reason-weak-spot { background: var(--red-soft); color: var(--red); border: 1px solid var(--red); }
 .reason-near-your-edge { background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent); }
+.reason-blind-spot { background: var(--red-soft); color: var(--red); border: 1px solid var(--red); }
 .reason-bookmarked { background: var(--amber-soft); color: var(--amber); border: 1px solid var(--amber); }
 
 /* Session summary — unlocked concepts banner */

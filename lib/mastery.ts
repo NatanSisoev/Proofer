@@ -194,10 +194,37 @@ function learnableCandidates(): Candidate[] {
     .all() as Candidate[];
 }
 
-/** Learnable concepts ranked by expected information gain, highest first. */
-export function infoGainRanked(limit = 20): (Candidate & { score: number })[] {
+// How much a concept the student is overconfident about (predicted > actual)
+// is boosted in selection. Practicing where belief outruns reality is the
+// tutor's whole job — so it gets a deliberate, tunable bump on top of the
+// pure mastery-model information gain. Kept self-contained (no queries.ts
+// import) to avoid a cycle, since queries.ts already imports this module.
+const OVERCONF_WEIGHT = 1.2;
+const ACTUAL_SQL = "CASE a.verdict WHEN 'correct' THEN 1.0 WHEN 'partial' THEN 0.5 ELSE 0.0 END";
+
+function overconfidenceMap(): Map<string, number> {
+  const expr = `AVG(a.predicted_correct - (${ACTUAL_SQL}))`;
+  const rows = db()
+    .prepare(
+      `SELECT a.node_id AS id, ${expr} AS overconf
+         FROM attempts a
+        WHERE a.predicted_correct IS NOT NULL
+        GROUP BY a.node_id
+       HAVING COUNT(*) >= 2 AND ${expr} > 0.15`
+    )
+    .all() as { id: string; overconf: number }[];
+  return new Map(rows.map((r) => [r.id, r.overconf]));
+}
+
+/** Learnable concepts ranked by expected information gain (with an overconfidence
+ *  boost), highest first. */
+export function infoGainRanked(limit = 20): (Candidate & { overconf: number; score: number })[] {
+  const overconf = overconfidenceMap();
   return learnableCandidates()
-    .map((c) => ({ ...c, score: infoGainScore(c) }))
+    .map((c) => {
+      const oc = overconf.get(c.id) ?? 0;
+      return { ...c, overconf: oc, score: infoGainScore(c) + OVERCONF_WEIGHT * oc };
+    })
     .sort((a, b) => b.score - a.score)
     .slice(0, limit);
 }

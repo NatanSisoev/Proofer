@@ -3,7 +3,7 @@ import SearchBox from "./components/SearchBox";
 import RandomConceptButton from "./components/RandomConceptButton";
 import QuickKnown from "./components/QuickKnown";
 import SnoozeButton from "./components/SnoozeButton";
-import { frontier, stats, dueForReview, todayStats, recentlyPracticed, bookmarkedNodes, conceptOfDay, areaMastery } from "@/lib/queries";
+import { frontier, stats, dueForReview, todayStats, recentlyPracticed, bookmarkedNodes, conceptOfDay, areaMastery, overconfidentConcepts } from "@/lib/queries";
 import { getDailyGoal } from "@/lib/settings";
 import { ArrowRight, ArrowDown, Star } from "./components/Icons";
 
@@ -33,6 +33,7 @@ export default function Home() {
   const bookmarks = bookmarkedNodes();
   const spotlight = conceptOfDay();
   const areas = areaMastery().slice(0, 12);
+  const blindSpots = overconfidentConcepts(5);
 
   return (
     <div className="wrap">
@@ -169,6 +170,40 @@ export default function Home() {
                   className="pill pill-amber icon-label"
                 >
                   review <ArrowRight size={10} />
+                </Link>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Blind spots — concepts you rate higher than your results justify */}
+      {blindSpots.length > 0 && (
+        <div className="panel panel-blindspots" style={{ marginBottom: 20 }}>
+          <div className="panel-header">
+            <div>
+              <h2 className="red">Blind spots</h2>
+              <p className="muted small" style={{ margin: "2px 0 0" }}>
+                You rate these higher than your results justify — the best place to practice.
+              </p>
+            </div>
+            <Link href="/session?mode=blindspots" className="cta icon-label">
+              Drill all {blindSpots.length} <ArrowRight size={13} />
+            </Link>
+          </div>
+          {blindSpots.map((n) => (
+            <div className="frontier-item" key={n.id}>
+              <div style={{ minWidth: 0 }}>
+                {n.type && <span className={`type-badge t-${n.type}`} style={{ marginRight: 8 }}>{n.type}</span>}
+                <Link href={`/node/${encodeURIComponent(n.id)}`}>{n.title}</Link>
+                {n.area && <span className="muted small"> · {n.area}</span>}
+              </div>
+              <div className="item-actions">
+                <span className="pill pill-red pill-xs" title="how much your confidence exceeds your performance">
+                  +{Math.round(n.overconf * 100)}pp overrated
+                </span>
+                <Link href={`/learn?node=${encodeURIComponent(n.id)}`} className="pill pill-accent icon-label">
+                  practice <ArrowRight size={10} />
                 </Link>
               </div>
             </div>
