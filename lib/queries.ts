@@ -948,6 +948,33 @@ export type Calibration = {
 // "refuses to let you fool yourself" instrument made into a number.
 const ACTUAL_CASE = "CASE verdict WHEN 'correct' THEN 1.0 WHEN 'partial' THEN 0.5 ELSE 0.0 END";
 
+export type OverconfidentConcept = NodeRow & { mastery_p: number; n: number; overconf: number };
+
+// Concepts the student rates higher than their results justify — predicted
+// confidence systematically above the realized verdict (n>=2 so it isn't one
+// fluke). These are the highest-value practice targets: the tutor's job is to
+// stop you fooling yourself, and this is exactly where belief and reality split.
+export function overconfidentConcepts(limit = 20): OverconfidentConcept[] {
+  const overconfExpr = `AVG(a.predicted_correct - (${ACTUAL_CASE.replace(/verdict/g, "a.verdict")}))`;
+  return db()
+    .prepare(
+      `SELECT nd.*,
+              COALESCE(m.p, 0) AS mastery_p,
+              COUNT(*) AS n,
+              ${overconfExpr} AS overconf
+         FROM attempts a
+         JOIN nodes nd ON nd.id = a.node_id
+         LEFT JOIN mastery m ON m.node_id = a.node_id
+        WHERE a.predicted_correct IS NOT NULL
+          AND nd.exists_ = 1
+        GROUP BY a.node_id
+       HAVING COUNT(*) >= 2 AND ${overconfExpr} > 0.15
+        ORDER BY overconf DESC
+        LIMIT ?`
+    )
+    .all(limit) as OverconfidentConcept[];
+}
+
 export function calibration(): Calibration {
   const overall = db()
     .prepare(
@@ -962,27 +989,12 @@ export function calibration(): Calibration {
     )
     .get() as { n: number; brier: number | null; bias: number | null };
 
-  // Concepts where belief most outruns performance (n>=2 so it isn't one fluke).
-  // Aliases avoid two collisions: the nodes table is `nd` (not `n`, which is the
-  // count alias), and the computed column is `overconf` (not `gap`, which is an
-  // existing TEXT column on `attempts` that HAVING/ORDER BY would otherwise bind
-  // to). HAVING repeats the aggregate expression rather than its alias.
-  const overconfExpr = `AVG(a.predicted_correct - (${ACTUAL_CASE.replace(/verdict/g, "a.verdict")}))`;
-  const overconfident = db()
-    .prepare(
-      `SELECT a.node_id,
-              COALESCE(nd.title, a.node_id) AS title,
-              COUNT(*) AS n,
-              ${overconfExpr} AS overconf
-         FROM attempts a
-         LEFT JOIN nodes nd ON nd.id = a.node_id
-        WHERE a.predicted_correct IS NOT NULL
-        GROUP BY a.node_id
-       HAVING COUNT(*) >= 2 AND ${overconfExpr} > 0.15
-        ORDER BY overconf DESC
-        LIMIT 6`
-    )
-    .all() as { node_id: string; title: string; n: number; overconf: number }[];
+  const overconfident = overconfidentConcepts(6).map((c) => ({
+    node_id: c.id,
+    title: c.title,
+    n: c.n,
+    overconf: c.overconf,
+  }));
 
   return {
     n: overall.n,
