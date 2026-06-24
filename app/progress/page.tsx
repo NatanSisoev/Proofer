@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { masteryHistogram, recentAttemptsGlobal, weakSpots, stats, todayStats, reviewForecast, masteryVelocity, activityCalendar, areaMastery, masteryMilestones, recurringWeakPrerequisites } from "@/lib/queries";
 import ActivityCalendar from "@/app/components/ActivityCalendar";
+import ProgressTabs from "@/app/components/ProgressTabs";
 import { getDailyGoal } from "@/lib/settings";
 import { VERDICT, type Verdict } from "@/lib/verdict";
-import { VerdictIcon, ArrowRight, ArrowLeft, Download } from "@/app/components/Icons";
+import { VerdictIcon, ArrowRight, Download } from "@/app/components/Icons";
 
 export const dynamic = "force-dynamic";
 
@@ -52,9 +53,10 @@ export default function ProgressPage() {
           <a href="/api/export/anki?mastered=false" download="proofer-anki.txt" className="muted small icon-label" style={{ textDecoration: "none" }}>
             <Download size={12} /> Anki deck
           </a>
-          <Link href="/" className="muted small icon-label"><ArrowLeft size={12} /> home</Link>
         </div>
       </div>
+
+      <ProgressTabs active="overview" />
 
       {/* Summary stats */}
       <div className="stat-row" style={{ marginBottom: 20 }}>
@@ -182,9 +184,6 @@ export default function ProgressPage() {
           <div className="panel">
             <div className="panel-header">
               <h2>Recent attempts</h2>
-              <Link href="/history" className="small accent-link icon-label">
-                Full history <ArrowRight size={11} />
-              </Link>
             </div>
             {recent.length === 0 && <p className="muted">No attempts yet — start practicing!</p>}
             <div className="recent-list">

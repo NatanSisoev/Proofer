@@ -101,7 +101,7 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
     <div className="wrap">
       <ReadingProgress />
       <div className="breadcrumb">
-        <Link href="/" className="icon-label"><ArrowLeft size={12} /> map</Link>
+        <Link href="/browse" className="icon-label"><ArrowLeft size={12} /> browse</Link>
         {node.area && (
           <> · <Link href={`/browse?area=${encodeURIComponent(node.area)}`}>{node.area}</Link></>
         )}

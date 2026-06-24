@@ -2,7 +2,7 @@ import Link from "next/link";
 import StudyPlanClient from "./StudyPlanClient";
 import { browseAreas, areaMastery } from "@/lib/queries";
 import { hasKey } from "@/lib/llm";
-import { ArrowLeft } from "@/app/components/Icons";
+import ProgressTabs from "@/app/components/ProgressTabs";
 
 export const dynamic = "force-dynamic";
 
@@ -14,9 +14,6 @@ export default function StudyPlanPage() {
 
   return (
     <div className="wrap">
-      <div className="breadcrumb">
-        <Link href="/" className="icon-label"><ArrowLeft size={12} /> home</Link>
-      </div>
       <header className="top borderless">
         <div>
           <h1>Study Plan</h1>
@@ -25,6 +22,8 @@ export default function StudyPlanPage() {
           </p>
         </div>
       </header>
+
+      <ProgressTabs active="plan" />
 
       {!hasKey() ? (
         <div className="panel" style={{ marginTop: 20 }}>

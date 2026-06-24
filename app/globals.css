@@ -707,15 +707,6 @@ details[open].practice-history > summary::before { transform: rotate(90deg); }
 .recent-chip:hover { border-color: var(--accent); text-decoration: none; }
 .verdict-dot-sm { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; display: inline-block; }
 
-/* home: navigate panel link list */
-.nav-item {
-  display: flex; flex-direction: column; gap: 2px;
-  padding: 8px 0; border-bottom: 1px solid var(--border);
-  color: var(--text);
-}
-.nav-item:hover { color: var(--text); text-decoration: none; }
-.nav-item:last-child { border-bottom: none; }
-
 /* quality dashboard */
 .quality-row {
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
@@ -858,9 +849,6 @@ details[open].practice-history > summary::before { transform: rotate(90deg); }
 
 /* due bar (decayed mastery display) */
 .due-bar { display: flex; align-items: center; gap: 6px; }
-
-/* nav item title label */
-.nav-label { font-weight: 500; }
 
 /* progress page: column layouts */
 .progress-left-col { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
