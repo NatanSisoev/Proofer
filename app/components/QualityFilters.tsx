@@ -127,7 +127,7 @@ export default function QualityFilters({
           {showPractice ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
         </button>
         {showPractice && (
-          <div style={{ marginTop: 12 }}>
+          <div className="accordion-fade" style={{ marginTop: 12 }}>
             <p className="muted small quality-hint">
               Notes with no structural issues but not yet practiced. Start a Smart session to work through these.
             </p>
