@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { masteryHistogram, recentAttemptsGlobal, weakSpots, stats, todayStats, reviewForecast, masteryVelocity, activityCalendar, areaMastery, masteryMilestones, recurringWeakPrerequisites } from "@/lib/queries";
+import { masteryHistogram, recentAttemptsGlobal, weakSpots, stats, todayStats, reviewForecast, masteryVelocity, activityCalendar, areaMastery, masteryMilestones, recurringWeakPrerequisites, calibration } from "@/lib/queries";
 import ActivityCalendar from "@/app/components/ActivityCalendar";
 import { getDailyGoal } from "@/lib/settings";
 import { VERDICT, type Verdict } from "@/lib/verdict";
@@ -31,6 +31,7 @@ export default function ProgressPage() {
   const areas = areaMastery();
   const milestones = masteryMilestones();
   const weakPrereqs = recurringWeakPrerequisites(6);
+  const calib = calibration();
 
   const masteredPct = s.real > 0 ? Math.round((s.known / s.real) * 100) : 0;
   const maxBucket = Math.max(...hist.map((h) => h.count), 1);
@@ -228,6 +229,62 @@ export default function ProgressPage() {
 
         {/* Right column */}
         <div className="progress-right-col">
+          {/* Calibration — how well your confidence matches reality */}
+          {calib.n > 0 && calib.brier !== null && (() => {
+            // Brier score 0 = perfect, 1 = worst. Bias > 0 means overconfident.
+            const score = Math.round((1 - calib.brier) * 100); // higher = better calibrated
+            const bias = calib.bias ?? 0;
+            const verdict =
+              bias > 0.12 ? { label: "You tend to be overconfident", color: "var(--red)" }
+              : bias < -0.12 ? { label: "You tend to underrate yourself", color: "var(--amber)" }
+              : { label: "Your confidence is well-calibrated", color: "var(--green)" };
+            return (
+              <div className="panel">
+                <div className="panel-header">
+                  <h2>Calibration</h2>
+                  <span className="muted small">{calib.n} rated</span>
+                </div>
+                <p className="muted small panel-desc">
+                  How well your pre-answer confidence matches how you actually did —
+                  the honest measure of what you really know.
+                </p>
+                <div className="calib-headline">
+                  <span className="calib-score" style={{ color: verdict.color }}>{score}</span>
+                  <span className="muted small">/ 100 calibration</span>
+                </div>
+                <p className="small" style={{ color: verdict.color, margin: "2px 0 0" }}>
+                  {verdict.label}
+                </p>
+                {calib.overconfident.length > 0 && (
+                  <div style={{ marginTop: 12 }}>
+                    <p className="muted small panel-desc" style={{ marginBottom: 6 }}>
+                      You think you know these better than you do:
+                    </p>
+                    <div className="flex-col" style={{ gap: 6 }}>
+                      {calib.overconfident.map((c) => (
+                        <div key={c.node_id} className="area-row">
+                          <Link href={`/node/${encodeURIComponent(c.node_id)}`} className="area-name">
+                            {c.title}
+                          </Link>
+                          <span className="pill pill-red pill-xs" title="confidence minus actual performance">
+                            +{Math.round(c.overconf * 100)}pp
+                          </span>
+                          <Link
+                            href={`/learn?node=${encodeURIComponent(c.node_id)}`}
+                            className="pill pill-accent pill-xs"
+                            style={{ flexShrink: 0 }}
+                          >
+                            drill
+                          </Link>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
+
           {/* Per-area mastery breakdown */}
           {areas.length > 0 && (
             <div className="panel">

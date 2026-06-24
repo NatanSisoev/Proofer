@@ -30,6 +30,46 @@ export type Grade = {
   unlocked?: ProblemNode[];
 };
 
+// Pre-answer confidence options. The values are the probability the student is
+// asserting they'll be graded correct — fed to the grader as `predicted` and
+// scored against the realized verdict (Brier score) on the Progress page.
+export const CONFIDENCE_OPTIONS: { label: string; value: number; hint: string }[] = [
+  { label: "Guessing", value: 0.2, hint: "Little idea — taking a shot" },
+  { label: "Unsure", value: 0.5, hint: "Could go either way" },
+  { label: "Confident", value: 0.85, hint: "I've got this" },
+];
+
+/** A one-tap self-rating of confidence, shown before the answer is submitted. */
+export function ConfidenceSelect({
+  value,
+  onChange,
+  disabled,
+}: {
+  value: number | null;
+  onChange: (v: number) => void;
+  disabled?: boolean;
+}) {
+  return (
+    <div className="confidence-select">
+      <span className="muted small">How sure are you?</span>
+      <div className="confidence-options">
+        {CONFIDENCE_OPTIONS.map((o) => (
+          <button
+            key={o.value}
+            type="button"
+            disabled={disabled}
+            title={o.hint}
+            className={`confidence-chip${value === o.value ? " confidence-chip-active" : ""}`}
+            onClick={() => onChange(o.value)}
+          >
+            {o.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 /** The problem prompt, concept reminder, hint, answer box, and revealed solution. */
 export function ProblemPanel({
   problem,

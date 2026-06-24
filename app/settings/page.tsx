@@ -9,6 +9,7 @@ import { Download, ArrowLeft } from "@/app/components/Icons";
 type Settings = {
   daily_goal: string;
   voice_lang: string;
+  calibration_enabled: string;
   gemini_api_key: string;
   anthropic_api_key: string;
 };
@@ -32,7 +33,7 @@ const VOICE_LANGS = [
 ];
 
 export default function SettingsPage() {
-  const [settings, setSettings] = useState<Settings>({ daily_goal: "5", voice_lang: "en-US", gemini_api_key: "", anthropic_api_key: "" });
+  const [settings, setSettings] = useState<Settings>({ daily_goal: "5", voice_lang: "en-US", calibration_enabled: "1", gemini_api_key: "", anthropic_api_key: "" });
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -134,6 +135,32 @@ export default function SettingsPage() {
                 <option key={l.value} value={l.value}>{l.label}</option>
               ))}
             </select>
+          </div>
+
+          {/* Confidence check / calibration */}
+          <div className="panel">
+            <h2>Confidence check</h2>
+            <p className="muted small panel-desc">
+              Ask you to rate how sure you are before each answer. Your confidence is
+              scored against how you actually did (a calibration score on the Progress
+              page) — the honest measure of what you really know.
+            </p>
+            <div className="action-row">
+              <button
+                onClick={() => save({ calibration_enabled: "1" })}
+                className={settings.calibration_enabled !== "0" ? "btn-primary" : "btn-ghost"}
+                disabled={saving}
+              >
+                On
+              </button>
+              <button
+                onClick={() => save({ calibration_enabled: "0" })}
+                className={settings.calibration_enabled === "0" ? "btn-primary" : "btn-ghost"}
+                disabled={saving}
+              >
+                Off
+              </button>
+            </div>
           </div>
 
           {/* Saved indicator */}

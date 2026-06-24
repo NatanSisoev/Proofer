@@ -1,4 +1,5 @@
 import { browseAreas } from "@/lib/queries";
+import { getCalibrationEnabled } from "@/lib/settings";
 import SessionSetup from "@/app/components/SessionSetup";
 
 export const dynamic = "force-dynamic";
@@ -16,7 +17,7 @@ export default async function SessionPage({
         <h1>Study session</h1>
         <span className="tag">focused practice on a queue of concepts</span>
       </header>
-      <SessionSetup areas={areas} initialMode={(mode as any) || "smart"} initialArea={area || ""} />
+      <SessionSetup areas={areas} initialMode={(mode as any) || "smart"} initialArea={area || ""} enableCalibration={getCalibrationEnabled()} />
     </div>
   );
 }

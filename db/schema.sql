@@ -78,7 +78,12 @@ CREATE TABLE IF NOT EXISTS attempts (
   gap           TEXT,            -- the specific identified misunderstanding
   blamed_prereq TEXT,            -- prerequisite the error was attributed to
   created_at    TEXT,
-  mode          TEXT             -- 'ai' (real grading) | 'demo' (no API key)
+  mode          TEXT,            -- 'ai' (real grading) | 'demo' (no API key)
+  -- Calibration: the student's own pre-answer confidence (0..1) that they'd be
+  -- correct. Compared against the realized verdict to score self-knowledge
+  -- (Brier score) — the "refuses to let you fool yourself" signal. NULL when the
+  -- student skipped the confidence check or it was disabled.
+  predicted_correct REAL
 );
 
 CREATE INDEX IF NOT EXISTS idx_attempts_node ON attempts(node_id);
