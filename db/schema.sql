@@ -127,3 +127,10 @@ CREATE TABLE IF NOT EXISTS problems (
   id             INTEGER PRIMARY KEY AUTOINCREMENT,
   node_id        TEXT NOT NULL,
   kind           TEXT,
+  problem        TEXT NOT NULL,
+  ideal_solution TEXT,
+  rubric         TEXT,   -- JSON array
+  prereqs        TEXT,   -- JSON array of prerequisite node ids
+  mode           TEXT,   -- ai | demo
+  created_at     TEXT
+);
