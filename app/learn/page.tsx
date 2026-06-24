@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import StudyQueue from "@/app/components/StudyQueue";
 import { getNode } from "@/lib/queries";
+import { getCalibrationEnabled } from "@/lib/settings";
 import { ArrowLeft } from "@/app/components/Icons";
 
 export default async function LearnPage({
@@ -35,7 +36,7 @@ export default async function LearnPage({
       <div className="breadcrumb">
         <Link href={`/node/${encodeURIComponent(node)}`} className="icon-label"><ArrowLeft size={12} /> {nodeData.title}</Link> · practice
       </div>
-      <StudyQueue queue={[queueNode]} />
+      <StudyQueue queue={[queueNode]} enableCalibration={getCalibrationEnabled()} />
     </div>
   );
 }

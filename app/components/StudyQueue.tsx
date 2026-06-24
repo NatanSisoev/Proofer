@@ -5,7 +5,7 @@ import Link from "next/link";
 import VoiceInput from "./VoiceInput";
 import Spinner from "./Spinner";
 import { VERDICT } from "@/lib/verdict";
-import { ProblemPanel, GradeFeedback, type Problem, type Grade } from "./ProblemCard";
+import { ProblemPanel, GradeFeedback, ConfidenceSelect, type Problem, type Grade } from "./ProblemCard";
 import { ArrowLeft, ArrowRight, Check, X, VerdictIcon, CircularProgress } from "./Icons";
 import {
   SESSION_KEY,
@@ -20,11 +20,13 @@ export default function StudyQueue({
   preferKind,
   savedState,
   examMode,
+  enableCalibration,
 }: {
   queue: QueueNode[];
   preferKind?: string;
   savedState?: SavedSession | null;
   examMode?: { timeLimitSec: number };
+  enableCalibration?: boolean;
 }) {
   const [activeQueue, setActiveQueue] = useState<QueueNode[]>(savedState?.activeQueue ?? queue);
   const [index, setIndex] = useState(savedState?.index ?? 0);
@@ -44,6 +46,8 @@ export default function StudyQueue({
   const [showReminder, setShowReminder] = useState(false);
   const [hint, setHint] = useState<string | null>(null);
   const [hintBusy, setHintBusy] = useState(false);
+  // Pre-answer confidence (0..1) for calibration; reset per card, sent on submit.
+  const [confidence, setConfidence] = useState<number | null>(null);
   const [sessionElapsed, setSessionElapsed] = useState(0);
   const [sessionStart] = useState(() => Date.now());
   const [examTimedOut, setExamTimedOut] = useState(false);
@@ -79,6 +83,7 @@ export default function StudyQueue({
     setHint(null);
     setHintBusy(false);
     setCopied(false);
+    setConfidence(null);
     try {
       const cached = prefetchCache.current.get(nodeId);
       prefetchCache.current.delete(nodeId);
@@ -115,6 +120,7 @@ export default function StudyQueue({
       setHintBusy(false);
       setFollowUpBusy(false);
       setCopied(false);
+      setConfidence(null);
       return;
     }
     const ctrl = new AbortController();
@@ -291,7 +297,11 @@ export default function StudyQueue({
       const res = await fetch("/api/practice/grade", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ problemId: problem.problemId, answer }),
+        body: JSON.stringify({
+          problemId: problem.problemId,
+          answer,
+          ...(enableCalibration && confidence !== null ? { predicted: confidence } : {}),
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "grading failed");
@@ -596,6 +606,11 @@ export default function StudyQueue({
                 <strong>{problem.node.title}</strong>
               </Link>
               {problem.node.area && <span className="muted small"> · {problem.node.area}</span>}
+              {currentNode?.reason && (
+                <span className={`reason-tag reason-${currentNode.reason.replace(/\s+/g, "-")}`} style={{ marginLeft: 8 }}>
+                  {currentNode.reason}
+                </span>
+              )}
               {problem.mode === "demo" && <span className="pill" style={{ marginLeft: 10 }}>demo mode</span>}
             </div>
             <span className="pill">{problem.kind}</span>
@@ -623,6 +638,10 @@ export default function StudyQueue({
               </button>
             }
           />
+
+          {!grade && !revealed && enableCalibration && (
+            <ConfidenceSelect value={confidence} onChange={setConfidence} disabled={busy} />
+          )}
 
           {!grade && !revealed && (
             <div className="practice-actions">

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db, MASTERY_THRESHOLD } from "@/lib/db";
-import { P_INIT } from "@/lib/mastery";
+import { P_INIT, infoGainRanked } from "@/lib/mastery";
+import { overconfidentConcepts } from "@/lib/queries";
+import { getSelectionPolicy } from "@/lib/settings";
 
 export const dynamic = "force-dynamic";
 
@@ -62,6 +64,10 @@ export async function GET(req: NextRequest) {
       ORDER BY COALESCE(m.p, 0) ASC
       LIMIT ?
     `).all(limit) as QueueNode[]).map((r) => ({ ...r, reason: "bookmarked" }));
+  } else if (mode === "blindspots") {
+    rows = overconfidentConcepts(limit).map((c) => ({
+      id: c.id, title: c.title, type: c.type, area: c.area, reason: "blind spot",
+    }));
   } else if (mode === "area" && area) {
     rows = (db().prepare(`
       SELECT n.id, n.title, n.type, n.area
@@ -74,7 +80,9 @@ export async function GET(req: NextRequest) {
       LIMIT ?
     `).all(area, MASTERY_THRESHOLD, limit) as QueueNode[]).map((r) => ({ ...r, reason: undefined }));
   } else {
-    // smart: due first → in-progress frontier → fresh frontier → weak
+    // smart: due reviews first (retention is time-critical), then either
+    // information-gain ranking (the default policy) or the classic greedy
+    // in-progress → fresh frontier → weak ordering.
     const due = db().prepare(`
       SELECT n.id, n.title, n.type, n.area
       FROM nodes n
@@ -87,6 +95,22 @@ export async function GET(req: NextRequest) {
       LIMIT 5
     `).all(P_INIT) as QueueNode[];
 
+    if (getSelectionPolicy() === "infogain") {
+      const seen = new Set(due.map((r) => r.id));
+      const combined: QueueNode[] = due.map((r) => ({ ...r, reason: "due for review" }));
+      // Pull extra candidates so de-duping against `due` can't starve the queue.
+      for (const c of infoGainRanked(limit * 2)) {
+        if (combined.length >= limit) break;
+        if (seen.has(c.id)) continue;
+        seen.add(c.id);
+        // Surface *why* this concept was chosen — the policy made visible.
+        const reason = c.overconf > 0 ? "blind spot"
+          : c.attempts === 0 ? "ready to learn"
+          : "near your edge";
+        combined.push({ id: c.id, title: c.title, type: c.type, area: c.area, reason });
+      }
+      rows = combined; // falls through to the shared mastery-attach + return below
+    } else {
     // frontier concepts you've already started (mastery > 0 but not yet mastered).
     // Ghost prereqs (exists_=0) are excluded — matches frontier() semantics in lib/queries.ts.
     const inProgress = db().prepare(`
@@ -160,6 +184,7 @@ export async function GET(req: NextRequest) {
     }
 
     rows = combined;
+    } // end greedy policy
   }
 
   // Attach mastery data in one batch query

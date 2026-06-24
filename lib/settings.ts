@@ -3,6 +3,8 @@ import { db } from "./db";
 const DEFAULTS: Record<string, string> = {
   daily_goal: "5",
   voice_lang: "en-US",
+  calibration_enabled: "1",
+  selection_policy: "infogain",
 };
 
 function getSetting(key: string): string {
@@ -20,4 +22,20 @@ export function getDailyGoal(): number {
 
 export function getVoiceLang(): string {
   return getSetting("voice_lang") || "en-US";
+}
+
+// Whether to ask the student to rate their confidence before each answer
+// (the calibration / Brier-score signal). On by default; togglable in Settings.
+export function getCalibrationEnabled(): boolean {
+  return getSetting("calibration_enabled") !== "0";
+}
+
+export type SelectionPolicy = "infogain" | "greedy";
+
+// How the tutor picks what to practice next. "infogain" prefers concepts whose
+// outcome is most uncertain (highest expected information about mastery),
+// weighted by downstream unlocks; "greedy" is the classic lowest-mastery-first.
+// Defaults to infogain — the better policy — with greedy as an escape hatch.
+export function getSelectionPolicy(): SelectionPolicy {
+  return getSetting("selection_policy") === "greedy" ? "greedy" : "infogain";
 }

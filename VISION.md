@@ -61,26 +61,119 @@ network effect. ALEKS has a crude, hand-built version; an AI-native one at scale
 One-liner for a serious student: *"Anki, except it writes its own cards from your actual
 course, tests whether you truly understand, and always knows what you're ready to learn next."*
 
-## Roadmap
+## Where we are (shipped)
 
-- **Now (this repo):** typed graph imported from a real vault; cycle-safe prerequisite
-  closure; **mastery model + generative assessment loop** (generate problem → grade free-form
-  answer → BKT update → frontier). The 3-month falsifiable test: *does this beat "Anki + ChatGPT"
-  for one real course?*
-- **Phase 2:** upload-your-course (syllabus/notes/problem sets) → map onto the universal graph;
-  AI edge-typing with an approval queue; FSRS retention scheduling; learning-path generation.
-- **Phase 3:** the misconception dataset; Lean/Mathlib verification of statements and proofs;
-  semantic search (pgvector); Postgres as the primary store; public contribution with provenance.
+The original "Now" slice is done, and most of what was scoped as Phase 2 shipped with it.
+The full assessment loop runs end-to-end on a real 767-concept vault:
+
+- **The tutor loop is live.** Generate a targeted problem → grade the free-form answer → name
+  the gap → attribute it to a prerequisite → **BKT** update → frontier recompute. Socratic
+  hints that withhold the answer, follow-ups, reveal-on-demand, and per-attempt logging
+  (`attempts.gap` / `blamed_prereq`) are all in.
+- **Inferred mastery, not self-report.** Continuous BKT with prerequisite propagation; a
+  blamed prereq is nudged down, demonstrated use nudges prereqs up. Mastery history,
+  sparklines, velocity, and milestones are tracked.
+- **Retention scheduling.** Per-concept half-life that doubles on success / halves on failure,
+  a "due today" queue, and a review forecast — the FSRS-style spaced-repetition layer is
+  working (if hand-rolled).
+- **Diagnosis surfaces.** `learningPath()` (known→target shortest path), `recurringWeakPrerequisites`,
+  per-node "last gap identified," weak-spot and frontier session modes.
+- **AI edge-typing with an approval queue.** `classifyEdge` upgrades untyped `related` edges
+  into `depends_on`/`generalizes`/… with confidence, gated behind `/quality`.
+- **Product surface around the loop:** Browse / Map / Practice / Progress / History / Plan /
+  Quality, plus exam mode (timed), voice answer input, Anki export, bookmarks, personal notes,
+  daily goals, an activity calendar, compare-concepts, and an AI study-plan generator. Three
+  LLM tiers (Gemini free → Anthropic → demo stub) with caching.
+
+**The 3-month falsifiable test still stands and is now runnable:** *does this beat "Anki +
+ChatGPT" for one real course?* Everything below is about making the answer an emphatic yes.
+
+## Where it falls short today (the honest gaps)
+
+These are the load-bearing parts of the thesis that are **not yet real** — and they're exactly
+the parts a chatbot can't copy, so they're where the next level lives:
+
+1. **Grading still trusts an LLM about math.** The thesis is "the one domain where a machine can
+   *verify*" — but proof-grading is a language model's opinion. It can bless a wrong proof. The
+   verification layer (Pillar 3's endgame) does not exist yet.
+2. **The misconception graph is single-user and passive.** We *log* gaps; we don't *cluster*
+   them, don't predict the next error, and there's no second user — so the network-effect moat
+   is a schema, not a system.
+3. **The graph is one hand-built vault.** "Your professor's actual course" is still aspirational:
+   there's no ingestion path, and discovery is keyword `LIKE` search with no embeddings.
+4. **Problem selection is greedy, not optimal.** We pick the lowest-mastery frontier node. We
+   don't choose the problem that *most reduces uncertainty about your mind* or that targets your
+   specific recorded misconception — and we never ask you to bet on yourself.
+
+## The next level (ambitious bets, in thesis-priority order)
+
+Each bet is here because it deepens a pillar a chatbot structurally cannot reach. None is a
+cosmetic feature.
+
+### 1. Formal verification — make grading non-hallucinating (Pillar 3, the endgame)
+Wire **Lean 4 / Mathlib** into the loop. For concepts that formalize cleanly, autoformalize the
+generated problem's statement, and when the student writes a proof, attempt to elaborate their
+argument (or an LLM transcription of it) against the kernel. A *checked* proof is ground truth no
+chatbot can offer; a failed elaboration localizes the exact unjustified step, which becomes a
+far sharper `blamed_prereq` than an LLM's guess. Start narrow (algebraic identities, basic
+analysis/number-theory statements where autoformalization is tractable), degrade gracefully to
+LLM grading elsewhere, and **label every verdict with its trust level** (kernel-checked vs.
+model-judged). This is the single change that turns "an AI tutor" into "an AI tutor that cannot
+be wrong about the math it verifies."
+
+### 2. The misconception graph, for real — the compounding moat (Pillar 2 + the 3-year moat)
+Turn the attempt log into a living layer over the concept graph. Cluster `gap`/`blamed_prereq`
+text into **named misconceptions** (embedding + LLM labeling), attach them as typed nodes to the
+concepts they corrupt, and learn the **transitions**: *which misconception precedes which error*.
+Then make it *predictive* — when your attempt pattern matches a known misconception cluster,
+pre-empt the next stumble instead of waiting for it ("you're treating `closure` as `interior`;
+here's the problem that separates them"). This requires a real **multi-user** substrate so the
+graph compounds across students — the network effect the vision promises, made into a system
+rather than a single-row table.
+
+### 3. Bring-your-own-course ingestion — the distribution wedge (Pillar 1 at scale)
+Let a student drop in a **syllabus, lecture notes, or a problem set (PDF/markdown)** and map it
+onto the universal graph: extract concepts, **embed and align** them to existing nodes (dedup vs.
+create), propose new nodes and typed edges through the existing approval queue, and tag the
+result as *their course*. This is the wedge — "Anki that writes its own cards from *your actual
+course*" only becomes literally true when the course is theirs, not one curated vault. It also
+feeds the cold-start problem: every uploaded course enriches the shared graph (with provenance).
+
+### 4. Information-theoretic practice + calibration — attack self-deception directly (Pillar 1)
+Two upgrades to the selection policy, both squarely on the "refuses to let you fool yourself"
+thesis:
+- **Optimal-difficulty selection.** Instead of greedily picking the lowest-mastery node, pick the
+  problem whose outcome most reduces uncertainty in the mastery model (expected information gain),
+  and tune generated difficulty toward the **~85% success band** where learning is fastest
+  (desirable difficulty, not demoralization).
+- **Calibration as a first-class signal.** Before each answer, ask the student to predict their
+  own correctness; score the gap (a running **Brier score**) and surface it. Overconfidence on a
+  concept is itself a diagnosis — and measuring it is something no stateless chatbot does, because
+  it requires a persistent model of *you*.
+
+### Infra unlock (enables 2–4)
+Several bets need the same substrate that Phase 3 always implied: **Postgres + `pgvector`** as the
+primary store, embeddings over statements/attempts, and real **multi-user** accounts. All current
+SQL is standard and the recursive prerequisite CTE is the only non-trivial query, so the port is
+mechanical — do it once, and ingestion-alignment, misconception clustering, and semantic discovery
+all fall out of the same vector index.
 
 ## Business
 
 Freemium. Free = graph exploration + basic explanations (the marketing surface). Paid
-(~$12–20/mo student) = the mastery model, diagnosis, unlimited tutoring, proof-grading,
-exam-prep mode, upload-your-course. Wedge: exam-prep and homework-rescue — acute, recurring pain.
+(~$12–20/mo student) = the mastery model, diagnosis, unlimited tutoring, **verified**
+proof-grading, exam-prep mode, and bring-your-own-course. Wedge: exam-prep and homework-rescue —
+acute, recurring pain. The verification layer (bet #1) and the misconception graph (bet #2) are
+what justify a subscription over a $20 chatbot: one is *correct* where the chatbot guesses, the
+other *knows you* where the chatbot forgets.
 
 ## Honest risks
 
-A tutor wrong about math is fatal (→ verification layer, formal backing). Cold-start content
-is huge (→ AI generation + your vault + formal verification for quality). Desirable difficulty
-is unpleasant (→ habit design: streaks, the graph lighting up, exam urgency). BKT is hard but
-known science (ALEKS/Carnegie proved it).
+A tutor wrong about math is fatal — today grading is LLM-only, so **bet #1 (formal verification)
+is the highest-leverage de-risking move**, not a far-future nice-to-have. Autoformalization is
+hard and won't cover everything (→ narrow beachhead + graceful LLM fallback + explicit trust
+labels). Cold-start content is huge (→ course ingestion + AI generation + the shared graph).
+Desirable difficulty is unpleasant (→ habit design: streaks, the graph lighting up, exam urgency,
+and the ~85% success band so practice feels winnable). The misconception moat only compounds with
+users (→ ingestion is the acquisition wedge that gets us to multi-user critical mass). BKT is hard
+but known science (ALEKS/Carnegie proved it).

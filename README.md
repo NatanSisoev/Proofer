@@ -65,9 +65,15 @@ your `user_knows` state.
 
 ## Next steps
 
-- **AI edge-typing pass**: upgrade the 1,972 `related` edges into specific types with
-  confidence + an approval queue (the brief's "suggested edges" workflow, bootstrapped
-  from content you already wrote).
-- **Learning-path generation**: shortest path through `depends_on` from known → target.
-- **Semantic search**: pgvector embeddings over statements (after the Postgres port).
-- **DAG hygiene**: surface `depends_on` cycles as data-quality issues to resolve.
+The original next-steps shipped: **AI edge-typing** (`classifyEdge` + the `/quality`
+approval queue), **learning-path generation** (`learningPath()` known→target), and
+**DAG hygiene** (`dependencyCycles()` surfaced in `/quality`) are all live, alongside
+spaced-repetition retention, exam mode, voice input, and an AI study planner. The
+roadmap has moved up a level — see [VISION.md](VISION.md) for the ambitious bets:
+
+- **Formal verification (Lean/Mathlib)** — kernel-check proofs so grading can't hallucinate.
+- **The misconception graph** — cluster logged gaps into named misconceptions, multi-user,
+  predictive.
+- **Bring-your-own-course ingestion** — map a syllabus / notes / problem set onto the graph.
+- **Postgres + `pgvector`** — the substrate for semantic search, course-alignment, and
+  misconception clustering (the SQLite → Postgres port is mechanical).

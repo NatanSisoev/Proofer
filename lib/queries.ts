@@ -933,6 +933,77 @@ export function masteryVelocity(): { last7: number; last30: number } {
   return { last7: count(7), last30: count(30) };
 }
 
+export type Calibration = {
+  n: number;                 // attempts that carried a confidence prediction
+  brier: number | null;      // mean (predicted - actual)^2; lower = better calibrated
+  bias: number | null;       // mean (predicted - actual); >0 overconfident, <0 underconfident
+  overconfident: { node_id: string; title: string; n: number; overconf: number }[];
+};
+
+// How well the student's pre-answer confidence matches reality. `actual` maps a
+// verdict to a score (correct=1, partial=0.5, incorrect=0); the Brier score is
+// the mean squared error between predicted confidence and that outcome, and the
+// signed bias says whether they systematically over- or under-rate themselves.
+// Only attempts where the student gave a prediction count. This is the
+// "refuses to let you fool yourself" instrument made into a number.
+const ACTUAL_CASE = "CASE verdict WHEN 'correct' THEN 1.0 WHEN 'partial' THEN 0.5 ELSE 0.0 END";
+
+export type OverconfidentConcept = NodeRow & { mastery_p: number; n: number; overconf: number };
+
+// Concepts the student rates higher than their results justify — predicted
+// confidence systematically above the realized verdict (n>=2 so it isn't one
+// fluke). These are the highest-value practice targets: the tutor's job is to
+// stop you fooling yourself, and this is exactly where belief and reality split.
+export function overconfidentConcepts(limit = 20): OverconfidentConcept[] {
+  const overconfExpr = `AVG(a.predicted_correct - (${ACTUAL_CASE.replace(/verdict/g, "a.verdict")}))`;
+  return db()
+    .prepare(
+      `SELECT nd.*,
+              COALESCE(m.p, 0) AS mastery_p,
+              COUNT(*) AS n,
+              ${overconfExpr} AS overconf
+         FROM attempts a
+         JOIN nodes nd ON nd.id = a.node_id
+         LEFT JOIN mastery m ON m.node_id = a.node_id
+        WHERE a.predicted_correct IS NOT NULL
+          AND nd.exists_ = 1
+        GROUP BY a.node_id
+       HAVING COUNT(*) >= 2 AND ${overconfExpr} > 0.15
+        ORDER BY overconf DESC
+        LIMIT ?`
+    )
+    .all(limit) as OverconfidentConcept[];
+}
+
+export function calibration(): Calibration {
+  const overall = db()
+    .prepare(
+      `SELECT COUNT(*) AS n,
+              AVG((predicted_correct - act) * (predicted_correct - act)) AS brier,
+              AVG(predicted_correct - act) AS bias
+         FROM (
+           SELECT predicted_correct, ${ACTUAL_CASE} AS act
+             FROM attempts
+            WHERE predicted_correct IS NOT NULL
+         )`
+    )
+    .get() as { n: number; brier: number | null; bias: number | null };
+
+  const overconfident = overconfidentConcepts(6).map((c) => ({
+    node_id: c.id,
+    title: c.title,
+    n: c.n,
+    overconf: c.overconf,
+  }));
+
+  return {
+    n: overall.n,
+    brier: overall.n > 0 ? overall.brier : null,
+    bias: overall.n > 0 ? overall.bias : null,
+    overconfident,
+  };
+}
+
 export function isBookmarked(nodeId: string): boolean {
   return !!db().prepare("SELECT 1 FROM bookmarks WHERE node_id = ?").get(nodeId);
 }

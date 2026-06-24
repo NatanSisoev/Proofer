@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db, MASTERY_THRESHOLD } from "@/lib/db";
 import { P_INIT } from "@/lib/mastery";
+import { overconfidentConcepts } from "@/lib/queries";
 
 export const dynamic = "force-dynamic";
 
@@ -36,5 +37,7 @@ export async function GET() {
     WHERE n.exists_ = 1
   `).get() as any).n as number;
 
-  return NextResponse.json({ due, weak, frontier, bookmarks });
+  const blindspots = overconfidentConcepts(50).length;
+
+  return NextResponse.json({ due, weak, frontier, bookmarks, blindspots });
 }

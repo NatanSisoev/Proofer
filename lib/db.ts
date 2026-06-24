@@ -37,6 +37,24 @@ function patchStatementSync() {
 // never get patched on the live process.
 patchStatementSync();
 
+// Additive column migrations for schema fields introduced after a DB was first
+// created. CREATE TABLE IF NOT EXISTS won't add columns to an existing table,
+// and SQLite has no ADD COLUMN IF NOT EXISTS — so we attempt each ALTER and
+// ignore the "duplicate column name" error when it has already been applied.
+const MIGRATIONS = [
+  "ALTER TABLE attempts ADD COLUMN predicted_correct REAL",
+];
+
+function migrate(d: DatabaseSync) {
+  for (const stmt of MIGRATIONS) {
+    try {
+      d.exec(stmt);
+    } catch {
+      // Column already exists (or table not yet present) — safe to ignore.
+    }
+  }
+}
+
 export function db(): DatabaseSync {
   if (!global.__prooferDb) {
     const d = new DatabaseSync(DB_PATH);
@@ -44,6 +62,7 @@ export function db(): DatabaseSync {
     // Ensure schema exists (CREATE IF NOT EXISTS) so new tables like mastery/
     // attempts appear without forcing a re-import of the vault.
     d.exec(readFileSync(join(process.cwd(), "db", "schema.sql"), "utf8"));
+    migrate(d);
     global.__prooferDb = d;
   }
   return global.__prooferDb;
