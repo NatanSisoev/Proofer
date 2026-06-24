@@ -7,6 +7,7 @@ import dynamic from "next/dynamic";
 import Spinner from "./Spinner";
 import { Plus, Minus, Star, ArrowRight, X, Search } from "./Icons";
 import EmptyState from "./EmptyState";
+import ErrorBanner from "./ErrorBanner";
 import { SESSION_KEY, type SavedSession } from "./session-types";
 
 const MIN_COUNT = 1;
@@ -468,11 +469,7 @@ export default function SessionSetup({
           </div>
         </div>
 
-        {error && (
-          <div className="panel error-notice" style={{ marginBottom: 16 }}>
-            {error}
-          </div>
-        )}
+        {error && <div style={{ marginBottom: 16 }}><ErrorBanner>{error}</ErrorBanner></div>}
 
         <button
           className="btn-primary btn-full icon-label"

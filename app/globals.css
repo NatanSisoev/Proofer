@@ -156,7 +156,13 @@ html, body {
   font-size: 15px;
   line-height: 1.65;
   transition: background-color 0.2s var(--ease), color 0.2s var(--ease);
+  scrollbar-color: var(--border) transparent;
 }
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 6px; border: 2px solid var(--bg); }
+::-webkit-scrollbar-thumb:hover { background: var(--muted); }
 
 .hero-title {
   font-family: var(--font-serif, Georgia), serif;
@@ -761,6 +767,11 @@ details[open].practice-history > .attempt-list { animation: accordion-fade 0.25s
   padding: 10px 14px; background: var(--accent-soft); border: 1px solid var(--border);
   border-radius: 8px; font-size: 13px; color: var(--green); font-weight: 600;
 }
+.error-banner {
+  padding: 10px 14px; background: var(--red-soft); border: 1px solid var(--red);
+  border-radius: 8px; font-size: 13px; color: var(--red); font-weight: 600;
+}
+.error-banner svg { flex-shrink: 0; }
 
 /* button size variants */
 .btn-full { width: 100%; padding: 11px 28px; font-size: 15px; }
@@ -1005,7 +1016,6 @@ details[open].practice-history > .attempt-list { animation: accordion-fade 0.25s
 .ai-suggestion { display: flex; align-items: center; gap: 8px; font-size: 13px; }
 .ai-suggest-type { font-weight: 600; color: var(--accent); }
 .edge-action-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.error-text { color: var(--red); margin-bottom: 12px; }
 
 /* problem card: concept reminder panel */
 .reminder-panel { font-size: 13.5px; background: var(--bg-soft); margin-bottom: 4px; }
@@ -1073,7 +1083,6 @@ details[open].practice-history > .attempt-list { animation: accordion-fade 0.25s
 .stepper-value { min-width: 26px; text-align: center; font-size: 13px; font-weight: 600; }
 .stepper.active .stepper-value { color: #FFFFFF; }
 .item-title { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.error-notice { color: var(--red); }
 
 /* session queue preview rows */
 .row-index { width: 18px; text-align: right; flex-shrink: 0; }
@@ -1095,7 +1104,6 @@ details[open].practice-history > .attempt-list { animation: accordion-fade 0.25s
 /* node actions component */
 .actions-col { display: flex; flex-direction: column; gap: 12px; }
 .action-row { display: flex; gap: 8px; flex-wrap: wrap; }
-.action-error { color: var(--red); font-size: 13px; margin: 0; }
 .action-success { color: var(--green); font-size: 13px; margin: 0; }
 .code-preview { white-space: pre-wrap; font-size: 12.5px; line-height: 1.55; max-height: 500px; overflow: auto; background: var(--bg); padding: 14px; border-radius: 8px; border: 1px solid var(--border); font-family: ui-monospace, monospace; }
 .explain-panel { background: var(--bg-soft); margin-top: 4px; }

@@ -35,6 +35,7 @@ import {
   Pencil as LPencil,
   HelpCircle as LHelpCircle,
   Settings as LSettings,
+  AlertCircle as LAlertCircle,
   type LucideIcon,
 } from "lucide-react";
 
@@ -102,6 +103,7 @@ export const Minus = wrap(LMinus);
 export const Pencil = wrap(LPencil);
 export const HelpCircle = wrap(LHelpCircle);
 export const Settings = wrap(LSettings);
+export const AlertCircle = wrap(LAlertCircle);
 
 export function Star({ size = 14, className, style, filled = false }: IconProps & { filled?: boolean }) {
   return <LStar size={size} className={className} style={style} fill={filled ? "currentColor" : "none"} />;
