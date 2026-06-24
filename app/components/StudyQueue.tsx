@@ -606,6 +606,11 @@ export default function StudyQueue({
                 <strong>{problem.node.title}</strong>
               </Link>
               {problem.node.area && <span className="muted small"> · {problem.node.area}</span>}
+              {currentNode?.reason && (
+                <span className={`reason-tag reason-${currentNode.reason.replace(/\s+/g, "-")}`} style={{ marginLeft: 8 }}>
+                  {currentNode.reason}
+                </span>
+              )}
               {problem.mode === "demo" && <span className="pill" style={{ marginLeft: 10 }}>demo mode</span>}
             </div>
             <span className="pill">{problem.kind}</span>

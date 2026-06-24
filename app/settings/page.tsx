@@ -10,6 +10,7 @@ type Settings = {
   daily_goal: string;
   voice_lang: string;
   calibration_enabled: string;
+  selection_policy: string;
   gemini_api_key: string;
   anthropic_api_key: string;
 };
@@ -33,7 +34,7 @@ const VOICE_LANGS = [
 ];
 
 export default function SettingsPage() {
-  const [settings, setSettings] = useState<Settings>({ daily_goal: "5", voice_lang: "en-US", calibration_enabled: "1", gemini_api_key: "", anthropic_api_key: "" });
+  const [settings, setSettings] = useState<Settings>({ daily_goal: "5", voice_lang: "en-US", calibration_enabled: "1", selection_policy: "infogain", gemini_api_key: "", anthropic_api_key: "" });
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -159,6 +160,33 @@ export default function SettingsPage() {
                 disabled={saving}
               >
                 Off
+              </button>
+            </div>
+          </div>
+
+          {/* Practice selection policy */}
+          <div className="panel">
+            <h2>What to practice next</h2>
+            <p className="muted small panel-desc">
+              How smart sessions choose concepts. <strong>Adaptive</strong> picks the
+              concepts whose outcome is most uncertain — where practice teaches the most —
+              and aims difficulty at your level. <strong>Weakest first</strong> always
+              drills your lowest-mastery concept.
+            </p>
+            <div className="action-row">
+              <button
+                onClick={() => save({ selection_policy: "infogain" })}
+                className={settings.selection_policy !== "greedy" ? "btn-primary" : "btn-ghost"}
+                disabled={saving}
+              >
+                Adaptive
+              </button>
+              <button
+                onClick={() => save({ selection_policy: "greedy" })}
+                className={settings.selection_policy === "greedy" ? "btn-primary" : "btn-ghost"}
+                disabled={saving}
+              >
+                Weakest first
               </button>
             </div>
           </div>

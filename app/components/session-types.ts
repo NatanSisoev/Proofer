@@ -1,6 +1,9 @@
 import type { Problem, Grade, ProblemNode } from "./ProblemCard";
 
-export type QueueNode = ProblemNode;
+// A queued concept. `reason` (e.g. "near your edge", "due for review") explains
+// why the selection policy chose it; `mastery_p` is its current mastery. Both
+// are attached by /api/session/queue and are optional for hand-built queues.
+export type QueueNode = ProblemNode & { reason?: string; mastery_p?: number };
 
 export type SessionResult = {
   node: QueueNode;

@@ -1,4 +1,5 @@
 import { db, MASTERY_THRESHOLD, MASTERED_SUBQUERY, type NodeRow } from "./db";
+import { getSelectionPolicy } from "./settings";
 
 // Bayesian Knowledge Tracing parameters (classic four).
 export const P_INIT = 0.15; // prior mastery of an unseen concept
@@ -137,6 +138,88 @@ export function nextToPractice(): NodeRow | undefined {
         LIMIT 1`
     )
     .get() as NodeRow | undefined;
+}
+
+// ===========================================================================
+// Information-theoretic selection
+// ===========================================================================
+
+// Shannon entropy of a Bernoulli(p) — our uncertainty about whether the student
+// has truly mastered a concept. Maximal at p=0.5, zero at p∈{0,1}. This is the
+// information an attempt is expected to reveal about the latent mastery state.
+export function masteryEntropy(p: number): number {
+  if (p <= 0 || p >= 1) return 0;
+  return -p * Math.log2(p) - (1 - p) * Math.log2(1 - p);
+}
+
+export type Candidate = {
+  id: string; title: string; type: string | null; area: string | null;
+  p: number; attempts: number; unlocks: number;
+};
+
+// Score a candidate by expected information gain. Greedy selection chases the
+// LOWEST mastery — but we're already confident the student doesn't know those,
+// so testing them reveals little and mostly demoralizes. Instead prefer concepts
+// whose outcome is genuinely uncertain (high entropy), weighted by how much
+// mastering them unlocks downstream. Never-practiced concepts are treated as
+// maximally uncertain (pEff=0.5) so the frontier still advances rather than
+// stalling at entropy(0)=0.
+export function infoGainScore(c: { p: number; attempts: number; unlocks: number }): number {
+  const pEff = c.attempts === 0 ? 0.5 : c.p;
+  const unlockWeight = Math.log2(2 + c.unlocks); // 1.0 at zero deps, grows slowly
+  return masteryEntropy(pEff) * unlockWeight;
+}
+
+// Learnable-now, not-yet-mastered concepts (every existing prerequisite already
+// mastered — the frontier), with mastery p, attempt count, and unlock weight.
+function learnableCandidates(): Candidate[] {
+  return db()
+    .prepare(
+      `SELECT n.id, n.title, n.type, n.area,
+              COALESCE(m.p, 0) AS p,
+              COALESCE(m.attempts, 0) AS attempts,
+              (SELECT COUNT(*) FROM edges e2 WHERE e2.dst = n.id AND e2.type='depends_on') AS unlocks
+         FROM nodes n
+         LEFT JOIN mastery m ON m.node_id = n.id
+        WHERE n.exists_ = 1
+          AND n.id NOT IN (${MASTERED_SUBQUERY})
+          AND NOT EXISTS (
+            SELECT 1 FROM edges e
+             WHERE e.src = n.id AND e.type = 'depends_on'
+               AND e.dst <> n.id
+               AND e.dst NOT IN (${MASTERED_SUBQUERY})
+               AND e.dst IN (SELECT id FROM nodes WHERE exists_ = 1)
+          )`
+    )
+    .all() as Candidate[];
+}
+
+/** Learnable concepts ranked by expected information gain, highest first. */
+export function infoGainRanked(limit = 20): (Candidate & { score: number })[] {
+  return learnableCandidates()
+    .map((c) => ({ ...c, score: infoGainScore(c) }))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, limit);
+}
+
+/** Single highest-information-gain concept to practice next. */
+export function nextByInfoGain(): NodeRow | undefined {
+  const top = infoGainRanked(1)[0];
+  if (!top) return undefined;
+  return getNodeRow(top.id);
+}
+
+function getNodeRow(id: string): NodeRow | undefined {
+  return db().prepare("SELECT * FROM nodes WHERE id = ?").get(id) as NodeRow | undefined;
+}
+
+/** Pick the next concept under the active selection policy (Settings-driven),
+ *  falling back to greedy if info-gain yields no candidate. */
+export function selectNext(): NodeRow | undefined {
+  if (getSelectionPolicy() === "infogain") {
+    return nextByInfoGain() ?? nextToPractice();
+  }
+  return nextToPractice();
 }
 
 export function recordAttempt(row: {

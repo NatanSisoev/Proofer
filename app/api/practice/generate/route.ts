@@ -48,7 +48,8 @@ export async function POST(req: NextRequest) {
 
   let gen;
   try {
-    gen = await generateProblem(node, prereqs, recentGaps, preferKind);
+    // Pass current mastery so difficulty targets the ~85% success band.
+    gen = await generateProblem(node, prereqs, recentGaps, preferKind, getMasteryP(nodeId));
   } catch (e) {
     const { status, message } = friendlyLLMError(e);
     return NextResponse.json({ error: message }, { status });

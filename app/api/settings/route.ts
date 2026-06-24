@@ -7,6 +7,7 @@ const DEFAULTS: Record<string, string> = {
   daily_goal: "5",
   voice_lang: "en-US",
   calibration_enabled: "1",
+  selection_policy: "infogain",
   gemini_api_key: "",
   anthropic_api_key: "",
 };

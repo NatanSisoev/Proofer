@@ -159,7 +159,19 @@ Be fair: partial credit for partial understanding. Be honest: do not praise a wr
 
 export type ProblemKind = "compute" | "prove" | "counterexample" | "explain";
 
-function problemUserText(node: NodeRow, prereqs: string[], recentGaps: string[] = [], preferKind?: ProblemKind): string {
+// Translate the student's current mastery (0..1) into a difficulty instruction.
+// Goal: the "desirable difficulty" band — a problem they should solve ~85% of
+// the time at their current level, so practice is winnable but not trivial.
+function difficultyHint(masteryP?: number): string {
+  if (masteryP === undefined) return "";
+  if (masteryP < 0.3)
+    return `\nDIFFICULTY: This student is early on this concept. Test the core idea directly and concretely — no edge cases or unusual setups. They should be able to solve it if they grasp the basic definition.`;
+  if (masteryP < 0.7)
+    return `\nDIFFICULTY: This student has a partial grasp. Aim for standard difficulty — a problem that applies the concept in a typical way and rewards genuine understanding over memorization.`;
+  return `\nDIFFICULTY: This student is close to mastering this concept. Include a subtle case, edge condition, or a step that requires combining it with a prerequisite — something only solid understanding handles.`;
+}
+
+function problemUserText(node: NodeRow, prereqs: string[], recentGaps: string[] = [], preferKind?: ProblemKind, masteryP?: number): string {
   const kindHint = preferKind
     ? `\nIMPORTANT: Write a "${preferKind}" type problem specifically. The kind field in your JSON MUST be "${preferKind}".`
     : "";
@@ -173,6 +185,7 @@ function problemUserText(node: NodeRow, prereqs: string[], recentGaps: string[] 
     recentGaps.length
       ? `\nThis student has struggled before. Recent gaps in their understanding:\n${recentGaps.map((g, i) => `${i + 1}. ${g}`).join("\n")}\nWrite a problem that DIRECTLY ADDRESSES one of these specific gaps — do not repeat the aspect they already got right.`
       : `\nWrite one problem that tests genuine understanding of "${node.title}".`,
+    difficultyHint(masteryP),
     kindHint,
     `\nRespond as JSON.`,
   ]
@@ -207,10 +220,10 @@ function gradeUserText(a: {
 // ===========================================================================
 // Dispatch
 // ===========================================================================
-export async function generateProblem(node: NodeRow, prereqs: string[], recentGaps: string[] = [], preferKind?: ProblemKind): Promise<GeneratedProblem> {
+export async function generateProblem(node: NodeRow, prereqs: string[], recentGaps: string[] = [], preferKind?: ProblemKind, masteryP?: number): Promise<GeneratedProblem> {
   const cfg = getLLMConfig();
-  if (cfg.provider === "gemini") return geminiGenerate(node, prereqs, recentGaps, preferKind, cfg);
-  if (cfg.provider === "anthropic") return anthropicGenerate(node, prereqs, recentGaps, preferKind, cfg.anthropic!);
+  if (cfg.provider === "gemini") return geminiGenerate(node, prereqs, recentGaps, preferKind, cfg, masteryP);
+  if (cfg.provider === "anthropic") return anthropicGenerate(node, prereqs, recentGaps, preferKind, cfg.anthropic!, masteryP);
   return stubProblem(node);
 }
 
@@ -456,8 +469,8 @@ async function geminiCall(system: string, userText: string, schema: unknown, tem
   return JSON.parse(text);
 }
 
-async function geminiGenerate(node: NodeRow, prereqs: string[], recentGaps: string[] = [], preferKind: ProblemKind | undefined, cfg: LLMConfig): Promise<GeneratedProblem> {
-  return geminiCall(AUTHOR_SYSTEM, problemUserText(node, prereqs, recentGaps, preferKind), G_PROBLEM_SCHEMA, 0.8, cfg);
+async function geminiGenerate(node: NodeRow, prereqs: string[], recentGaps: string[] = [], preferKind: ProblemKind | undefined, cfg: LLMConfig, masteryP?: number): Promise<GeneratedProblem> {
+  return geminiCall(AUTHOR_SYSTEM, problemUserText(node, prereqs, recentGaps, preferKind, masteryP), G_PROBLEM_SCHEMA, 0.8, cfg);
 }
 
 async function geminiGrade(a: Parameters<typeof gradeAnswer>[0], cfg: LLMConfig): Promise<GradeResult> {
@@ -504,12 +517,12 @@ function firstJson<T>(msg: Anthropic.Message): T {
   return JSON.parse(raw) as T;
 }
 
-async function anthropicGenerate(node: NodeRow, prereqs: string[], recentGaps: string[] = [], preferKind: ProblemKind | undefined, anthropic: Anthropic): Promise<GeneratedProblem> {
+async function anthropicGenerate(node: NodeRow, prereqs: string[], recentGaps: string[] = [], preferKind: ProblemKind | undefined, anthropic: Anthropic, masteryP?: number): Promise<GeneratedProblem> {
   const msg = await anthropic.messages.create({
     model: ANTHROPIC_PROBLEM_MODEL,
     max_tokens: 4096,
     system: [{ type: "text", text: AUTHOR_SYSTEM + "\n\nIMPORTANT: Respond ONLY with a single valid JSON object — no markdown fences, no preamble.", cache_control: { type: "ephemeral" } }],
-    messages: [{ role: "user", content: problemUserText(node, prereqs, recentGaps, preferKind) }],
+    messages: [{ role: "user", content: problemUserText(node, prereqs, recentGaps, preferKind, masteryP) }],
   });
   return firstJson<GeneratedProblem>(msg);
 }
