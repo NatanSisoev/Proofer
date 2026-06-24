@@ -55,10 +55,12 @@ export default function SessionSetup({
   areas,
   initialMode = "smart",
   initialArea = "",
+  enableCalibration,
 }: {
   areas: AreaOption[];
   initialMode?: Mode;
   initialArea?: string;
+  enableCalibration?: boolean;
 }) {
   const searchParams = useSearchParams();
   const modeFromUrl = searchParams.get("mode");
@@ -208,6 +210,7 @@ export default function SessionSetup({
         preferKind={preferKind === "any" ? undefined : preferKind}
         savedState={resumeData}
         examMode={mode === "exam" ? { timeLimitSec: examTimeLimitMin * 60 } : undefined}
+        enableCalibration={enableCalibration}
       />
     );
   }

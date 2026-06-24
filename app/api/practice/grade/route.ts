@@ -8,7 +8,11 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 120;
 
 export async function POST(req: NextRequest) {
-  const { problemId, answer } = await req.json();
+  const { problemId, answer, predicted } = await req.json();
+  // The student's pre-answer self-rating (0..1), only sent on the first attempt.
+  // Clamp to a valid probability; anything missing/invalid is recorded as NULL.
+  const predictedCorrect =
+    typeof predicted === "number" && predicted >= 0 && predicted <= 1 ? predicted : null;
   const prob = db().prepare("SELECT * FROM problems WHERE id = ?").get(problemId) as any;
   if (!prob) return NextResponse.json({ error: "unknown problem" }, { status: 404 });
 
@@ -48,6 +52,7 @@ export async function POST(req: NextRequest) {
     gap: grade.gap,
     blamed_prereq: blamed || "",
     mode: hasKey() ? "ai" : "demo",
+    predicted_correct: predictedCorrect,
   });
 
   const masteryAfter = getMasteryP(node.id);

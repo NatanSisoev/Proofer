@@ -381,6 +381,22 @@ button.know.on { background: var(--green-soft); border-color: var(--green-border
 .practice-actions-group { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 .practice-actions-secondary { gap: 6px; padding-left: 10px; border-left: 1px solid var(--border); }
 @media (max-width: 640px) { .practice-actions-secondary { border-left: none; padding-left: 0; } }
+
+/* Pre-answer confidence selector (calibration) */
+.confidence-select { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 12px 0 2px; }
+.confidence-options { display: flex; gap: 6px; flex-wrap: wrap; }
+.confidence-chip {
+  background: var(--bg); color: var(--muted); border: 1px solid var(--border);
+  border-radius: 8px; padding: 4px 12px; font-size: 13px; cursor: pointer;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+.confidence-chip:hover:not(:disabled) { border-color: var(--accent); color: var(--fg); }
+.confidence-chip-active { background: var(--accent-soft); border-color: var(--accent); color: var(--accent-strong); font-weight: 600; }
+.confidence-chip:disabled { opacity: 0.5; cursor: default; }
+
+/* Calibration card (Progress) */
+.calib-headline { display: flex; align-items: baseline; gap: 8px; margin-top: 4px; }
+.calib-score { font-size: 30px; font-weight: 700; line-height: 1; }
 .btn-primary {
   background: var(--accent-strong); color: #FFFFFF; border: none; font-weight: 600;
   padding: 9px 20px; border-radius: 999px; font-size: 14px; cursor: pointer;

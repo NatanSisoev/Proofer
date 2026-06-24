@@ -149,16 +149,18 @@ export function recordAttempt(row: {
   gap: string;
   blamed_prereq: string;
   mode: string;
+  predicted_correct?: number | null;
 }) {
   db()
     .prepare(
-      `INSERT INTO attempts(node_id,kind,problem,answer,verdict,evidence,gap,blamed_prereq,created_at,mode)
-       VALUES(?,?,?,?,?,?,?,?,?,?)`
+      `INSERT INTO attempts(node_id,kind,problem,answer,verdict,evidence,gap,blamed_prereq,created_at,mode,predicted_correct)
+       VALUES(?,?,?,?,?,?,?,?,?,?,?)`
     )
     .run(
       row.node_id, row.kind, row.problem, row.answer,
       row.verdict, row.evidence, row.gap, row.blamed_prereq,
-      new Date().toISOString(), row.mode
+      new Date().toISOString(), row.mode,
+      row.predicted_correct ?? null
     );
 }
 
