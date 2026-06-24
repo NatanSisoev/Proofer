@@ -7,6 +7,7 @@ import Spinner from "./Spinner";
 import { VERDICT } from "@/lib/verdict";
 import { ProblemPanel, GradeFeedback, ConfidenceSelect, type Problem, type Grade } from "./ProblemCard";
 import { ArrowLeft, ArrowRight, Check, X, VerdictIcon, CircularProgress } from "./Icons";
+import ErrorBanner from "./ErrorBanner";
 import {
   SESSION_KEY,
   type QueueNode,
@@ -584,9 +585,9 @@ export default function StudyQueue({
         </div>
       )}
       {error && (
-        <div className="panel error-notice">
-          <div style={{ marginBottom: 8 }}>{error}</div>
-          <div className="btn-row">
+        <div className="panel">
+          <ErrorBanner>{error}</ErrorBanner>
+          <div className="btn-row" style={{ marginTop: 12 }}>
             <button className="btn-ghost btn-sm" onClick={() => generate(currentNode.id, undefined)} disabled={busy}>
               Retry
             </button>

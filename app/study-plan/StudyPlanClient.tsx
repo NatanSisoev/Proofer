@@ -4,6 +4,7 @@ import { useState } from "react";
 import dynamic from "next/dynamic";
 import Spinner from "@/app/components/Spinner";
 import { ArrowRight, X, RefreshCw } from "@/app/components/Icons";
+import ErrorBanner from "@/app/components/ErrorBanner";
 
 const Markdown = dynamic(() => import("@/app/components/Markdown"));
 
@@ -94,7 +95,7 @@ export default function StudyPlanClient({
             {busy ? <Spinner label="Generating plan…" /> : <>Generate study plan <ArrowRight size={14} /></>}
           </button>
 
-          {error && <p className="action-error" style={{ marginTop: 10 }}>{error}</p>}
+          {error && <div style={{ marginTop: 10 }}><ErrorBanner>{error}</ErrorBanner></div>}
         </div>
 
         {/* Weak areas summary */}

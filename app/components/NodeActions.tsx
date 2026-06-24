@@ -4,6 +4,7 @@ import { useState } from "react";
 import dynamic from "next/dynamic";
 import Spinner from "./Spinner";
 import { ExternalLink, Sparkles, Check } from "./Icons";
+import ErrorBanner from "./ErrorBanner";
 
 // Markdown pulls in katex + react-markdown + remark; defer it out of this
 // component's initial chunk since it only renders after "Explain this" is clicked.
@@ -114,7 +115,7 @@ export default function NodeActions({ nodeId, nodePath, hasLLM }: Props) {
         )}
       </div>
 
-      {explainError && <p className="action-error">{explainError}</p>}
+      {explainError && <ErrorBanner>{explainError}</ErrorBanner>}
 
       {explanation && (
         <div className="panel explain-panel">
@@ -123,9 +124,7 @@ export default function NodeActions({ nodeId, nodePath, hasLLM }: Props) {
         </div>
       )}
 
-      {improveState === "error" && (
-        <p className="action-error">{improveError}</p>
-      )}
+      {improveState === "error" && <ErrorBanner>{improveError}</ErrorBanner>}
 
       {improveState === "done" && (
         <p className="action-success icon-label"><Check size={13} /> Note updated in Obsidian. Re-sync vault to refresh.</p>

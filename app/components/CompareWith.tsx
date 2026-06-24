@@ -5,6 +5,7 @@ import Link from "next/link";
 import dynamic from "next/dynamic";
 import Spinner from "./Spinner";
 import { Scale, X, ArrowRight } from "./Icons";
+import ErrorBanner from "./ErrorBanner";
 
 const Markdown = dynamic(() => import("./Markdown"));
 
@@ -139,7 +140,7 @@ export default function CompareWith({ nodeId, nodeTitle }: { nodeId: string; nod
       )}
 
       {busy && <div className="muted small" style={{ padding: "8px 0" }}><Spinner label="Generating comparison…" /></div>}
-      {error && <div className="action-error">{error}</div>}
+      {error && <ErrorBanner>{error}</ErrorBanner>}
 
       {comparison && !busy && (
         <div className="divider-top">

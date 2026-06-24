@@ -4,6 +4,7 @@ import { useState, useCallback } from "react";
 import Link from "next/link";
 import type { RelatedEdge } from "@/lib/queries";
 import { Check, ArrowRight, ArrowLeftRight } from "./Icons";
+import ErrorBanner from "./ErrorBanner";
 
 type EdgeClassification = {
   src_id: string; tgt_id: string;
@@ -132,9 +133,7 @@ export default function RelatedEdges({ initial, hasKey }: { initial: RelatedEdge
         )}
       </div>
 
-      {classifyAllError && (
-        <p className="muted small error-text">{classifyAllError}</p>
-      )}
+      {classifyAllError && <ErrorBanner>{classifyAllError}</ErrorBanner>}
 
       {visible.length === 0 && (
         <p className="muted empty-state icon-label">
