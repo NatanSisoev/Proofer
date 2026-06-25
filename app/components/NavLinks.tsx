@@ -4,17 +4,17 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const LINKS = [
-  { href: "/browse", label: "Browse" },
-  { href: "/graph", label: "Map" },
+  { href: "/explore", label: "Explore" },
   { href: "/session", label: "Practice" },
   { href: "/progress", label: "Progress" },
 ];
 
 // Routes that belong conceptually under a top-level nav item but live at
-// their own path (e.g. history/study-plan are tabs within "Progress").
+// their own path (e.g. history is a tab within "Progress").
 const ALIASES: Record<string, string[]> = {
+  "/explore": ["/browse", "/graph"],
   "/session": ["/learn"],
-  "/progress": ["/history", "/study-plan"],
+  "/progress": ["/history"],
 };
 
 export default function NavLinks() {
