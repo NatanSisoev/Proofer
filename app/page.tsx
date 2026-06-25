@@ -318,38 +318,6 @@ export default function Home() {
               );
             })}
           </div>
-
-          <div className="panel">
-            <div className="panel-header">
-              <h2>Navigate</h2>
-            </div>
-            <div className="flex-col">
-              <Link href="/graph" className="nav-item">
-                <div className="nav-label">Knowledge map</div>
-                <div className="muted small">Full graph, colored by mastery</div>
-              </Link>
-              <Link href="/progress" className="nav-item">
-                <div className="nav-label">Progress</div>
-                <div className="muted small">Mastery histogram & recent activity</div>
-              </Link>
-              <Link href="/browse" className="nav-item">
-                <div className="nav-label">Browse</div>
-                <div className="muted small">All concepts by area and type</div>
-              </Link>
-              <Link href="/quality" className="nav-item">
-                <div className="nav-label">Note quality</div>
-                <div className="muted small">Gaps, missing prereqs, isolated nodes</div>
-              </Link>
-              <Link href="/session" className="nav-item">
-                <div className="nav-label">Practice</div>
-                <div className="muted small">AI-generated problems, Socratic grading</div>
-              </Link>
-              <Link href="/study-plan" className="nav-item">
-                <div className="nav-label">Study plan</div>
-                <div className="muted small">AI study schedule for your next exam</div>
-              </Link>
-            </div>
-          </div>
         </div>
       </div>
     </div>

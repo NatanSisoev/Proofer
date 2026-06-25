@@ -5,6 +5,7 @@ import HistoryAreaFilter from "@/app/components/HistoryAreaFilter";
 import MathText from "@/app/components/MathText";
 import { truncateMath } from "@/lib/text";
 import { ArrowLeft, ArrowRight } from "@/app/components/Icons";
+import ProgressTabs from "@/app/components/ProgressTabs";
 
 export const dynamic = "force-dynamic";
 
@@ -67,8 +68,9 @@ export default async function HistoryPage({
             {total.toLocaleString()} attempt{total !== 1 ? "s" : ""} total
           </p>
         </div>
-        <Link href="/progress" className="muted small icon-label"><ArrowLeft size={12} /> progress</Link>
       </div>
+
+      <ProgressTabs active="history" />
 
       {/* Filter bar */}
       <div className="filter-bar">

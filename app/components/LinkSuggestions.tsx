@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import type { LinkSuggestion } from "@/lib/queries";
 import { Check, X } from "./Icons";
+import EmptyState from "./EmptyState";
 
 export default function LinkSuggestions({ initial }: { initial: LinkSuggestion[] }) {
   const [suggestions, setSuggestions] = useState(initial);
@@ -35,7 +36,7 @@ export default function LinkSuggestions({ initial }: { initial: LinkSuggestion[]
   const visible = suggestions.filter((s) => !dismissed.has(key(s)));
 
   if (visible.length === 0) {
-    return <p className="muted">No unlinked mentions found — your graph is well-connected!</p>;
+    return <EmptyState icon={<Check size={18} />}>No unlinked mentions found — your graph is well-connected!</EmptyState>;
   }
 
   return (

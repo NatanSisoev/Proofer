@@ -3,7 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import type { QualityIssue } from "@/lib/queries";
-import { ArrowRight } from "./Icons";
+import { ArrowRight, ChevronUp, ChevronDown, Check } from "./Icons";
+import EmptyState from "./EmptyState";
 
 const ISSUE_COLOR: Record<string, string> = {
   "no content": "var(--red)",
@@ -82,7 +83,7 @@ export default function QualityFilters({
         <h2>
           {filter ? `"${filter}" — ${baseList.length}` : `Structural issues — ${structuralOnly.length}`}
         </h2>
-        {baseList.length === 0 && <p className="muted">No structural issues found.</p>}
+        {baseList.length === 0 && <EmptyState icon={<Check size={18} />}>No structural issues found.</EmptyState>}
         <div className="quality-list">
           {baseList.map((n) => (
             <div key={n.node_id} className="quality-row">
@@ -124,10 +125,10 @@ export default function QualityFilters({
           className="collapse-btn"
         >
           <span>Practice gaps — {practiceOnly.length} never-practiced notes</span>
-          <span>{showPractice ? "▲" : "▼"}</span>
+          {showPractice ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
         </button>
         {showPractice && (
-          <div style={{ marginTop: 12 }}>
+          <div className="accordion-fade" style={{ marginTop: 12 }}>
             <p className="muted small quality-hint">
               Notes with no structural issues but not yet practiced. Start a Smart session to work through these.
             </p>

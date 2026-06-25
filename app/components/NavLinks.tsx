@@ -8,17 +8,21 @@ const LINKS = [
   { href: "/graph", label: "Map" },
   { href: "/session", label: "Practice" },
   { href: "/progress", label: "Progress" },
-  { href: "/history", label: "History" },
-  { href: "/study-plan", label: "Plan" },
-  { href: "/quality", label: "Quality" },
 ];
+
+// Routes that belong conceptually under a top-level nav item but live at
+// their own path (e.g. history/study-plan are tabs within "Progress").
+const ALIASES: Record<string, string[]> = {
+  "/session": ["/learn"],
+  "/progress": ["/history", "/study-plan"],
+};
 
 export default function NavLinks() {
   const path = usePathname();
 
   function isActive(href: string) {
-    if (href === "/session" && path.startsWith("/learn")) return true;
-    return path === href || (href !== "/" && path.startsWith(href));
+    if (path === href || (href !== "/" && path.startsWith(href))) return true;
+    return (ALIASES[href] || []).some((alias) => path.startsWith(alias));
   }
 
   return (

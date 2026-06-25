@@ -34,6 +34,7 @@ const EDGE_LABEL: Record<string, string> = {
   generalizes: "generalizes",
   equivalent_to: "equivalent to",
   instance_of: "instance of",
+  proven_by: "proven by",
   contradicts: "contradicts",
   related: "related to",
 };
@@ -42,6 +43,7 @@ const INV_LABEL: Record<string, string> = {
   generalizes: "specializes",
   equivalent_to: "equivalent to",
   instance_of: "has instance",
+  proven_by: "proves",
   contradicts: "contradicted by",
   related: "related to",
 };
@@ -101,7 +103,7 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
     <div className="wrap">
       <ReadingProgress />
       <div className="breadcrumb">
-        <Link href="/" className="icon-label"><ArrowLeft size={12} /> map</Link>
+        <Link href="/browse" className="icon-label"><ArrowLeft size={12} /> browse</Link>
         {node.area && (
           <> · <Link href={`/browse?area=${encodeURIComponent(node.area)}`}>{node.area}</Link></>
         )}

@@ -4,6 +4,7 @@ import { useState } from "react";
 import dynamic from "next/dynamic";
 import Spinner from "./Spinner";
 import { Sparkles, X, RefreshCw, Lightbulb, Triangle, Palette, BookOpen, Hash } from "./Icons";
+import ErrorBanner from "./ErrorBanner";
 import type { ComponentType } from "react";
 
 const Markdown = dynamic(() => import("./Markdown"));
@@ -97,11 +98,7 @@ export default function ReExplain({ nodeId }: { nodeId: string }) {
           <Spinner label={`Generating ${lastAngle} explanation…`} />
         </div>
       )}
-      {error && (
-        <div className="action-error" style={{ padding: "8px 0" }}>
-          {error}
-        </div>
-      )}
+      {error && <ErrorBanner>{error}</ErrorBanner>}
       {explanation && !busy && (
         <div className="divider-top">
           <div className="panel-label label-xs icon-label" style={{ marginBottom: 8 }}>

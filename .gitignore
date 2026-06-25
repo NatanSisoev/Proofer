@@ -1,6 +1,7 @@
 node_modules/
 .next/
 data/
+graph.db
 *.log
 next-env.d.ts
 .DS_Store

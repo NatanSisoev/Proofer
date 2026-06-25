@@ -1,5 +1,7 @@
 "use client";
 
+import { HelpCircle } from "./Icons";
+
 /** Fires a synthetic keydown "?" so the KeyboardShortcuts listener toggles the modal. */
 export default function ShortcutsTrigger() {
   function open() {
@@ -18,15 +20,12 @@ export default function ShortcutsTrigger() {
         border: "none",
         cursor: "pointer",
         color: "var(--muted)",
-        fontSize: 15,
-        fontWeight: 700,
-        padding: "2px 6px",
-        borderRadius: 6,
-        lineHeight: 1,
-        userSelect: "none",
+        padding: "4px 6px",
+        display: "flex",
+        alignItems: "center",
       }}
     >
-      ?
+      <HelpCircle size={16} />
     </button>
   );
 }

@@ -228,6 +228,13 @@ export default function SettingsPage() {
               </div>
               <SyncButton />
             </div>
+            <div className="settings-row" style={{ marginTop: 14 }}>
+              <div>
+                <strong>Graph health</strong>
+                <p className="muted small" style={{ margin: "2px 0 0" }}>Gaps, missing prerequisites, dependency cycles, and unclassified links.</p>
+              </div>
+              <Link href="/quality" className="btn-ghost btn-sm">Note quality</Link>
+            </div>
           </div>
 
           {/* Info: LLM provider */}

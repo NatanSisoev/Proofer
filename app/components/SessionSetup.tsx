@@ -5,7 +5,9 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import Spinner from "./Spinner";
-import { Plus, Minus, Star, ArrowRight } from "./Icons";
+import { Plus, Minus, Star, ArrowRight, X, Search } from "./Icons";
+import EmptyState from "./EmptyState";
+import ErrorBanner from "./ErrorBanner";
 import { SESSION_KEY, type SavedSession } from "./session-types";
 
 const MIN_COUNT = 1;
@@ -380,7 +382,13 @@ export default function SessionSetup({
                   {customPicked.map(c => (
                     <div key={c.id} className="selected-chip">
                       <span>{c.title}</span>
-                      <button onClick={() => setCustomPicked(p => p.filter(x => x.id !== c.id))}>×</button>
+                      <button
+                        className="chip-remove"
+                        aria-label={`Remove ${c.title}`}
+                        onClick={() => setCustomPicked(p => p.filter(x => x.id !== c.id))}
+                      >
+                        <X size={11} />
+                      </button>
                     </div>
                   ))}
                 </div>
@@ -461,11 +469,7 @@ export default function SessionSetup({
           </div>
         </div>
 
-        {error && (
-          <div className="panel error-notice" style={{ marginBottom: 16 }}>
-            {error}
-          </div>
-        )}
+        {error && <div style={{ marginBottom: 16 }}><ErrorBanner>{error}</ErrorBanner></div>}
 
         <button
           className="btn-primary btn-full icon-label"
@@ -493,7 +497,7 @@ export default function SessionSetup({
           {previewLoading && mode !== "custom" && <span className="muted small loading-tag">loading…</span>}
         </h2>
         {!previewLoading && preview.length === 0 && mode !== "custom" && (
-          <p className="muted">No concepts found for this mode.</p>
+          <EmptyState icon={<Search size={18} />}>No concepts found for this mode.</EmptyState>
         )}
         {mode === "custom" && customPicked.length === 0 && (
           <p className="muted small">Use the search on the left to pick concepts.</p>
