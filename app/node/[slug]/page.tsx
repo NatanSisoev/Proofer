@@ -235,7 +235,6 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
                 </Link>
               )}
               <KnownButton slug={id} initial={known} />
-              <NodeActions nodeId={id} nodePath={node.path ?? null} hasLLM={llmAvailable} />
             </div>
           </div>
 
@@ -290,6 +289,7 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
                 </>
               )}
               <PersonalNotes nodeId={id} />
+              <NodeActions nodeId={id} nodePath={node.path ?? null} hasLLM={llmAvailable} />
               {llmAvailable && <ReExplain nodeId={id} />}
               {llmAvailable && <CompareWith nodeId={id} nodeTitle={node.title} />}
 
