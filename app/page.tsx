@@ -6,6 +6,7 @@ import SnoozeButton from "./components/SnoozeButton";
 import GoalButton from "./components/GoalButton";
 import LearningPath from "./components/LearningPath";
 import MathText from "./components/MathText";
+import UnlockPreview from "./components/UnlockPreview";
 import { frontier, stats, dueForReview, todayStats, recentlyPracticed, bookmarkedNodes, conceptOfDay, areaMastery, overconfidentConcepts, getNode } from "@/lib/queries";
 import { getDailyGoal, getLearningGoal } from "@/lib/settings";
 import { ArrowRight, ArrowDown, Star } from "./components/Icons";
@@ -302,7 +303,7 @@ export default function Home() {
                 {n.area && <span className="meta"> · {n.area}</span>}
               </div>
               <div className="item-actions">
-                {n.unlocks > 0 && <span className="pill unlock">unlocks {n.unlocks}</span>}
+                {n.unlocks > 0 && <UnlockPreview nodeId={n.id} unlockCount={n.unlocks} />}
                 <QuickKnown nodeId={n.id} />
                 <Link
                   href={`/learn?node=${encodeURIComponent(n.id)}`}

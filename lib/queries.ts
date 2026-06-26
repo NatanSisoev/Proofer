@@ -881,7 +881,8 @@ export function todayStats(): { today_concepts: number; today_attempts: number; 
        FROM attempts WHERE date(created_at) = date('now')`
   ).get() as any);
 
-  // streak: longest run of consecutive days ending today
+  // streak: longest run of consecutive days ending today (or yesterday, if the
+  // student hasn't practiced yet today — the streak is still alive until midnight).
   const days = d.prepare(
     `SELECT DISTINCT date(created_at) AS day
        FROM attempts
@@ -890,10 +891,16 @@ export function todayStats(): { today_concepts: number; today_attempts: number; 
   ).all() as { day: string }[];
 
   let streak = 0;
-  for (let i = 0; i < days.length; i++) {
-    const expected = new Date(Date.now() - i * 86400000).toISOString().slice(0, 10);
-    if (days[i].day === expected) streak++;
-    else break;
+  if (days.length > 0) {
+    const todayStr = new Date(Date.now()).toISOString().slice(0, 10);
+    // If today has no practice yet, start the consecutive-day check from yesterday
+    // so an in-progress streak isn't falsely zeroed out before midnight.
+    const startOffset = days[0].day === todayStr ? 0 : 1;
+    for (let i = 0; i < days.length; i++) {
+      const expected = new Date(Date.now() - (i + startOffset) * 86400000).toISOString().slice(0, 10);
+      if (days[i].day === expected) streak++;
+      else break;
+    }
   }
 
   return {
@@ -922,13 +929,23 @@ export function activityCalendar(): { date: string; count: number }[] {
   });
 }
 
-/** Concepts mastered in the last 7 and 30 days (for velocity display). */
+/** Concepts mastered in the last 7 and 30 days (for velocity display).
+ *  Counts DISTINCT concepts whose very first mastery-threshold crossing (p≥0.8)
+ *  falls within the window — repeated practice on already-mastered concepts
+ *  is NOT counted again.
+ */
 export function masteryVelocity(): { last7: number; last30: number } {
   const d = db();
   const count = (days: number) =>
     (d.prepare(
-      `SELECT COUNT(*) AS n FROM mastery_history
-        WHERE p >= 0.8 AND recorded_at >= date('now', '-${days} days')`
+      `SELECT COUNT(*) AS n
+         FROM (
+           SELECT node_id, MIN(recorded_at) AS first_mastered
+             FROM mastery_history
+            WHERE p >= 0.8
+            GROUP BY node_id
+         )
+        WHERE first_mastered >= date('now', '-${days} days')`
     ).get() as any).n as number;
   return { last7: count(7), last30: count(30) };
 }
