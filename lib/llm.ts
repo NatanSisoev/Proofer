@@ -5,7 +5,7 @@ import type { NodeRow } from "./db";
 
 // ===========================================================================
 // LLM response cache — SQLite-backed, 7-day TTL, keyed by SHA-256 of inputs.
-// Only used for the "read-only" explanation/comparison/study-plan calls, never
+// Only used for the "read-only" explanation/comparison calls, never
 // for problem generation or grading (which must be fresh per attempt).
 // ===========================================================================
 const CACHE_TTL_SECONDS = 7 * 24 * 60 * 60; // 7 days
@@ -766,80 +766,6 @@ export async function improveNote(content: string, title: string, type: string |
     return block.text;
   }
   throw new Error("No LLM provider configured — set GEMINI_API_KEY or ANTHROPIC_API_KEY.");
-}
-
-// ===========================================================================
-// Study plan generation
-// ===========================================================================
-export type StudyPlanInput = {
-  targetDate: string;           // ISO date like "2026-07-01"
-  focusArea?: string;           // optional area to prioritize
-  totalConcepts: number;
-  masteredConcepts: number;
-  weakAreas: { area: string; avg_p: number; count: number }[];
-  unmastered: { id: string; title: string; area: string | null; mastery_p: number }[];
-};
-
-/** Generate a markdown study plan for an upcoming exam/deadline. */
-export async function generateStudyPlan(input: StudyPlanInput): Promise<string> {
-  const cfg = getLLMConfig();
-  if (cfg.provider === "none") return "";
-  // Cache key includes the date so a plan generated "today" for a given target
-  // is reused on the same calendar day rather than burning an API call per page
-  // load, but automatically invalidates the next day (mastery may have changed).
-  const today = new Date().toISOString().slice(0, 10);
-  const ck = cacheKey("generateStudyPlan", { ...input, today });
-  const hit = cacheGet(ck);
-  if (hit) return hit;
-  const daysLeft = Math.ceil((new Date(input.targetDate).getTime() - new Date(today).getTime()) / 86400000);
-  const weeksLeft = Math.max(1, Math.round(daysLeft / 7));
-
-  const weakest = input.weakAreas.slice(0, 6).map(a => `${a.area} (${Math.round(a.avg_p * 100)}%)`).join(", ");
-  const frontier = input.unmastered.slice(0, 20).map(n => `- ${n.title} (${n.area ?? "?"}, ${Math.round(n.mastery_p * 100)}%)`).join("\n");
-
-  const prompt = [
-    `You are an expert mathematics tutor and study strategist.`,
-    `A student is preparing for an exam on ${input.targetDate} (${daysLeft} days / ~${weeksLeft} week(s) away).`,
-    `\nCurrent state:`,
-    `- Total concepts in graph: ${input.totalConcepts}`,
-    `- Already mastered: ${input.masteredConcepts} (${Math.round(input.masteredConcepts / input.totalConcepts * 100)}%)`,
-    input.focusArea ? `- Priority area: ${input.focusArea}` : "",
-    `- Weakest areas: ${weakest || "none yet"}`,
-    `\nTop unmastered concepts (by priority):`,
-    frontier || "(none — all mastered!)",
-    `\nWrite a concrete, actionable study plan in markdown.`,
-    `Structure it by week (Week 1, Week 2, ...) with a clear focus for each week.`,
-    `For each week, list: the key concepts to master, suggested session modes (review/weak spots/frontier), and daily practice targets.`,
-    `End with exam-week strategy and a motivational note.`,
-    `Be specific: name actual concepts and areas from the data. Use bullet points. Keep it under 600 words.`,
-  ].filter(Boolean).join("\n");
-
-  let result = "";
-  if (cfg.provider === "gemini") {
-    const resp = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${cfg.geminiModel}:generateContent?key=${cfg.geminiKey}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 0.6, maxOutputTokens: 2000, thinkingConfig: { thinkingBudget: 0 } },
-        }),
-      }
-    );
-    if (!resp.ok) throw new Error(await resp.text());
-    const data = await resp.json();
-    result = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ?? "";
-  } else if (cfg.provider === "anthropic" && cfg.anthropic) {
-    const msg = await cfg.anthropic.messages.create({
-      model: ANTHROPIC_GRADE_MODEL,
-      max_tokens: 2000,
-      messages: [{ role: "user", content: prompt }],
-    });
-    result = (msg.content[0] as any)?.text?.trim() ?? "";
-  }
-  if (result) cacheSet(ck, result);
-  return result;
 }
 
 // ===========================================================================

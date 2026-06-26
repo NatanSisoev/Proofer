@@ -68,7 +68,7 @@ your `user_knows` state.
 The original next-steps shipped: **AI edge-typing** (`classifyEdge` + the `/quality`
 approval queue), **learning-path generation** (`learningPath()` known→target), and
 **DAG hygiene** (`dependencyCycles()` surfaced in `/quality`) are all live, alongside
-spaced-repetition retention, exam mode, voice input, and an AI study planner. The
+spaced-repetition retention, exam mode, and voice input. The
 roadmap has moved up a level — see [VISION.md](VISION.md) for the ambitious bets:
 
 - **Formal verification (Lean/Mathlib)** — kernel-check proofs so grading can't hallucinate.

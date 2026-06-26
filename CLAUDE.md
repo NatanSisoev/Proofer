@@ -82,8 +82,8 @@ so new tables appear without re-importing):
   prerequisite the grader blamed for the gap. This log is the product's long-term moat.
 - `problems` — generated problem bodies/ideal solutions/rubrics, keyed so the student only
   ever sees a `problemId`, never the answer key, until they ask to reveal it.
-- `llm_cache` — SHA-256(fn + inputs)-keyed cache for read-only LLM calls (explain/compare/
-  study-plan), 7-day TTL enforced in `lib/llm.ts`; cleared on vault sync.
+- `llm_cache` — SHA-256(fn + inputs)-keyed cache for read-only LLM calls (explain/compare),
+  7-day TTL enforced in `lib/llm.ts`; cleared on vault sync.
 - `bookmarks`, `node_notes`, `settings` — small user-state tables.
 
 **`lib/db.ts`** holds the SQLite singleton (`global.__prooferDb`, survives HMR) and patches

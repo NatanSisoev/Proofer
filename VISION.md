@@ -80,9 +80,9 @@ The full assessment loop runs end-to-end on a real 767-concept vault:
   per-node "last gap identified," weak-spot and frontier session modes.
 - **AI edge-typing with an approval queue.** `classifyEdge` upgrades untyped `related` edges
   into `depends_on`/`generalizes`/… with confidence, gated behind `/quality`.
-- **Product surface around the loop:** Browse / Map / Practice / Progress / History / Plan /
+- **Product surface around the loop:** Browse / Map / Practice / Progress / History /
   Quality, plus exam mode (timed), voice answer input, Anki export, bookmarks, personal notes,
-  daily goals, an activity calendar, compare-concepts, and an AI study-plan generator. Three
+  daily goals, an activity calendar, and compare-concepts. Three
   LLM tiers (Gemini free → Anthropic → demo stub) with caching.
 
 **The 3-month falsifiable test still stands and is now runnable:** *does this beat "Anki +
