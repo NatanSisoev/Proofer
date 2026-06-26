@@ -11,7 +11,7 @@ not data volume. Fix architecture first; everything else compounds on top of it.
 
 ---
 
-## ✅ Status as of 2026-06-21
+## ✅ Status as of 2026-06-25
 
 Most P0–P3 items are complete. Summary of what's shipped:
 
@@ -32,6 +32,9 @@ Most P0–P3 items are complete. Summary of what's shipped:
 - **P3 #6** ✅ Provider/model badge in `/settings` LLM panel.
 - **P4 #2** ✅ (partial) `.t-Algorithm`, `.t-Example`, `.t-ghost` backgrounds now use `var(--green-soft)` / `var(--amber-soft)` / `var(--red-soft)`; `.t-ghost` color → `var(--red)`. Dark-mode bg overrides removed for these three (CSS vars carry dark values). Text colors for Algorithm/Example still hardcoded (no exact variable match exists yet).
 - **New** ✅ Exam mode: timed session with countdown clock, auto-finish, exam-branded summary.
+- **New (2026-06-25)** ✅ `masteryVelocity()` bug fixed — now counts distinct concepts first mastered in the timeframe (previously overcounted repeated practice on already-mastered concepts).
+- **New (2026-06-25)** ✅ Streak bug fixed — `todayStats()` streak no longer zeroes out if the student hasn't practiced yet today; stays alive until midnight (was showing 0 instead of the true streak day-count).
+- **New (2026-06-25)** ✅ Unlock preview — "unlocks N" pill on home-page frontier items is now interactive: click to fetch and display the specific concepts that would become learnable if this concept is mastered (`UnlockPreview.tsx` + `/api/newly-unlocked`).
 
 **Remaining backlog below.**
 
