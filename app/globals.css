@@ -1139,6 +1139,8 @@ details[open].practice-history > .attempt-list { animation: accordion-fade 0.25s
 .panel-due { border-left: 3px solid var(--amber); }
 .panel h2.red { color: var(--red); }
 .panel-blindspots { border-left: 3px solid var(--red); }
+.panel-goal { border-left: 3px solid var(--accent); }
+.goal-btn-active { color: var(--accent) !important; border-color: var(--accent) !important; }
 .item-actions { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
 
 /* quality filters */

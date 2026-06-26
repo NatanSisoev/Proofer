@@ -1,11 +1,12 @@
 import nextDynamic from "next/dynamic";
 import Link from "next/link";
-import { browseAreas, nodesInArea, nodeTypes, areaMastery, search } from "@/lib/queries";
+import { browseAreas, nodesInArea, nodeTypes, areaMastery, searchWithMastery } from "@/lib/queries";
 import type { BrowseNode } from "@/lib/queries";
 import { ArrowLeft, ArrowRight, Search } from "@/app/components/Icons";
 import EmptyState from "@/app/components/EmptyState";
 import BrowseFilters from "@/app/components/BrowseFilters";
 import ExploreViewMode from "@/app/components/ExploreViewMode";
+import ExploreSearch from "@/app/components/ExploreSearch";
 
 const GlobalGraph = nextDynamic(() => import("@/app/components/GlobalGraph"), {
   loading: () => <div className="graph-shell graph-shell-loading" />,
@@ -196,11 +197,7 @@ async function ListView({
 
   if (q) {
     // Use the search function to find matching nodes
-    const searchResults = search(q);
-    nodes = searchResults.map((node) => ({
-      ...node,
-      mastery_p: node.mastery_p ?? 0,
-    })) as BrowseNode[];
+    nodes = searchWithMastery(q);
   } else {
     // Show all nodes if no query
     const areas = browseAreas();
@@ -239,25 +236,7 @@ async function ListView({
       </div>
 
       <div className="search-container" style={{ marginBottom: 20 }}>
-        <input
-          type="search"
-          placeholder="Search concepts..."
-          defaultValue={q || ""}
-          onInput={(e) => {
-            const val = (e.target as HTMLInputElement).value;
-            const p = new URLSearchParams();
-            p.set("view", "list");
-            if (val) p.set("q", val);
-            window.location.href = `/explore?${p.toString()}`;
-          }}
-          style={{
-            width: "100%",
-            padding: "10px 12px",
-            border: "1px solid var(--border)",
-            borderRadius: "6px",
-            fontSize: "14px",
-          }}
-        />
+        <ExploreSearch defaultValue={q} />
       </div>
 
       {q && (

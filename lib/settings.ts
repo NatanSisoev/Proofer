@@ -30,6 +30,22 @@ export function getCalibrationEnabled(): boolean {
   return getSetting("calibration_enabled") !== "0";
 }
 
+export function getLearningGoal(): string {
+  return getSetting("learning_goal");
+}
+
+export function setLearningGoal(nodeId: string): void {
+  try {
+    if (nodeId) {
+      db().prepare("INSERT OR REPLACE INTO settings (key, value) VALUES ('learning_goal', ?)").run(nodeId);
+    } else {
+      db().prepare("DELETE FROM settings WHERE key = 'learning_goal'").run();
+    }
+  } catch {
+    // ignore
+  }
+}
+
 export type SelectionPolicy = "infogain" | "greedy";
 
 // How the tutor picks what to practice next. "infogain" prefers concepts whose
