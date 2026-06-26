@@ -41,7 +41,7 @@ export async function POST() {
     // that request crash on a closed handle. WAL mode allows the stale
     // connection to coexist harmlessly until it's garbage-collected.
     global.__prooferDb = undefined;
-    // Clear the LLM cache so any explain/compare/study-plan responses that
+    // Clear the LLM cache so any explain/compare responses that
     // referenced old note content are regenerated on the next request.
     clearLLMCache();
     const summary = stdout.split("\n").filter(Boolean).slice(-6).join("\n");

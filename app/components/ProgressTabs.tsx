@@ -3,10 +3,9 @@ import Link from "next/link";
 const TABS = [
   { href: "/progress", key: "overview", label: "Overview" },
   { href: "/history", key: "history", label: "History" },
-  { href: "/study-plan", key: "plan", label: "Study plan" },
 ] as const;
 
-export default function ProgressTabs({ active }: { active: "overview" | "history" | "plan" }) {
+export default function ProgressTabs({ active }: { active: "overview" | "history" }) {
   return (
     <div className="tab-bar">
       {TABS.map((t) => (

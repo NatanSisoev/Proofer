@@ -262,7 +262,7 @@ export default function SettingsPage() {
               ) : (
                 <span className="warn-text">
                   <strong>Demo mode</strong> — no API key set. Problems and grading use canned
-                  stubs; explain / compare / study-plan are disabled.
+                  stubs; explain / compare are disabled.
                 </span>
               )}
             </div>
