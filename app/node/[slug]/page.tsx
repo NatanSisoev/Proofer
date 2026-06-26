@@ -14,10 +14,12 @@ import PersonalNotes from "@/app/components/PersonalNotes";
 import ReExplain from "@/app/components/ReExplain";
 import CompareWith from "@/app/components/CompareWith";
 import ReadingProgress from "@/app/components/ReadingProgress";
+import GoalButton from "@/app/components/GoalButton";
 import { getNode, edgesOf, isKnown, readiness, prerequisites, attemptCount, isBookmarked, nodeAttempts, nodeAttemptDetails, nextReviewDays, similarConcepts, nodeBlamedPrereqs, egoGraph } from "@/lib/queries";
 import { truncateMath } from "@/lib/text";
 import { getMasteryP } from "@/lib/mastery";
 import { hasKey } from "@/lib/llm";
+import { getLearningGoal } from "@/lib/settings";
 import { ArrowLeft, ArrowRight } from "@/app/components/Icons";
 import type { EdgeRow } from "@/lib/db";
 
@@ -87,6 +89,7 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
   const similar = node.area ? similarConcepts(id, node.area, mastery, 6) : [];
   const blamedPrereqs = attempts >= 2 ? nodeBlamedPrereqs(id, 3) : [];
   const ego = node.exists_ === 1 ? egoGraph(id, 1) : null;
+  const currentGoal = getLearningGoal();
 
   // Most recent non-correct attempt gap — surfaced prominently near the CTA
   const lastGapAttempt = attemptDetails.find(
@@ -219,6 +222,7 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
               <div className="node-cta">
                 <Link href={`/learn?node=${encodeURIComponent(id)}`} className="cta icon-label">Practice this <ArrowRight size={13} /></Link>
                 <BookmarkButton nodeId={id} initial={bookmarked} />
+                <GoalButton nodeId={id} isCurrentGoal={currentGoal === id} />
               </div>
               {lastGapAttempt && (
                 <div className="last-gap-note">

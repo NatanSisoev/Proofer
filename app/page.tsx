@@ -3,8 +3,11 @@ import SearchBox from "./components/SearchBox";
 import RandomConceptButton from "./components/RandomConceptButton";
 import QuickKnown from "./components/QuickKnown";
 import SnoozeButton from "./components/SnoozeButton";
-import { frontier, stats, dueForReview, todayStats, recentlyPracticed, bookmarkedNodes, conceptOfDay, areaMastery, overconfidentConcepts } from "@/lib/queries";
-import { getDailyGoal } from "@/lib/settings";
+import GoalButton from "./components/GoalButton";
+import LearningPath from "./components/LearningPath";
+import MathText from "./components/MathText";
+import { frontier, stats, dueForReview, todayStats, recentlyPracticed, bookmarkedNodes, conceptOfDay, areaMastery, overconfidentConcepts, getNode } from "@/lib/queries";
+import { getDailyGoal, getLearningGoal } from "@/lib/settings";
 import { ArrowRight, ArrowDown, Star } from "./components/Icons";
 
 export const dynamic = "force-dynamic";
@@ -34,6 +37,8 @@ export default function Home() {
   const spotlight = conceptOfDay();
   const areas = areaMastery().slice(0, 12);
   const blindSpots = overconfidentConcepts(5);
+  const goalId = getLearningGoal();
+  const goalNode = goalId ? getNode(goalId) : null;
 
   return (
     <div className="wrap">
@@ -174,6 +179,45 @@ export default function Home() {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Learning Goal — prominently show the path to the student's target concept */}
+      {goalNode && goalNode.exists_ === 1 && (
+        <div className="panel panel-goal" style={{ marginBottom: 20 }}>
+          <div className="panel-header">
+            <div>
+              <h2 className="accent">Learning goal</h2>
+              <p className="muted small" style={{ margin: "2px 0 0" }}>
+                Your target concept — here's what stands between you and mastering it.
+              </p>
+            </div>
+            <div style={{ display: "flex", gap: 8, alignItems: "center", flexShrink: 0 }}>
+              <Link
+                href={`/node/${encodeURIComponent(goalId)}`}
+                className="pill pill-accent icon-label"
+              >
+                View <ArrowRight size={10} />
+              </Link>
+              <GoalButton nodeId={goalId} isCurrentGoal={true} />
+            </div>
+          </div>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 8 }}>
+            {goalNode.type && (
+              <span className={`type-badge t-${goalNode.type}`}>{goalNode.type}</span>
+            )}
+            <Link href={`/node/${encodeURIComponent(goalId)}`} className="concept-link" style={{ fontWeight: 600 }}>
+              {goalNode.title}
+            </Link>
+            {goalNode.area && <span className="muted small">{goalNode.area}</span>}
+          </div>
+          {goalNode.overview && (
+            <MathText className="muted small" style={{ marginBottom: 12 }}>
+              {goalNode.overview.length > 160 ? goalNode.overview.slice(0, 160) + "…" : goalNode.overview}
+            </MathText>
+          )}
+          {/* Reuse the LearningPath component — it computes the unmastered prereq path server-side */}
+          <LearningPath nodeId={goalId} />
         </div>
       )}
 
