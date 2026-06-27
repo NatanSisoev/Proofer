@@ -4,6 +4,7 @@ import { browseAreas, nodesInArea, nodeTypes, areaMastery, searchWithMastery } f
 import type { BrowseNode } from "@/lib/queries";
 import { ArrowLeft, ArrowRight, Search } from "@/app/components/Icons";
 import EmptyState from "@/app/components/EmptyState";
+import MathText from "@/app/components/MathText";
 import BrowseFilters from "@/app/components/BrowseFilters";
 import ExploreViewMode from "@/app/components/ExploreViewMode";
 import ExploreSearch from "@/app/components/ExploreSearch";
@@ -90,7 +91,7 @@ async function SectionsView({
         {/* Area header: mastery summary + actions */}
         <div className="area-header">
           <div>
-            <h1 style={{ marginBottom: 6 }}>{area}</h1>
+            <h1 style={{ marginBottom: 6 }}><MathText>{area}</MathText></h1>
             <div className="mastery-summary">
               <div className="mastery-bar-row">
                 <div className="bar" style={{ width: 100 }}>
@@ -285,7 +286,7 @@ function NodeRow({ node }: { node: BrowseNode }) {
           <span className={`type-badge t-${node.type}`}>{node.type}</span>
         )}
         <Link href={`/node/${encodeURIComponent(node.id)}`} className="browse-node-link">
-          {node.title}
+          <MathText>{node.title}</MathText>
         </Link>
       </div>
       <div className="browse-row-right">

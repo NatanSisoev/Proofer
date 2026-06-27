@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import Spinner from "./Spinner";
+import MathText from "./MathText";
 import { Plus, Minus, Star, ArrowRight, X, Search } from "./Icons";
 import EmptyState from "./EmptyState";
 import ErrorBanner from "./ErrorBanner";
@@ -288,9 +289,10 @@ export default function SessionSetup({
                       {m.label}
                     </span>
                     {modeCount !== null && (
-                      <span className="pill pill-sm" style={{
-                        color: isEmpty ? "var(--muted)" : m.key === "due" ? "var(--amber)" : "var(--text)",
-                      }}>
+                      <span
+                        className={`pill pill-sm${!isEmpty && m.key === "due" ? " pill-amber" : ""}`}
+                        style={!isEmpty && m.key !== "due" ? { color: "var(--text)" } : undefined}
+                      >
                         {modeCount}
                       </span>
                     )}
@@ -332,9 +334,8 @@ export default function SessionSetup({
                 {EXAM_TIME_OPTIONS.map((o) => (
                   <button
                     key={o.value}
-                    className={examTimeLimitMin === o.value ? "btn-primary" : "btn-ghost"}
+                    className={`filter-btn${examTimeLimitMin === o.value ? " active" : ""}`}
                     onClick={() => setExamTimeLimitMin(o.value)}
-                    style={{ minWidth: 60 }}
                   >
                     {o.label}
                   </button>
@@ -370,7 +371,7 @@ export default function SessionSetup({
                         }}
                       >
                         {r.type && <span className={`type-badge t-${r.type}`}>{r.type}</span>}
-                        <span className="item-title">{r.title}</span>
+                        <span className="item-title"><MathText>{r.title}</MathText></span>
                         {r.area && <span className="muted small" style={{ fontSize: 11 }}>{r.area}</span>}
                       </button>
                     ))}
@@ -381,7 +382,7 @@ export default function SessionSetup({
                 <div className="chips-row">
                   {customPicked.map(c => (
                     <div key={c.id} className="selected-chip">
-                      <span>{c.title}</span>
+                      <span><MathText>{c.title}</MathText></span>
                       <button
                         className="chip-remove"
                         aria-label={`Remove ${c.title}`}
@@ -429,8 +430,8 @@ export default function SessionSetup({
               <button
                 key={n}
                 onClick={() => setCountClamped(n)}
-                className={count === n ? "btn-primary" : "btn-ghost"}
-                style={{ minWidth: 44 }}
+                className={`filter-btn${count === n ? " active" : ""}`}
+                style={{ minWidth: 36, justifyContent: "center" }}
               >
                 {n}
               </button>
@@ -511,7 +512,7 @@ export default function SessionSetup({
               target="_blank"
               className="preview-link"
             >
-              {n.title}
+              <MathText>{n.title}</MathText>
             </Link>
             {n.reason && (
               <span className={`reason-tag reason-${n.reason.replace(/\s+/g, "-")}`}>

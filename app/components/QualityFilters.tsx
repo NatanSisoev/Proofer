@@ -5,6 +5,7 @@ import Link from "next/link";
 import type { QualityIssue } from "@/lib/queries";
 import { ArrowRight, ChevronUp, ChevronDown, Check } from "./Icons";
 import EmptyState from "./EmptyState";
+import MathText from "./MathText";
 
 const ISSUE_COLOR: Record<string, string> = {
   "no content": "var(--red)",
@@ -48,13 +49,7 @@ export default function QualityFilters({
         <div className="chips-row">
           <button
             onClick={() => setFilter(null)}
-            style={{
-              fontSize: 12, padding: "4px 10px",
-              background: filter === null ? "var(--accent-soft)" : "transparent",
-              border: `1px solid ${filter === null ? "var(--accent)" : "var(--border)"}`,
-              color: filter === null ? "var(--accent)" : "var(--muted)",
-              borderRadius: 20, cursor: "pointer",
-            }}
+            className={`filter-btn${filter === null ? " active" : ""}`}
           >
             Structural ({structuralOnly.length})
           </button>
@@ -64,13 +59,7 @@ export default function QualityFilters({
               <button
                 key={t}
                 onClick={() => setFilter(filter === t ? null : t)}
-                style={{
-                  fontSize: 12, padding: "4px 10px",
-                  background: filter === t ? (ISSUE_COLOR[t] ?? "var(--accent)") + "22" : "transparent",
-                  border: `1px solid ${filter === t ? (ISSUE_COLOR[t] ?? "var(--accent)") : "var(--border)"}`,
-                  color: filter === t ? (ISSUE_COLOR[t] ?? "var(--accent)") : "var(--muted)",
-                  borderRadius: 20, cursor: "pointer",
-                }}
+                className={`filter-btn${filter === t ? " active" : ""}`}
               >
                 {t} ({count})
               </button>
@@ -90,27 +79,25 @@ export default function QualityFilters({
               <div className="flex-fill">
                 {n.type && <span className={`type-badge t-${n.type}`} style={{ marginRight: 8 }}>{n.type}</span>}
                 <Link href={`/node/${encodeURIComponent(n.node_id)}`} className="node-link">
-                  {n.title}
+                  <MathText>{n.title}</MathText>
                 </Link>
                 {n.area && <span className="muted small"> · {n.area}</span>}
               </div>
               <div className="issue-pills">
                 {n.issues.filter((i) => i !== "never practiced").map((issue) => (
-                  <span
+                  <button
                     key={issue}
+                    type="button"
                     className="pill"
                     onClick={() => setFilter(issue === filter ? null : issue)}
                     style={{
                       color: ISSUE_COLOR[issue] ?? "var(--muted)",
-                      borderColor: "transparent",
-                      background: "var(--bg-soft)",
-                      fontSize: 11,
                       cursor: "pointer",
                       opacity: filter && filter !== issue ? 0.4 : 1,
                     }}
                   >
                     {issue}
-                  </span>
+                  </button>
                 ))}
               </div>
             </div>
@@ -138,7 +125,7 @@ export default function QualityFilters({
                   <div className="flex-fill">
                     {n.type && <span className={`type-badge t-${n.type}`} style={{ marginRight: 8 }}>{n.type}</span>}
                     <Link href={`/node/${encodeURIComponent(n.node_id)}`} className="node-link">
-                      {n.title}
+                      <MathText>{n.title}</MathText>
                     </Link>
                     {n.area && <span className="muted small"> · {n.area}</span>}
                   </div>

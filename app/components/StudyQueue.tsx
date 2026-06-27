@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import VoiceInput from "./VoiceInput";
+import MathText from "./MathText";
 import Spinner from "./Spinner";
 import { VERDICT } from "@/lib/verdict";
 import { ProblemPanel, GradeFeedback, ConfidenceSelect, type Problem, type Grade } from "./ProblemCard";
@@ -428,7 +429,7 @@ export default function StudyQueue({
             <div className="chips-row">
               {results.filter((r) => r.justMastered).map((r, i) => (
                 <Link key={i} href={`/node/${encodeURIComponent(r.node.id)}`} className="mastered-node-chip">
-                  {r.node.title}
+                  <MathText>{r.node.title}</MathText>
                 </Link>
               ))}
             </div>
@@ -442,7 +443,7 @@ export default function StudyQueue({
               {unlockedNodes.map((n) => (
                 <Link key={n.id} href={`/node/${encodeURIComponent(n.id)}`} className="unlocked-node-chip">
                   {n.type && <span className={`type-badge t-${n.type}`}>{n.type}</span>}
-                  {n.title}
+                  <MathText>{n.title}</MathText>
                 </Link>
               ))}
             </div>
@@ -462,9 +463,9 @@ export default function StudyQueue({
                   <VerdictIcon verdict={r.verdict} size={11} />
                 </span>
                 <Link href={`/node/${encodeURIComponent(r.node.id)}`} className="text-link">
-                  {r.node.title}
+                  <MathText>{r.node.title}</MathText>
                 </Link>
-                {r.node.area && <span className="muted small"> · {r.node.area}</span>}
+                {r.node.area && <span className="muted small"> · <MathText>{r.node.area}</MathText></span>}
                 {r.justMastered && <span className="mastered-badge">mastered</span>}
                 <span className="muted small result-mastery icon-label">
                   {r.elapsedSec !== undefined && (
@@ -604,9 +605,9 @@ export default function StudyQueue({
             <div>
               <span className="muted small">Practicing</span>{" "}
               <Link href={`/node/${encodeURIComponent(problem.node.id)}`}>
-                <strong>{problem.node.title}</strong>
+                <strong><MathText>{problem.node.title}</MathText></strong>
               </Link>
-              {problem.node.area && <span className="muted small"> · {problem.node.area}</span>}
+              {problem.node.area && <span className="muted small"> · <MathText>{problem.node.area}</MathText></span>}
               {currentNode?.reason && (
                 <span className={`reason-tag reason-${currentNode.reason.replace(/\s+/g, "-")}`} style={{ marginLeft: 8 }}>
                   {currentNode.reason}

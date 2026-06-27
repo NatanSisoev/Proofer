@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowUp, ArrowDown } from "./Icons";
+import MathText from "./MathText";
+import { ArrowUp, ArrowDown, Search } from "./Icons";
 
 type Hit = {
   id: string;
@@ -81,7 +82,7 @@ export default function GlobalSearch() {
     <div className="global-search-overlay" onClick={close}>
       <div className="global-search-panel" onClick={(e) => e.stopPropagation()}>
         <div className="global-search-header">
-          <span className="global-search-icon">⌕</span>
+          <span className="global-search-icon icon-label"><Search size={16} /></span>
           <input
             ref={inputRef}
             value={q}
@@ -101,16 +102,15 @@ export default function GlobalSearch() {
                 key={h.id}
                 href={`/node/${encodeURIComponent(h.id)}`}
                 onClick={close}
-                className="global-search-hit"
-                style={{ background: i === cursor ? "var(--accent-soft)" : "transparent" }}
+                className={i === cursor ? "global-search-hit active" : "global-search-hit"}
               >
                 <div className="global-search-hit-inner">
                   {h.type && <span className={`type-badge t-${h.type}`}>{h.type}</span>}
                   <div className="global-search-hit-text">
-                    <div className="global-search-hit-title">{h.title}</div>
+                    <div className="global-search-hit-title"><MathText>{h.title}</MathText></div>
                     {h.overview && (
                       <div className="global-search-hit-overview muted small">
-                        {h.overview.slice(0, 80)}
+                        <MathText>{h.overview.slice(0, 80)}</MathText>
                       </div>
                     )}
                   </div>

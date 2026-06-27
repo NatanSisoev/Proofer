@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Moon } from "./Icons";
 
 export default function SnoozeButton({ nodeId }: { nodeId: string }) {
   const [snoozed, setSnoozed] = useState(false);
@@ -29,9 +30,9 @@ export default function SnoozeButton({ nodeId }: { nodeId: string }) {
       onClick={snooze}
       disabled={loading}
       title="Snooze 2 days"
-      className="btn-snooze"
+      className="btn-snooze icon-label"
     >
-      {loading ? "…" : "zz"}
+      {loading ? "…" : <Moon size={12} />}
     </button>
   );
 }

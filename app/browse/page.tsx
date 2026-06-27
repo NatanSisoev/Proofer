@@ -4,6 +4,7 @@ import type { BrowseNode } from "@/lib/queries";
 import BrowseFilters from "@/app/components/BrowseFilters";
 import { ArrowLeft, ArrowRight, Search } from "@/app/components/Icons";
 import EmptyState from "@/app/components/EmptyState";
+import MathText from "@/app/components/MathText";
 
 // Mastery data is user-specific but 30s stale is perfectly acceptable for a
 // single-user local app. ISR avoids a full DB round-trip on every /browse nav.
@@ -45,7 +46,7 @@ export default async function BrowsePage({
         {/* Area header: mastery summary + actions */}
         <div className="area-header">
           <div>
-            <h1 style={{ marginBottom: 6 }}>{area}</h1>
+            <h1 style={{ marginBottom: 6 }}><MathText>{area}</MathText></h1>
             <div className="mastery-summary">
               <div className="mastery-bar-row">
                 <div className="bar" style={{ width: 100 }}>
@@ -126,7 +127,7 @@ function NodeRow({ node }: { node: BrowseNode }) {
           <span className={`type-badge t-${node.type}`}>{node.type}</span>
         )}
         <Link href={`/node/${encodeURIComponent(node.id)}`} className="browse-node-link">
-          {node.title}
+          <MathText>{node.title}</MathText>
         </Link>
       </div>
       <div className="browse-row-right">

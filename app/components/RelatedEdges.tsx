@@ -3,6 +3,7 @@
 import { useState, useCallback } from "react";
 import Link from "next/link";
 import type { RelatedEdge } from "@/lib/queries";
+import MathText from "./MathText";
 import { Check, ArrowRight, ArrowLeftRight } from "./Icons";
 import ErrorBanner from "./ErrorBanner";
 
@@ -176,12 +177,12 @@ function EdgeRow({
       {/* Concept pair */}
       <div className="edge-pair">
         <Link href={`/node/${encodeURIComponent(edge.src_id)}`} className="concept-link text-link">
-          {edge.src_title}
+          <MathText>{edge.src_title}</MathText>
         </Link>
         {edge.src_type && <span className={`type-badge t-${edge.src_type}`}>{edge.src_type}</span>}
         <span className="muted icon-label" style={{ fontSize: 12 }}><ArrowLeftRight size={12} /> related</span>
         <Link href={`/node/${encodeURIComponent(edge.tgt_id)}`} className="concept-link text-link">
-          {edge.tgt_title}
+          <MathText>{edge.tgt_title}</MathText>
         </Link>
         {edge.tgt_type && <span className={`type-badge t-${edge.tgt_type}`}>{edge.tgt_type}</span>}
         {edge.src_area && edge.tgt_area && edge.src_area !== edge.tgt_area && (
@@ -194,7 +195,7 @@ function EdgeRow({
 
       {/* Context snippet */}
       {edge.context && (
-        <p className="muted small italic-note">"{edge.context}"</p>
+        <p className="muted small italic-note"><MathText>{`“${edge.context}”`}</MathText></p>
       )}
 
       {/* AI suggestion */}

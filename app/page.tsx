@@ -117,11 +117,11 @@ export default function Home() {
                 href={`/node/${encodeURIComponent(spotlight.id)}`}
                 className="spotlight-title"
               >
-                {spotlight.title}
+                <MathText>{spotlight.title}</MathText>
               </Link>
               {spotlight.overview && (
                 <p className="muted spotlight-overview">
-                  {spotlight.overview.length > 200 ? spotlight.overview.slice(0, 200) + "…" : spotlight.overview}
+                  <MathText>{spotlight.overview.length > 200 ? spotlight.overview.slice(0, 200) + "…" : spotlight.overview}</MathText>
                 </p>
               )}
             </div>
@@ -165,7 +165,7 @@ export default function Home() {
             <div className="frontier-item" key={n.id}>
               <div style={{ minWidth: 0 }}>
                 {n.type && <span className={`type-badge t-${n.type}`} style={{ marginRight: 8 }}>{n.type}</span>}
-                <Link href={`/node/${encodeURIComponent(n.id)}`}>{n.title}</Link>
+                <Link href={`/node/${encodeURIComponent(n.id)}`}><MathText>{n.title}</MathText></Link>
                 {n.area && <span className="muted small"> · {n.area}</span>}
               </div>
               <div className="due-actions">
@@ -196,9 +196,9 @@ export default function Home() {
             <div style={{ display: "flex", gap: 8, alignItems: "center", flexShrink: 0 }}>
               <Link
                 href={`/node/${encodeURIComponent(goalId)}`}
-                className="pill pill-accent icon-label"
+                className="cta cta-sm icon-label"
               >
-                View <ArrowRight size={10} />
+                View <ArrowRight size={12} />
               </Link>
               <GoalButton nodeId={goalId} isCurrentGoal={true} />
             </div>
@@ -208,7 +208,7 @@ export default function Home() {
               <span className={`type-badge t-${goalNode.type}`}>{goalNode.type}</span>
             )}
             <Link href={`/node/${encodeURIComponent(goalId)}`} className="concept-link" style={{ fontWeight: 600 }}>
-              {goalNode.title}
+              <MathText>{goalNode.title}</MathText>
             </Link>
             {goalNode.area && <span className="muted small">{goalNode.area}</span>}
           </div>
@@ -240,7 +240,7 @@ export default function Home() {
             <div className="frontier-item" key={n.id}>
               <div style={{ minWidth: 0 }}>
                 {n.type && <span className={`type-badge t-${n.type}`} style={{ marginRight: 8 }}>{n.type}</span>}
-                <Link href={`/node/${encodeURIComponent(n.id)}`}>{n.title}</Link>
+                <Link href={`/node/${encodeURIComponent(n.id)}`}><MathText>{n.title}</MathText></Link>
                 {n.area && <span className="muted small"> · {n.area}</span>}
               </div>
               <div className="item-actions">
@@ -276,7 +276,7 @@ export default function Home() {
                           : "var(--red)",
                       }}
                     />
-                    {n.title}
+                    <MathText>{n.title}</MathText>
                   </Link>
                 ))}
               </div>
@@ -299,7 +299,7 @@ export default function Home() {
                 <span className={`type-badge t-${n.type || "ghost"}`} style={{ marginRight: 8 }}>
                   {n.type || "?"}
                 </span>
-                <Link href={`/node/${encodeURIComponent(n.id)}`}>{n.title}</Link>
+                <Link href={`/node/${encodeURIComponent(n.id)}`}><MathText>{n.title}</MathText></Link>
                 {n.area && <span className="meta"> · {n.area}</span>}
               </div>
               <div className="item-actions">
@@ -325,7 +325,7 @@ export default function Home() {
                 <div className="frontier-item" key={n.id}>
                   <div>
                     {n.type && <span className={`type-badge t-${n.type}`} style={{ marginRight: 6 }}>{n.type}</span>}
-                    <Link href={`/node/${encodeURIComponent(n.id)}`} className="text-link">{n.title}</Link>
+                    <Link href={`/node/${encodeURIComponent(n.id)}`} className="text-link"><MathText>{n.title}</MathText></Link>
                   </div>
                   <div className="item-actions">
                     <div className="bar" style={{ width: 50 }}>

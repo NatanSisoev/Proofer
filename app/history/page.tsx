@@ -81,7 +81,7 @@ export default async function HistoryPage({
             <Link
               key={v || "all"}
               href={filterLink("verdict", v)}
-              className={verdict === v ? "btn-primary btn-xs" : "btn-ghost btn-xs"}
+              className={`filter-btn${verdict === v ? " active" : ""}`}
               style={{ color: !v ? undefined : VERDICT[v as Verdict]?.color }}
             >
               {v ? VERDICT[v as Verdict]?.short : "all"}
@@ -95,7 +95,7 @@ export default async function HistoryPage({
             <span className="muted small" style={{ fontSize: 11 }}>kind:</span>
             <Link
               href={filterLink("kind", "")}
-              className={!kind ? "btn-primary btn-xs" : "btn-ghost btn-xs"}
+              className={`filter-btn${!kind ? " active" : ""}`}
             >
               all
             </Link>
@@ -103,7 +103,7 @@ export default async function HistoryPage({
               <Link
                 key={k}
                 href={filterLink("kind", k)}
-                className={kind === k ? "btn-primary btn-xs" : "btn-ghost btn-xs"}
+                className={`filter-btn${kind === k ? " active" : ""}`}
               >
                 {k}
               </Link>
@@ -148,7 +148,7 @@ export default async function HistoryPage({
                   )}
                   {a.title ? (
                     <Link href={`/node/${encodeURIComponent(a.node_id)}`} className="concept-link">
-                      {a.title}
+                      <MathText>{a.title}</MathText>
                     </Link>
                   ) : (
                     <span className="muted small">{a.node_id}</span>

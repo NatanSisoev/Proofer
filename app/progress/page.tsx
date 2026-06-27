@@ -6,6 +6,7 @@ import { getDailyGoal } from "@/lib/settings";
 import { VERDICT, type Verdict } from "@/lib/verdict";
 import { VerdictIcon, ArrowRight, Download, Sparkles } from "@/app/components/Icons";
 import EmptyState from "@/app/components/EmptyState";
+import MathText from "@/app/components/MathText";
 
 export const dynamic = "force-dynamic";
 
@@ -202,11 +203,11 @@ export default function ProgressPage() {
                       href={`/node/${encodeURIComponent(a.node_id)}`}
                       className="attempt-link"
                     >
-                      {(a as any).title || a.node_id}
+                      <MathText>{(a as any).title || a.node_id}</MathText>
                     </Link>
                     {a.gap && a.gap !== "none" && a.gap !== "(gave up — showed answer)" && (
                       <p className="muted small attempt-gap">
-                        {a.gap}
+                        <MathText>{a.gap}</MathText>
                       </p>
                     )}
                     {a.gap === "(gave up — showed answer)" && (
@@ -264,7 +265,7 @@ export default function ProgressPage() {
                       {calib.overconfident.map((c) => (
                         <div key={c.node_id} className="area-row">
                           <Link href={`/node/${encodeURIComponent(c.node_id)}`} className="area-name">
-                            {c.title}
+                            <MathText>{c.title}</MathText>
                           </Link>
                           <span className="pill pill-red pill-xs" title="confidence minus actual performance">
                             +{Math.round(c.overconf * 100)}pp
@@ -348,11 +349,11 @@ export default function ProgressPage() {
                         <div className="weak-prereq-name">
                           {w.exists_ === 1 ? (
                             <Link href={`/node/${encodeURIComponent(w.prereq)}`} className="weak-prereq-title">
-                              {w.prereq}
+                              <MathText>{w.prereq}</MathText>
                             </Link>
                           ) : (
                             <span className="weak-prereq-title muted" title="No note yet — a gap in your graph">
-                              {w.prereq} <span className="pill" style={{ fontSize: 9 }}>gap</span>
+                              <MathText>{w.prereq}</MathText> <span className="pill pill-xs">gap</span>
                             </span>
                           )}
                           <span className="pill pill-red pill-xs">
@@ -370,7 +371,7 @@ export default function ProgressPage() {
                         {concepts.slice(0, 3).map((c, i) => (
                           <span key={c}>
                             {i > 0 && ", "}
-                            <Link href={`/node/${encodeURIComponent(c)}`}>{c}</Link>
+                            <Link href={`/node/${encodeURIComponent(c)}`}><MathText>{c}</MathText></Link>
                           </span>
                         ))}
                         {concepts.length > 3 && ` +${concepts.length - 3} more`}
@@ -438,7 +439,7 @@ export default function ProgressPage() {
                 <div>
                   {n.type && <span className={`type-badge t-${n.type}`} style={{ marginRight: 6 }}>{n.type}</span>}
                   <Link href={`/node/${encodeURIComponent(n.id)}`} className="preview-link">
-                    {n.title}
+                    <MathText>{n.title}</MathText>
                   </Link>
                 </div>
                 <div className="weak-spot-right">

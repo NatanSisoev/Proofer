@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import Spinner from "./Spinner";
+import MathText from "./MathText";
 import { Scale, X, ArrowRight } from "./Icons";
 import ErrorBanner from "./ErrorBanner";
 
@@ -75,7 +76,7 @@ export default function CompareWith({ nodeId, nodeTitle }: { nodeId: string; nod
     <div className="inset-panel">
       <div className="panel-header">
         <span className="panel-label icon-label">
-          <Scale size={13} /> Compare {nodeTitle} with…
+          <Scale size={13} /> Compare <MathText>{nodeTitle}</MathText> with…
         </span>
         <button
           className="btn-ghost close-btn"
@@ -108,7 +109,7 @@ export default function CompareWith({ nodeId, nodeTitle }: { nodeId: string; nod
                     <span className={`type-badge t-${r.type}`} style={{ flexShrink: 0 }}>{r.type}</span>
                   )}
                   <span className="item-title">
-                    {r.title}
+                    <MathText>{r.title}</MathText>
                   </span>
                   {r.area && <span className="muted small">{r.area}</span>}
                 </button>
@@ -123,10 +124,10 @@ export default function CompareWith({ nodeId, nodeTitle }: { nodeId: string; nod
         <div style={{ marginBottom: 10 }}>
           <div className="compare-header">
             <span className="muted small">Comparing</span>
-            <strong>{nodeTitle}</strong>
+            <strong><MathText>{nodeTitle}</MathText></strong>
             <span className="muted small">vs</span>
             <Link href={`/node/${encodeURIComponent(selected.id)}`} style={{ fontWeight: 600 }}>
-              {selected.title}
+              <MathText>{selected.title}</MathText>
             </Link>
             <button
               className="btn-ghost close-btn"

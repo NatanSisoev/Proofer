@@ -60,7 +60,7 @@ function RelList({ rows, dir }: { rows: EdgeRow[]; dir: "out" | "in" }) {
         return (
           <li key={i}>
             <span className={`edge-type ${e.type}`}>{label}</span>
-            <Link href={`/node/${encodeURIComponent(other)}`}>{other}</Link>
+            <Link href={`/node/${encodeURIComponent(other)}`}><MathText>{other}</MathText></Link>
             {e.context && <MathText className="edge-ctx">{"— " + e.context.replace(/\*\*/g, "")}</MathText>}
           </li>
         );
@@ -117,7 +117,7 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
           <div className="node-head">
             <div>
               <span className="type-badge t-ghost">gap</span>
-              <h1>{node.title}</h1>
+              <h1><MathText>{node.title}</MathText></h1>
             </div>
             <GhostCreate nodeId={id} nodeTitle={node.title} nodeArea={node.area} />
           </div>
@@ -149,7 +149,7 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
                   <span className="muted small">{attempts} attempt{attempts !== 1 ? "s" : ""}</span>
                 )}
               </div>
-              <h1>{node.title}</h1>
+              <h1><MathText>{node.title}</MathText></h1>
               {node.overview && (
                 <MathText className="muted node-overview">
                   {node.overview}
@@ -196,10 +196,10 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
                     <span key={b.prereq} className="blamed-prereq-chip">
                       {b.exists_ ? (
                         <Link href={`/node/${encodeURIComponent(b.prereq)}`} className="blamed-prereq-link">
-                          {b.prereq}
+                          <MathText>{b.prereq}</MathText>
                         </Link>
                       ) : (
-                        <span className="muted">{b.prereq}</span>
+                        <span className="muted"><MathText>{b.prereq}</MathText></span>
                       )}
                       {b.blame_count > 1 && (
                         <span className="blame-count">×{b.blame_count}</span>
@@ -258,7 +258,7 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
                     {ready.missing.slice(0, 8).map((m, i) => (
                       <span key={m.id}>
                         {i > 0 && ", "}
-                        <Link href={`/node/${encodeURIComponent(m.id)}`}>{m.title}</Link>
+                        <Link href={`/node/${encodeURIComponent(m.id)}`}><MathText>{m.title}</MathText></Link>
                       </span>
                     ))}
                     {ready.missing.length > 8 && ` and ${ready.missing.length - 8} more`}
@@ -356,7 +356,7 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
                       <div>
                         {s.type && <span className={`type-badge t-${s.type}`} style={{ marginRight: 6 }}>{s.type}</span>}
                         <Link href={`/node/${encodeURIComponent(s.id)}`} className="preview-link">
-                          {s.title}
+                          <MathText>{s.title}</MathText>
                         </Link>
                       </div>
                       <div className="preview-mastery">

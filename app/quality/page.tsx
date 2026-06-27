@@ -4,6 +4,7 @@ import { noteQuality, linkSuggestions, dependencyCycles, relatedEdgesWithNodes, 
 import QualityFilters from "@/app/components/QualityFilters";
 import LinkSuggestions from "@/app/components/LinkSuggestions";
 import RelatedEdges from "@/app/components/RelatedEdges";
+import MathText from "@/app/components/MathText";
 import { hasKey } from "@/lib/llm";
 import { Check, ArrowRight, ArrowLeftRight } from "@/app/components/Icons";
 
@@ -152,7 +153,7 @@ export default async function QualityPage({
             <h2>Issue hotspots by area</h2>
             {topAreas.map(([area, count]) => (
               <div key={area} className="hotspot-row">
-                <Link href={`/browse?area=${encodeURIComponent(area)}`} className="text-link" style={{ fontSize: 14 }}>{area}</Link>
+                <Link href={`/browse?area=${encodeURIComponent(area)}`} className="text-link hotspot-area"><MathText>{area}</MathText></Link>
                 <span className="pill pill-amber">{count} issues</span>
               </div>
             ))}
@@ -205,14 +206,14 @@ export default async function QualityPage({
                     {c.nodes.map((n, j) => (
                       <span key={j} className="cycle-node-pair">
                         {j > 0 && <span className="muted" style={{ display: "inline-flex" }}>{c.mutual ? <ArrowLeftRight size={12} /> : <ArrowRight size={12} />}</span>}
-                        <Link href={`/node/${encodeURIComponent(n)}`}>{n}</Link>
+                        <Link href={`/node/${encodeURIComponent(n)}`}><MathText>{n}</MathText></Link>
                       </span>
                     ))}
                     {/* close the loop for cycles longer than a mutual pair */}
                     {!c.mutual && (
                       <span className="cycle-node-pair">
                         <span className="muted cycle-arrow" style={{ display: "inline-flex" }}><ArrowRight size={12} /></span>
-                        <Link href={`/node/${encodeURIComponent(c.nodes[0])}`} className="muted">{c.nodes[0]}</Link>
+                        <Link href={`/node/${encodeURIComponent(c.nodes[0])}`} className="muted"><MathText>{c.nodes[0]}</MathText></Link>
                       </span>
                     )}
                   </span>

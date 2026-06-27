@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import cytoscape from "cytoscape";
+import MathText from "./MathText";
 
 type GNode = {
   id: string; title: string; type: string | null; area: string | null;
@@ -328,7 +329,7 @@ export default function GlobalGraph({ initialArea }: { initialArea?: string }) {
       {/* Tooltip */}
       {tooltip && (
         <div className="graph-tooltip" style={{ left: tooltip.x, top: tooltip.y }}>
-          <strong>{tooltip.title}</strong>
+          <strong><MathText>{tooltip.title}</MathText></strong>
           {tooltip.type && <span className="muted"> · {tooltip.type}</span>}
           <span className="tooltip-mastery" style={{ color: tooltip.mastery >= 0.8 ? "var(--green)" : tooltip.mastery > 0 ? "var(--amber)" : "var(--muted)" }}>
             {Math.round(tooltip.mastery * 100)}% mastery
