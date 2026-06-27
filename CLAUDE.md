@@ -34,33 +34,25 @@ files, but preserves `mastery`, `attempts`, `bookmarks`, `node_notes`, and `sett
 
 ## Git workflow
 
-`main` is a public GitHub repo (`NatanSisoev/Proofer`) and must always be in a working
-state: `npx tsc --noEmit` passes and the app actually runs before anything lands there.
-Work happens on a branch, not directly on `main`, except for genuinely trivial one-line
-fixes (a typo, a single CSS value).
+**Work directly on `main` and commit there.** This is a solo project; the owner asked to stop
+the branch-per-change / PR overhead. Do NOT create feature branches or open PRs for routine
+work — make the change, verify it, and commit straight to `main`. (`origin/main` is a public
+GitHub repo, `NatanSisoev/Proofer`.)
 
-- **One branch per logical change**, named `<type>/<kebab-summary>` — e.g.
-  `feat/spaced-repetition-half-life`, `fix/search-keyboard-nav`, `design/home-stat-row`,
-  `refactor/llm-provider-config`. A branch is one coherent idea end-to-end; don't fold an
-  unrelated fix into a feature branch just because you noticed it along the way.
-- **Commit messages are `<type>: <imperative summary>`**, matching the established types in
-  `git log`: `feat`, `fix`, `style` (pure CSS/inline-style extraction, no behavior change),
-  `design` (visual/UX rework), `refactor`, `perf`, `chore`, `docs`. Add a body only when the
-  *why* isn't obvious from the diff — most commits here don't need one.
-- **Squash fixup/WIP commits before merging.** `main`'s history should read as one commit
-  per shipped change, not one per save — `git commit --amend` or `git rebase -i` while still
-  on the branch, never after it's merged.
-- **Bring a branch back via `gh pr create`, merge with `gh pr merge --squash --delete-branch`.**
-  Even solo, opening the PR is a real checkpoint — re-read the diff before merging, don't
-  just rubber-stamp it. Squash merges keep `main` linear; this repo has no use for merge-commit
-  noise or long-lived parallel branches.
-- Never force-push `main`. Never skip the typecheck to land a branch faster.
-- **Never end a turn with a dirty working tree.** If a response actually changed code (not
-  just exploration/reading), commit it before finishing — on the change's branch per the
-  rule above, or directly if it's one of the trivial one-liner exceptions. "I'll commit it
-  later" is how this repo ended up with files committed mid-write in the first place
-  (`04f2cb0` was a cleanup for exactly that). `git status` clean is the exit condition for
-  any turn that touched files, not an optional nicety.
+- `main` must always stay in a working state: `npx tsc --noEmit` passes and the app actually
+  runs before each commit. Never skip the typecheck to land a change faster.
+- **Commit each logical change as its own commit** with message `<type>: <imperative summary>`,
+  matching the established types in `git log`: `feat`, `fix`, `style` (pure CSS/inline-style
+  extraction, no behavior change), `design` (visual/UX rework), `refactor`, `perf`, `chore`,
+  `docs`. Add a body only when the *why* isn't obvious from the diff. If a turn produced several
+  unrelated changes, make several commits rather than one mixed one.
+- **Push after committing** (`git push`) so `origin/main` stays current — no work should sit
+  only locally.
+- Never force-push `main`. Never rewrite already-pushed history.
+- **Never end a turn with a dirty working tree.** If a response actually changed code (not just
+  exploration/reading), commit it to `main` before finishing — "I'll commit it later" is how this
+  repo ended up with files committed mid-write (`04f2cb0` was a cleanup for exactly that).
+  `git status` clean is the exit condition for any turn that touched files, not an optional nicety.
 
 ## Architecture
 
