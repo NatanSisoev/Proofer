@@ -5,6 +5,7 @@ import Link from "next/link";
 import type { LinkSuggestion } from "@/lib/queries";
 import { Check, X } from "./Icons";
 import EmptyState from "./EmptyState";
+import MathText from "./MathText";
 
 export default function LinkSuggestions({ initial }: { initial: LinkSuggestion[] }) {
   const [suggestions, setSuggestions] = useState(initial);
@@ -63,17 +64,17 @@ export default function LinkSuggestions({ initial }: { initial: LinkSuggestion[]
                 <div className="flex-fill">
                   <div className="link-suggestion-desc">
                     <Link href={`/node/${encodeURIComponent(s.src_id)}`} style={{ fontWeight: 600 }}>
-                      {s.src_title}
+                      <MathText>{s.src_title}</MathText>
                     </Link>
                     {s.src_area && <span className="muted small"> · {s.src_area}</span>}
                     <span className="muted" style={{ margin: "0 6px" }}>mentions</span>
                     <Link href={`/node/${encodeURIComponent(s.tgt_id)}`} className="link-suggestion-tgt">
-                      {s.tgt_title}
+                      <MathText>{s.tgt_title}</MathText>
                     </Link>
                     {s.tgt_area && <span className="muted small"> · {s.tgt_area}</span>}
                   </div>
                   <blockquote className="quote-snippet">
-                    {s.snippet}
+                    <MathText>{s.snippet}</MathText>
                   </blockquote>
                 </div>
                 <div className="item-actions">

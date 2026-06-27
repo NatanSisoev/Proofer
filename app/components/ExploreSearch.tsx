@@ -26,18 +26,10 @@ export default function ExploreSearch({ defaultValue }: { defaultValue?: string 
   return (
     <input
       type="search"
+      className="search-box"
       placeholder="Search concepts..."
       defaultValue={defaultValue || ""}
       onChange={handleInput}
-      style={{
-        width: "100%",
-        padding: "10px 12px",
-        border: "1px solid var(--border)",
-        borderRadius: "6px",
-        fontSize: "14px",
-        background: "var(--panel)",
-        color: "var(--text)",
-      }}
     />
   );
 }

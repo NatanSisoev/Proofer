@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Check } from "./Icons";
 
 export default function GoalButton({
   nodeId,
@@ -33,10 +34,10 @@ export default function GoalButton({
       onClick={toggle}
       disabled={busy}
       title={active ? "Clear learning goal" : "Set as learning goal — shows the path to this concept on your home page"}
-      className={`btn-ghost btn-sm${active ? " goal-btn-active" : ""}`}
+      className={`btn-ghost btn-sm icon-label${active ? " goal-btn-active" : ""}`}
       style={{ whiteSpace: "nowrap" }}
     >
-      {active ? "Goal ✓" : "Set as goal"}
+      {active ? <><Check size={13} /> Goal</> : "Set as goal"}
     </button>
   );
 }

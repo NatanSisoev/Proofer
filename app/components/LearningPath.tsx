@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { learningPath } from "@/lib/queries";
+import MathText from "./MathText";
 import { ArrowRight } from "./Icons";
 
 export default function LearningPath({ nodeId }: { nodeId: string }) {
@@ -30,7 +31,7 @@ export default function LearningPath({ nodeId }: { nodeId: string }) {
             <span className="path-num muted small">{i + 1}</span>
             {n.type && <span className={`type-badge t-${n.type}`}>{n.type}</span>}
             <Link href={`/node/${encodeURIComponent(n.id)}`} className="path-link">
-              {n.title}
+              <MathText>{n.title}</MathText>
             </Link>
             <div className="bar" style={{ width: 56 }}>
               <span style={{ width: `${Math.round((n as any).mastery_p * 100)}%` }} />

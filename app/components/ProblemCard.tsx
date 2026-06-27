@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Markdown from "./Markdown";
+import MathText from "./MathText";
 import AnswerBox from "./AnswerBox";
 import VoiceInput from "./VoiceInput";
 import { VERDICT } from "@/lib/verdict";
@@ -130,9 +131,9 @@ export function ProblemPanel({
               <div className="reminder-header">
                 {problem.node.type && <span className={`type-badge t-${problem.node.type}`}>{problem.node.type}</span>}
                 <Link href={`/node/${encodeURIComponent(problem.node.id)}`} target={reminderLinkTarget} className="concept-link">
-                  {problem.node.title}
+                  <MathText>{problem.node.title}</MathText>
                 </Link>
-                {problem.node.area && <span className="muted small">{problem.node.area}</span>}
+                {problem.node.area && <span className="muted small"><MathText>{problem.node.area}</MathText></span>}
               </div>
               <p className="muted small italic-note">
                 {reminderCaption}
@@ -217,7 +218,7 @@ export function GradeFeedback({
       {grade.understood?.length > 0 && (
         <div className="fb-block">
           <h4 className="green">What you got</h4>
-          <ul>{grade.understood.map((u, i) => <li key={i}>{u}</li>)}</ul>
+          <ul>{grade.understood.map((u, i) => <li key={i}><MathText>{u}</MathText></li>)}</ul>
         </div>
       )}
 
@@ -228,7 +229,7 @@ export function GradeFeedback({
           <p className="small" style={{ marginTop: 8 }}>
             This traces back to{" "}
             <Link href={`/learn?node=${encodeURIComponent(grade.blamed_prerequisite)}`}>
-              <strong>{grade.blamed_prerequisite}</strong>
+              <strong><MathText>{grade.blamed_prerequisite}</MathText></strong>
             </Link>{" "}
             — practice that first.
           </p>
@@ -277,7 +278,7 @@ export function GradeFeedback({
             {grade.unlocked.map((n) => (
               <Link key={n.id} href={`/node/${encodeURIComponent(n.id)}`} target={unlockTarget} className="mastered-node-chip">
                 {n.type && <span className="label-xs" style={{ opacity: 0.7 }}>{n.type}</span>}
-                {n.title}
+                <MathText>{n.title}</MathText>
               </Link>
             ))}
           </div>

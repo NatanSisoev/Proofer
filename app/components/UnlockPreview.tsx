@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
+import MathText from "./MathText";
 
 type UnlockNode = { id: string; title: string; area: string | null; type: string | null };
 
@@ -65,7 +66,7 @@ export default function UnlockPreview({ nodeId, unlockCount }: { nodeId: string;
                 <li key={n.id} className="unlock-popover-item">
                   {n.type && <span className={`type-badge t-${n.type}`}>{n.type}</span>}
                   <Link href={`/node/${encodeURIComponent(n.id)}`} onClick={() => setOpen(false)}>
-                    {n.title}
+                    <MathText>{n.title}</MathText>
                   </Link>
                   {n.area && <span className="muted small"> · {n.area}</span>}
                 </li>

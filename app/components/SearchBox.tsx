@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import MathText from "./MathText";
 import { ArrowUp, ArrowDown } from "./Icons";
 
 type Hit = {
@@ -66,7 +67,7 @@ export default function SearchBox() {
             >
               <div className="search-hit-left">
                 <span className={`type-badge t-${h.type || "ghost"}`}>{h.type || "?"}</span>
-                <span className="truncate">{h.title}</span>
+                <span className="truncate"><MathText>{h.title}</MathText></span>
                 {h.area && <span className="muted small" style={{ flexShrink: 0 }}>{h.area}</span>}
               </div>
               <div className="search-hit-right">

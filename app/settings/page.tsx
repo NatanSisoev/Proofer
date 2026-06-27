@@ -242,18 +242,12 @@ export default function SettingsPage() {
             <h2>LLM provider</h2>
 
             {/* Active provider/model badge */}
-            <div
-              className="provider-banner"
-              style={{ background: provider && !provider.hasKey ? "var(--amber-soft)" : "var(--green-soft)" }}
-            >
-              <span
-                className="verdict-dot-sm"
-                style={{ background: provider && !provider.hasKey ? "var(--amber)" : "var(--green)" }}
-              />
+            <div className={`provider-banner ${provider && !provider.hasKey ? "warn" : "ok"}`}>
+              <span className="verdict-dot-sm" />
               {!provider ? (
                 <span className="muted small">Checking…</span>
               ) : provider.hasKey ? (
-                <span style={{ fontSize: 13.5 }}>
+                <span className="provider-banner-text">
                   Currently answering with <strong>{provider.label}</strong>
                   {provider.model && (
                     <code className="model-code">{provider.model}</code>
