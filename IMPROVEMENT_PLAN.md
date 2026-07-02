@@ -106,7 +106,7 @@ different URLs for the same thing depending on entry point.
    one `anthropicText(...)` helper; each feature becomes a prompt + cache-key
    pair. Also delete the **dead Anthropic JSON schemas** (`A_PROBLEM_SCHEMA`,
    `aGradeSchema`, L483–510) — defined, never referenced.
-2. **Stream the long-form calls.** The one surviving piece of the old "P0 #4":
+2. ✅ **Stream the long-form calls.** The one surviving piece of the old "P0 #4":
    explain / re-explain / compare block the UI until the whole response lands
    (~5–15 s perceived freeze). Switch those routes to
    `streamGenerateContent` / Anthropic streaming and render incrementally in
