@@ -14,6 +14,16 @@ test("bktUpdate: zero evidence lowers a high prior", () => {
   assert.ok(updated < prior, `expected ${updated} < ${prior}`);
 });
 
+test("bktUpdate: a completely wrong answer must not raise a never-practiced prior", () => {
+  // Regression: the learning-transition bonus (P_TRANSIT) used to apply
+  // unconditionally, so a garbage/off-topic answer (evidence=0) on a
+  // never-practiced concept (prior floored to P_INIT) still added a flat
+  // +12pp — mastery jumped from 0% to ~14% on a nonsense answer.
+  const updated = bktUpdate(P_INIT, 0.0);
+  assert.ok(updated < P_INIT, `expected ${updated} < ${P_INIT} (evidence=0 must not increase mastery)`);
+  assert.ok(updated < 0.05, `expected ${updated} well under 5%, got ${updated}`);
+});
+
 test("bktUpdate: output always stays within (0, 1)", () => {
   for (const prior of [0.01, 0.15, 0.5, 0.9, 0.99]) {
     for (const evidence of [0, 0.25, 0.5, 0.75, 1]) {

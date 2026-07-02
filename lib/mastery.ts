@@ -72,8 +72,12 @@ export function bktUpdate(prior: number, evidence: number): number {
   const postCorrect = (prior * (1 - P_SLIP)) / (prior * (1 - P_SLIP) + (1 - prior) * P_GUESS);
   const postIncorrect = (prior * P_SLIP) / (prior * P_SLIP + (1 - prior) * (1 - P_GUESS));
   const posterior = evidence * postCorrect + (1 - evidence) * postIncorrect;
-  // Learning transition: practice itself teaches.
-  return posterior + (1 - posterior) * P_TRANSIT;
+  // Learning transition: practice teaches — but only in proportion to how much
+  // the answer actually demonstrated. Applying it unconditionally let a
+  // completely wrong (evidence=0) answer still add a flat +12pp, which could
+  // raise mastery on a nonsense answer. Scaling by evidence means a genuinely
+  // wrong answer teaches nothing; a fully correct one behaves exactly as before.
+  return posterior + (1 - posterior) * P_TRANSIT * evidence;
 }
 
 /** Spaced-repetition half-life multiplier for a given evidence score. */
