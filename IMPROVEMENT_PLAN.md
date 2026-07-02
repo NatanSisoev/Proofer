@@ -123,7 +123,7 @@ different URLs for the same thing depending on entry point.
    array**, so every keystroke-triggered render tears down and re-adds the
    window listener. Harmless today, but it's the kind of thing that bites when
    the handler gains state. Give it deps (or a ref-based handler).
-5. **Drop the dead `user_knows` table.** `db/schema.sql:42` admits it's
+5. ✅ **Drop the dead `user_knows` table.** `db/schema.sql:42` admits it's
    "kept for back-compat; mastery is now the source of truth" — nothing reads
    it. Remove from schema + importer preserve-list + `check-db.mjs`.
 6. **Make `check-db` runnable as documented.** `node scripts/check-db.mjs`
