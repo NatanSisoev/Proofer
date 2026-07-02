@@ -194,29 +194,35 @@ export default function StudyQueue({
     } catch {}
   }, [activeQueue, index, preferKind, resultsByIndex, done, problem, answer, grade, revealed, hint, followUp]);
 
-  // Keyboard navigation handler
-  useEffect(() => {
-    function handler(e: KeyboardEvent) {
-      if (done) return; // summary screen — let global shortcuts fire
-      const inText = e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLInputElement;
-      if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
-        e.preventDefault();
-        if (!grade && !busy && answer.trim()) submit();
-        else if (grade && followUp.trim() && !followUpBusy) submitFollowUp();
-        else if (grade) advance();
-      } else if (!inText && !e.ctrlKey && !e.metaKey && !e.altKey) {
-        if (e.key === "ArrowLeft") goBack();
-        else if (e.key === "ArrowRight" && grade) advance();
-        else if (e.key === "h") {
-          // Consume "h" entirely in-session so the global "Home" shortcut never fires.
-          e.stopImmediatePropagation();
-          if (!grade && !hint && problem?.mode !== "demo") getHint();
-        }
+  // Keyboard navigation handler. The listener itself is attached once (empty
+  // deps) — re-attaching on every render (e.g. every answer keystroke) was
+  // harmless today but wasteful. Instead, a ref always holds the latest
+  // closure so the single listener sees fresh state/handlers.
+  const keyHandlerRef = useRef<(e: KeyboardEvent) => void>(() => {});
+  keyHandlerRef.current = (e: KeyboardEvent) => {
+    if (done) return; // summary screen — let global shortcuts fire
+    const inText = e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLInputElement;
+    if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault();
+      if (!grade && !busy && answer.trim()) submit();
+      else if (grade && followUp.trim() && !followUpBusy) submitFollowUp();
+      else if (grade) advance();
+    } else if (!inText && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      if (e.key === "ArrowLeft") goBack();
+      else if (e.key === "ArrowRight" && grade) advance();
+      else if (e.key === "h") {
+        // Consume "h" entirely in-session so the global "Home" shortcut never fires.
+        e.stopImmediatePropagation();
+        if (!grade && !hint && problem?.mode !== "demo") getHint();
       }
     }
+  };
+
+  useEffect(() => {
+    function handler(e: KeyboardEvent) { keyHandlerRef.current(e); }
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  });
+  }, []);
 
   // Snapshot current card before navigating away
   function saveCardState() {
