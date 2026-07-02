@@ -919,7 +919,7 @@ export function dependencyCycles(limit = 40): DependencyCycle[] {
     let min = 0;
     for (let i = 1; i < path.length; i++) if (path[i] < path[min]) min = i;
     const rotated = path.slice(min).concat(path.slice(0, min));
-    const key = rotated.join(" ");
+    const key = rotated.join("\u0000");
     if (seen.has(key)) return;
     seen.add(key);
     cycles.push({ nodes: rotated, mutual: rotated.length === 2 });

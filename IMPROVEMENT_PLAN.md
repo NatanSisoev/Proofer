@@ -59,7 +59,7 @@ different URLs for the same thing depending on entry point.
 
 ## P1 — Correctness bugs (all small, all real)
 
-1. **NUL byte in `lib/queries.ts:903`.** The cycle-dedup key is
+1. ✅ **NUL byte in `lib/queries.ts:903`.** The cycle-dedup key is
    `rotated.join("<literal \0>")` — a raw NUL character in the source. It's valid
    TS (tsc passes) but makes the repo's most important file **binary to
    ripgrep/grep**: `Grep` on `lib/queries.ts` returns "binary file matches" and
