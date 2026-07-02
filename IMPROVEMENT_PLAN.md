@@ -154,7 +154,7 @@ different URLs for the same thing depending on entry point.
 
 Ranked by value-per-effort given VISION.md's pillars:
 
-1. **Show calibration on the session summary.** Confidence is collected on every
+1. ✅ **Show calibration on the session summary.** Confidence is collected on every
    attempt (when enabled), but the done screen (`StudyQueue` L352–507) never
    reflects it back — the loop "you said 80 %, you scored 50 %" closes only on
    `/progress`, later, if ever. Thread `predicted` into `resultsByIndex`, and on
