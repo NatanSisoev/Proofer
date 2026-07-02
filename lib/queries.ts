@@ -697,24 +697,31 @@ const DIRECT_UNMASTERED_SQ = `(
     AND COALESCE(pm.p, 0) < ${MASTERY_THRESHOLD}
 ) AS direct_unmastered_prereqs`;
 
+// Escape LIKE wildcards (%, _) and the escape char itself so a literal
+// search term like "a_n" or "100%" matches literally instead of the
+// underscore/percent acting as a single-char/any-chars wildcard.
+function escapeLike(q: string): string {
+  return q.replace(/\\/g, "\\\\").replace(/%/g, "\\%").replace(/_/g, "\\_");
+}
+
 export function searchWithMastery(q: string, limit = 25): (NodeRow & { mastery_p: number; direct_unmastered_prereqs: number })[] {
-  const safe = q.replace(/[%_]/g, "");
-  const like = `%${safe}%`;
-  const prefix = `${safe}%`;
+  const esc = escapeLike(q);
+  const like = `%${esc}%`;
+  const prefix = `${esc}%`;
   const primary = db()
     .prepare(
       `SELECT n.*, COALESCE(m.p, 0) AS mastery_p, ${DIRECT_UNMASTERED_SQ}
          FROM nodes n
          LEFT JOIN mastery m ON m.node_id = n.id
-        WHERE n.exists_ = 1 AND (n.title LIKE ? OR n.overview LIKE ?)
+        WHERE n.exists_ = 1 AND (n.title LIKE ? ESCAPE '\\' OR n.overview LIKE ? ESCAPE '\\')
         ORDER BY CASE
           WHEN lower(n.title) = lower(?) THEN 0
-          WHEN n.title LIKE ? THEN 1
+          WHEN n.title LIKE ? ESCAPE '\\' THEN 1
           ELSE 2
         END, n.title ASC
         LIMIT ?`
     )
-    .all(like, like, safe, prefix, limit) as (NodeRow & { mastery_p: number; direct_unmastered_prereqs: number })[];
+    .all(like, like, q, prefix, limit) as (NodeRow & { mastery_p: number; direct_unmastered_prereqs: number })[];
 
   // If few primary hits, supplement with content matches
   if (primary.length < 5) {
@@ -724,7 +731,7 @@ export function searchWithMastery(q: string, limit = 25): (NodeRow & { mastery_p
         `SELECT n.*, COALESCE(m.p, 0) AS mastery_p, ${DIRECT_UNMASTERED_SQ}
            FROM nodes n
            LEFT JOIN mastery m ON m.node_id = n.id
-          WHERE n.exists_ = 1 AND n.content LIKE ?
+          WHERE n.exists_ = 1 AND n.content LIKE ? ESCAPE '\\'
             AND n.id NOT IN (${[...seen].map(() => "?").join(",") || "''"})
           ORDER BY n.title ASC
           LIMIT ?`
@@ -737,15 +744,16 @@ export function searchWithMastery(q: string, limit = 25): (NodeRow & { mastery_p
 }
 
 export function search(q: string, limit = 25): NodeRow[] {
-  const like = `%${q.replace(/[%_]/g, "")}%`;
+  const esc = escapeLike(q);
+  const like = `%${esc}%`;
   return db()
     .prepare(
       `SELECT * FROM nodes
-        WHERE exists_ = 1 AND (title LIKE ? OR overview LIKE ?)
-        ORDER BY CASE WHEN title LIKE ? THEN 0 ELSE 1 END, title ASC
+        WHERE exists_ = 1 AND (title LIKE ? ESCAPE '\\' OR overview LIKE ? ESCAPE '\\')
+        ORDER BY CASE WHEN title LIKE ? ESCAPE '\\' THEN 0 ELSE 1 END, title ASC
         LIMIT ?`
     )
-    .all(like, like, `${q.replace(/[%_]/g, "")}%`, limit) as NodeRow[];
+    .all(like, like, `${esc}%`, limit) as NodeRow[];
 }
 
 export type RelatedEdge = {

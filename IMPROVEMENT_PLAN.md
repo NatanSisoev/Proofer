@@ -82,7 +82,7 @@ different URLs for the same thing depending on entry point.
    (`app/node/[slug]/page.tsx:154`). If the threshold is ever tuned, these
    silently disagree with the frontier/readiness model. One sweep to interpolate
    the constant.
-4. **Search mangles literal `%`/`_`.** `searchWithMastery`
+4. ✅ **Search mangles literal `%`/`_`.** `searchWithMastery`
    (`lib/queries.ts:670`) strips `%` and `_` from the query instead of escaping
    them (`LIKE ? ESCAPE '\'`). Searching `a_n` or anything with an underscore
    (common in math slugs) silently matches the wrong thing.
