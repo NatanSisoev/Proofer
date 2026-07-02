@@ -6,7 +6,7 @@ import { getSelectionPolicy } from "@/lib/settings";
 
 export const dynamic = "force-dynamic";
 
-type QueueNode = { id: string; title: string; type: string | null; area: string | null; mastery_p?: number; reason?: string };
+type QueueNode = { id: string; title: string; type: string | null; area: string | null; mastery_p?: number; reason?: string; reasonDetail?: string };
 
 export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl;
@@ -107,7 +107,12 @@ export async function GET(req: NextRequest) {
         const reason = c.overconf > 0 ? "blind spot"
           : c.attempts === 0 ? "ready to learn"
           : "near your edge";
-        combined.push({ id: c.id, title: c.title, type: c.type, area: c.area, reason });
+        const reasonDetail = c.overconf > 0
+          ? `You rate this ~${Math.round(c.overconf * 100)}pp above how you've actually performed.`
+          : c.attempts === 0
+          ? "Never practiced, but every prerequisite is already mastered."
+          : `Your mastery here (~${Math.round(c.p * 100)}%) is genuinely uncertain — practicing this teaches the most right now.`;
+        combined.push({ id: c.id, title: c.title, type: c.type, area: c.area, reason, reasonDetail });
       }
       rows = combined; // falls through to the shared mastery-attach + return below
     } else {

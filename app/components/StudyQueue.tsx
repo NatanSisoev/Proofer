@@ -653,7 +653,11 @@ export default function StudyQueue({
               </Link>
               {problem.node.area && <span className="muted small"> · <MathText>{problem.node.area}</MathText></span>}
               {currentNode?.reason && (
-                <span className={`reason-tag reason-${currentNode.reason.replace(/\s+/g, "-")}`} style={{ marginLeft: 8 }}>
+                <span
+                  className={`reason-tag reason-${currentNode.reason.replace(/\s+/g, "-")}`}
+                  style={{ marginLeft: 8 }}
+                  title={currentNode.reasonDetail}
+                >
                   {currentNode.reason}
                 </span>
               )}
