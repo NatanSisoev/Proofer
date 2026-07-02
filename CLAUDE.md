@@ -20,7 +20,7 @@ pnpm run build             # production build
 pnpm run start             # run a production build
 pnpm run import             # re-import the vault (default: C:\Users\natan\Mathematics\Notes)
 pnpm run import "C:\path\to\OtherVault\Notes"   # import a different vault
-node scripts/check-db.mjs   # sanity-check table row counts in data/graph.db
+pnpm run check-db           # sanity-check table row counts in data/graph.db
 npx tsc --noEmit            # typecheck — there is no separate lint or test command/framework
 ```
 
