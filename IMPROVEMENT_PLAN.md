@@ -96,7 +96,7 @@ different URLs for the same thing depending on entry point.
 
 ## P2 — Code health (pays for itself on the next feature)
 
-1. **Unify the LLM call paths.** `lib/llm.ts` has a good shared `geminiCall()`
+1. ✅ **Unify the LLM call paths.** `lib/llm.ts` has a good shared `geminiCall()`
    (header auth, structured JSON, thinking disabled) — but four functions still
    hand-roll their own `fetch`: `explainConcept` (L269), `diagnoseWeakness`
    (L372), `compareConcepts` (L572), `reExplainConcept` (L635). Each duplicates
