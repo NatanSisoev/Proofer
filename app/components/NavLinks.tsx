@@ -7,6 +7,7 @@ const LINKS = [
   { href: "/explore", label: "Explore" },
   { href: "/session", label: "Practice" },
   { href: "/progress", label: "Progress" },
+  { href: "/quality", label: "Quality" },
 ];
 
 // Routes that belong conceptually under a top-level nav item but live at

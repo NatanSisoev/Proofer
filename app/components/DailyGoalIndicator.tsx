@@ -23,8 +23,8 @@ export default function DailyGoalIndicator() {
 
   return (
     <Link
-      href="/progress"
-      title={`Today: ${today_concepts}/${daily_goal} concepts${streak_days > 0 ? ` · ${streak_days} day streak` : ""}`}
+      href="/session?mode=smart"
+      title={`Start today's session — ${today_concepts}/${daily_goal} concepts done${streak_days > 0 ? ` · ${streak_days} day streak` : ""}`}
       className="goal-pill"
       style={{ background: done ? "var(--green-soft)" : "var(--bg-soft)" }}
     >
