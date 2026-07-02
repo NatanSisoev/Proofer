@@ -23,7 +23,7 @@ import { getMasteryP } from "@/lib/mastery";
 import { hasKey } from "@/lib/llm";
 import { getLearningGoal } from "@/lib/settings";
 import { ArrowLeft, ArrowRight } from "@/app/components/Icons";
-import type { EdgeRow } from "@/lib/db";
+import { MASTERY_THRESHOLD, type EdgeRow } from "@/lib/db";
 
 // cytoscape is a heavy client-only lib; defer it to its own chunk so it
 // doesn't bloat the JS every node navigation has to download and parse.
@@ -151,7 +151,7 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
                     depth {depth}
                   </span>
                 )}
-                {mastery >= 0.8 && (
+                {mastery >= MASTERY_THRESHOLD && (
                   <span className="mastered-badge">mastered</span>
                 )}
                 {attempts > 0 && (

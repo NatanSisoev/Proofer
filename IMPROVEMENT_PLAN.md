@@ -75,7 +75,7 @@ different URLs for the same thing depending on entry point.
    midnight, and the heatmap shifts. Fix consistently: use SQLite's
    `'localtime'` modifier (`date(created_at,'localtime')`, `date('now','localtime')`)
    and local-date formatting on the JS side (both sides must agree).
-3. **`MASTERY_THRESHOLD` isn't the single source of truth it claims to be.**
+3. ✅ **`MASTERY_THRESHOLD` isn't the single source of truth it claims to be.**
    Hardcoded `0.8` appears in `browseAreas` (`lib/queries.ts:445`),
    `masteryVelocity` (`:1002`), `masteryMilestones` (`:1223`), `areaMastery`
    (`:1251`), and the node-page "mastered" badge

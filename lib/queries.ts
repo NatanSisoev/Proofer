@@ -442,7 +442,7 @@ export function browseAreas(): BrowseArea[] {
       `SELECT n.area,
               COUNT(*) AS count,
               AVG(COALESCE(m.p, 0)) AS avg_mastery,
-              SUM(CASE WHEN COALESCE(m.p, 0) >= 0.8 THEN 1 ELSE 0 END) AS mastered
+              SUM(CASE WHEN COALESCE(m.p, 0) >= ${MASTERY_THRESHOLD} THEN 1 ELSE 0 END) AS mastered
          FROM nodes n
          LEFT JOIN mastery m ON m.node_id = n.id
         WHERE n.exists_ = 1 AND n.area IS NOT NULL
@@ -1018,7 +1018,7 @@ export function masteryVelocity(): { last7: number; last30: number } {
          FROM (
            SELECT node_id, MIN(recorded_at) AS first_mastered
              FROM mastery_history
-            WHERE p >= 0.8
+            WHERE p >= ${MASTERY_THRESHOLD}
             GROUP BY node_id
          )
         WHERE first_mastered >= date('now', '-${days} days')`
@@ -1239,7 +1239,7 @@ export function masteryMilestones(): { day: string; cumulative: number }[] {
          FROM (
            SELECT node_id, MIN(recorded_at) AS recorded_at
              FROM mastery_history
-            WHERE p >= 0.8
+            WHERE p >= ${MASTERY_THRESHOLD}
             GROUP BY node_id
          )
         GROUP BY DATE(recorded_at)
@@ -1267,7 +1267,7 @@ export function areaMastery(): { area: string; total: number; mastered: number; 
       `SELECT
          n.area,
          COUNT(*) AS total,
-         COUNT(CASE WHEN COALESCE(m.p, 0) >= 0.8 THEN 1 END) AS mastered,
+         COUNT(CASE WHEN COALESCE(m.p, 0) >= ${MASTERY_THRESHOLD} THEN 1 END) AS mastered,
          AVG(COALESCE(m.p, 0)) AS avg_p,
          COUNT(CASE WHEN COALESCE(m.attempts, 0) > 0 THEN 1 END) AS practiced
        FROM nodes n
