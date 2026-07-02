@@ -309,7 +309,7 @@ export default function ProgressPage() {
                   const color = pct >= 80 ? "var(--green)" : pct >= 40 ? "var(--amber)" : "var(--muted)";
                   return (
                     <div key={a.area} className="area-row">
-                      <Link href={`/browse?area=${encodeURIComponent(a.area)}`} className="area-name">
+                      <Link href={`/explore?view=sections&area=${encodeURIComponent(a.area)}`} className="area-name">
                         {a.area}
                       </Link>
                       <div className="bar area-row-bar">

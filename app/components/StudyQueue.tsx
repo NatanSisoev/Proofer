@@ -416,7 +416,7 @@ export default function StudyQueue({
               .map(([area, count], i) => (
                 <span key={area}>
                   {i > 0 && " · "}
-                  <Link href={`/browse?area=${encodeURIComponent(area)}`}>{area}</Link>
+                  <Link href={`/explore?view=sections&area=${encodeURIComponent(area)}`}>{area}</Link>
                   {" "}<span className="summary-area-count">×{count}</span>
                 </span>
               ))}

@@ -1,6 +1,6 @@
 import nextDynamic from "next/dynamic";
 import Link from "next/link";
-import { browseAreas, nodesInArea, nodeTypes, areaMastery, searchWithMastery } from "@/lib/queries";
+import { browseAreas, nodesInArea, nodeTypes, areaMastery, searchWithMastery, allNodesWithMastery } from "@/lib/queries";
 import type { BrowseNode } from "@/lib/queries";
 import { ArrowLeft, ArrowRight, Search } from "@/app/components/Icons";
 import EmptyState from "@/app/components/EmptyState";
@@ -194,12 +194,7 @@ async function ListView({
     // Use the search function to find matching nodes
     nodes = searchWithMastery(q);
   } else {
-    // Show all nodes if no query
-    const areas = browseAreas();
-    for (const area of areas) {
-      const areaNodes = nodesInArea(area.area, { type, sort: validSort as any });
-      nodes.push(...areaNodes);
-    }
+    nodes = allNodesWithMastery({ type, sort: validSort as any });
   }
 
   // Filter by type if specified

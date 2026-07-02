@@ -342,14 +342,14 @@ export default function Home() {
           <div className="panel">
             <div className="panel-header">
               <h2>Areas</h2>
-              <Link href="/browse" className="small icon-label">Browse all <ArrowRight size={11} /></Link>
+              <Link href="/explore?view=sections" className="small icon-label">Browse all <ArrowRight size={11} /></Link>
             </div>
             {areas.map((a) => {
               const pct = Math.round(a.avg_p * 100);
               const color = pct >= 80 ? "var(--green)" : pct >= 40 ? "var(--amber)" : "var(--muted)";
               return (
                 <div className="frontier-item area-home-row" key={a.area}>
-                  <Link href={`/browse?area=${encodeURIComponent(a.area)}`} className="text-link area-home-name">
+                  <Link href={`/explore?view=sections&area=${encodeURIComponent(a.area)}`} className="text-link area-home-name">
                     {a.area}
                   </Link>
                   <div className="area-home-right">

@@ -31,7 +31,7 @@ essentially complete).
 
 ## P0 — Finish the explore merge (one coherent navigation model)
 
-### 1. `/browse` and `/graph` duplicate `/explore` wholesale
+### 1. ✅ `/browse` and `/graph` duplicate `/explore` wholesale
 `app/explore/page.tsx` `SectionsView` (L61–160) is a near-verbatim copy of
 `app/browse/page.tsx`, and its `MapView` (L162–179) copies `app/graph/page.tsx`.
 Both old routes still render, and most of the app still links to them:

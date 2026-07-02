@@ -1,135 +1,16 @@
-import Link from "next/link";
-import { browseAreas, nodesInArea, nodeTypes, areaMastery } from "@/lib/queries";
-import type { BrowseNode } from "@/lib/queries";
-import BrowseFilters from "@/app/components/BrowseFilters";
-import { ArrowLeft, ArrowRight, Search } from "@/app/components/Icons";
-import EmptyState from "@/app/components/EmptyState";
-import MathText from "@/app/components/MathText";
-import MasteryRing from "@/app/components/MasteryRing";
+import { redirect } from "next/navigation";
 
-// Mastery data is user-specific but 30s stale is perfectly acceptable for a
-// single-user local app. ISR avoids a full DB round-trip on every /browse nav.
-export const revalidate = 30;
-
-function MasteryBar({ p }: { p: number }) {
-  return <MasteryRing p={p} size={34} />;
-}
-
+// Old URL, kept working for bookmarks/browser history — /explore's
+// "sections" view replaced this page (see IMPROVEMENT_PLAN.md P0 #1).
 export default async function BrowsePage({
   searchParams,
 }: {
   searchParams: Promise<{ area?: string; type?: string; sort?: string }>;
 }) {
   const { area, type, sort } = await searchParams;
-
-  if (area) {
-    const validSort = (sort === "mastery_desc" || sort === "alpha") ? sort : "mastery_asc";
-    const nodes = nodesInArea(area, { type, sort: validSort as any });
-    const types = nodeTypes();
-    const areaStats = areaMastery().find((a) => a.area === area);
-    const masteredCount = areaStats?.mastered ?? 0;
-    const totalCount = areaStats?.total ?? nodes.length;
-    const avgMastery = areaStats?.avg_p ?? 0;
-
-    return (
-      <div className="wrap">
-        <div className="breadcrumb">
-          <Link href="/browse" className="icon-label"><ArrowLeft size={12} /> Topics</Link> · <strong>{area}</strong>
-        </div>
-
-        {/* Area header: mastery summary + actions */}
-        <div className="area-header">
-          <div>
-            <h1 style={{ marginBottom: 6 }}><MathText>{area}</MathText></h1>
-            <div className="mastery-summary">
-              <div className="mastery-bar-row">
-                <div className="bar" style={{ width: 100 }}>
-                  <span style={{ width: `${Math.round(avgMastery * 100)}%` }} />
-                </div>
-                <span className="mastery-pct">{Math.round(avgMastery * 100)}%</span>
-                <span className="muted small">avg mastery</span>
-              </div>
-              <span className="pill" style={{
-                color: masteredCount === totalCount ? "var(--green)" : "var(--muted)",
-                borderColor: masteredCount === totalCount ? "var(--green)" : undefined,
-              }}>
-                {masteredCount}/{totalCount} mastered
-              </span>
-              {areaStats?.practiced !== undefined && areaStats.practiced > 0 && (
-                <span className="muted small">{areaStats.practiced} practiced</span>
-              )}
-            </div>
-          </div>
-          <Link
-            href={`/session?mode=area&area=${encodeURIComponent(area)}`}
-            className="cta icon-label"
-            style={{ flexShrink: 0 }}
-          >
-            Practice {area} <ArrowRight size={13} />
-          </Link>
-        </div>
-
-        <BrowseFilters area={area} activeType={type} activeSort={sort || "mastery_asc"} types={types} />
-
-        <div className="node-list">
-          {nodes.map((n) => (
-            <NodeRow key={n.id} node={n} />
-          ))}
-          {nodes.length === 0 && <EmptyState icon={<Search size={18} />}>No concepts match this filter.</EmptyState>}
-        </div>
-      </div>
-    );
-  }
-
-  const areas = browseAreas();
-  return (
-    <div className="wrap">
-      <div className="page-top">
-        <div>
-          <h1>Browse by Topic</h1>
-          <p className="muted small" style={{ marginTop: 4 }}>
-            {areas.length} topics · click any to see concepts sorted by your mastery
-          </p>
-        </div>
-        <Link href="/" className="muted small icon-label"><ArrowLeft size={12} /> home</Link>
-      </div>
-
-      <div className="area-grid">
-        {areas.map((a) => (
-          <Link key={a.area} href={`/browse?area=${encodeURIComponent(a.area)}`} className="area-card">
-            <div className="area-name">{a.area}</div>
-            <div className="small muted" style={{ marginBottom: 8 }}>{a.count} concepts</div>
-            <div className="bar">
-              <span style={{ width: `${Math.round(a.avg_mastery * 100)}%` }} />
-            </div>
-            <div className="area-card-stats">
-              <span className="small muted">avg {Math.round(a.avg_mastery * 100)}%</span>
-              <span className="small muted">{a.mastered}/{a.count} mastered</span>
-            </div>
-          </Link>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function NodeRow({ node }: { node: BrowseNode }) {
-  return (
-    <div className="browse-row">
-      <div className="browse-row-left">
-        {node.type && (
-          <span className={`type-badge t-${node.type}`}>{node.type}</span>
-        )}
-        <Link href={`/node/${encodeURIComponent(node.id)}`} className="browse-node-link">
-          <MathText>{node.title}</MathText>
-        </Link>
-      </div>
-      <div className="browse-row-right">
-        <MasteryBar p={node.mastery_p} />
-        <Link href={`/learn?node=${encodeURIComponent(node.id)}`} className="pill pill-accent icon-label" style={{ flexShrink: 0 }}>
-          practice <ArrowRight size={10} />
-        </Link>
-      </div>
-    </div>
-  );
+  const params = new URLSearchParams({ view: "sections" });
+  if (area) params.set("area", area);
+  if (type) params.set("type", type);
+  if (sort) params.set("sort", sort);
+  redirect(`/explore?${params.toString()}`);
 }

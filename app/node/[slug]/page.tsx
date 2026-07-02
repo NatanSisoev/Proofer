@@ -115,9 +115,9 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
     <div className="wrap">
       <ReadingProgress />
       <div className="breadcrumb">
-        <Link href="/browse" className="icon-label"><ArrowLeft size={12} /> browse</Link>
+        <Link href="/explore?view=sections" className="icon-label"><ArrowLeft size={12} /> browse</Link>
         {node.area && (
-          <> · <Link href={`/browse?area=${encodeURIComponent(node.area)}`}>{node.area}</Link></>
+          <> · <Link href={`/explore?view=sections&area=${encodeURIComponent(node.area)}`}>{node.area}</Link></>
         )}
       </div>
 
@@ -378,7 +378,7 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
                         <MasteryRing p={s.mastery_p} size={34} />
                       </div>
                     ))}
-                    <Link href={`/browse?area=${encodeURIComponent(node.area!)}`} className="muted small browse-more icon-label">
+                    <Link href={`/explore?view=sections&area=${encodeURIComponent(node.area!)}`} className="muted small browse-more icon-label">
                       Browse all {node.area} <ArrowRight size={11} />
                     </Link>
                   </NodePanel>

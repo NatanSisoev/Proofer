@@ -46,8 +46,8 @@ export default function KeyboardShortcuts() {
         return;
       }
       if (e.key === "e") { router.push("/session"); return; }
-      if (e.key === "b") { router.push("/browse"); return; }
-      if (e.key === "g") { router.push("/graph"); return; }
+      if (e.key === "b") { router.push("/explore?view=sections"); return; }
+      if (e.key === "g") { router.push("/explore?view=map"); return; }
       if (e.key === "r") { router.push("/progress"); return; }
       if (e.key === "x") {
         fetch("/api/random").then(r => r.json()).then(d => { if (d.id) router.push(`/node/${encodeURIComponent(d.id)}`); });

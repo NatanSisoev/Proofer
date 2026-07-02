@@ -13,11 +13,11 @@ export default function BrowseFilters({ area, activeType, activeSort, types }: P
   const router = useRouter();
 
   function nav(params: Record<string, string | undefined>) {
-    const p = new URLSearchParams({ area });
+    const p = new URLSearchParams({ view: "sections", area });
     if (params.type || activeType) p.set("type", params.type ?? activeType ?? "");
     if (params.sort || activeSort) p.set("sort", params.sort ?? activeSort);
     if (!p.get("type")) p.delete("type");
-    router.push(`/browse?${p.toString()}`);
+    router.push(`/explore?${p.toString()}`);
   }
 
   const sortLabels: Record<string, string> = {

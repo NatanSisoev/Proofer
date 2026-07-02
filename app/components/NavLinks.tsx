@@ -13,7 +13,6 @@ const LINKS = [
 // Routes that belong conceptually under a top-level nav item but live at
 // their own path (e.g. history is a tab within "Progress").
 const ALIASES: Record<string, string[]> = {
-  "/explore": ["/browse", "/graph"],
   "/session": ["/learn"],
   "/progress": ["/history"],
 };

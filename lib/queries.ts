@@ -473,6 +473,25 @@ export function nodesInArea(
   return rows;
 }
 
+export function allNodesWithMastery(
+  opts: { type?: string; sort?: "mastery_asc" | "mastery_desc" | "alpha" } = {}
+): BrowseNode[] {
+  const { type, sort = "mastery_asc" } = opts;
+  const order =
+    sort === "mastery_desc" ? "mastery_p DESC" : sort === "alpha" ? "n.title ASC" : "mastery_p ASC";
+  const rows = db()
+    .prepare(
+      `SELECT n.*, COALESCE(m.p, 0) AS mastery_p
+         FROM nodes n
+         LEFT JOIN mastery m ON m.node_id = n.id
+        WHERE n.exists_ = 1
+          ${type ? "AND n.type = ?" : ""}
+        ORDER BY ${order}`
+    )
+    .all(...(type ? [type] : [])) as BrowseNode[];
+  return rows;
+}
+
 export function nodeTypes(): string[] {
   return (
     db()

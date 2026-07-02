@@ -153,7 +153,7 @@ export default async function QualityPage({
             <h2>Issue hotspots by area</h2>
             {topAreas.map(([area, count]) => (
               <div key={area} className="hotspot-row">
-                <Link href={`/browse?area=${encodeURIComponent(area)}`} className="text-link hotspot-area"><MathText>{area}</MathText></Link>
+                <Link href={`/explore?view=sections&area=${encodeURIComponent(area)}`} className="text-link hotspot-area"><MathText>{area}</MathText></Link>
                 <span className="pill pill-amber">{count} issues</span>
               </div>
             ))}
