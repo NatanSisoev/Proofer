@@ -12,6 +12,7 @@ export type SessionResult = {
   masteryAfter: number;
   justMastered?: boolean;
   elapsedSec?: number;
+  predicted?: number; // pre-answer confidence (0..1), when calibration is enabled
 };
 
 // Per-card snapshot for back-navigation and persistence

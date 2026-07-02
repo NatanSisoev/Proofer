@@ -6,6 +6,7 @@ import VoiceInput from "./VoiceInput";
 import MathText from "./MathText";
 import Spinner from "./Spinner";
 import { VERDICT } from "@/lib/verdict";
+import { computeSessionCalibration } from "@/lib/sessionCalibration";
 import { ProblemPanel, GradeFeedback, ConfidenceSelect, type Problem, type Grade } from "./ProblemCard";
 import { ArrowLeft, ArrowRight, Check, X, VerdictIcon, CircularProgress } from "./Icons";
 import ErrorBanner from "./ErrorBanner";
@@ -259,7 +260,14 @@ export default function StudyQueue({
         const elapsedSec = Math.round((Date.now() - questionStart.current) / 1000);
         setResultsByIndex((prev) => ({
           ...prev,
-          [index]: { node: currentNode, verdict: "incorrect", masteryBefore: data.masteryBefore, masteryAfter: data.masteryAfter, elapsedSec },
+          [index]: {
+            node: currentNode,
+            verdict: "incorrect",
+            masteryBefore: data.masteryBefore,
+            masteryAfter: data.masteryAfter,
+            elapsedSec,
+            ...(enableCalibration && confidence !== null ? { predicted: confidence } : {}),
+          },
         }));
       }
     } finally {
@@ -324,6 +332,7 @@ export default function StudyQueue({
           masteryAfter: data.masteryAfter,
           justMastered: data.justMastered ?? false,
           elapsedSec,
+          ...(enableCalibration && confidence !== null ? { predicted: confidence } : {}),
         },
       }));
     } catch (e: any) {
@@ -373,6 +382,17 @@ export default function StudyQueue({
       if (r.node.area) areaMap.set(r.node.area, (areaMap.get(r.node.area) ?? 0) + 1);
     }
 
+    // Calibration readout: how well this session's pre-answer confidence
+    // matched the actual verdicts, so the "you said 80%, you scored 50%"
+    // moment closes immediately instead of only later on /progress.
+    const calibrated = results.filter((r): r is SessionResult & { predicted: number } => r.predicted !== undefined);
+    const calibSummary = computeSessionCalibration(calibrated);
+    const calibVerdict = calibSummary && (
+      calibSummary.bias > 0.12 ? { label: "Overconfident this session", color: "var(--red)" }
+      : calibSummary.bias < -0.12 ? { label: "You underrated yourself this session", color: "var(--amber)" }
+      : { label: "Well-calibrated this session", color: "var(--green)" }
+    );
+
     return (
       <div className="session-summary">
         <div style={{ marginBottom: 6 }}>
@@ -414,6 +434,24 @@ export default function StudyQueue({
             </div>
           )}
         </div>
+
+        {calibSummary && calibVerdict && (
+          <div className="panel" style={{ marginTop: 16 }}>
+            <div className="panel-header">
+              <h2>Calibration this session</h2>
+              <span className="muted small">{calibrated.length} rated</span>
+            </div>
+            <div className="calib-headline">
+              <span className="calib-score" style={{ color: calibVerdict.color }}>{calibSummary.score}</span>
+              <span className="muted small">/ 100 calibration</span>
+            </div>
+            <p className="small" style={{ color: calibVerdict.color, margin: "2px 0 0" }}>
+              {calibSummary.overconfCount > 0
+                ? `Overconfident by ~${calibSummary.avgGapPp}pp on ${calibSummary.overconfCount} concept${calibSummary.overconfCount !== 1 ? "s" : ""}`
+                : calibVerdict.label}
+            </p>
+          </div>
+        )}
 
         {areaMap.size > 0 && (
           <p className="muted small summary-areas">
