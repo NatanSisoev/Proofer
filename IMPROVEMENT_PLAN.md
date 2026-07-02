@@ -179,7 +179,7 @@ Ranked by value-per-effort given VISION.md's pillars:
    problem flow, gate on p ≥ 0.8. This is the guided-learning surface that
    replaced the cut "study plan" feature — and the most differentiated UI the
    app would have.
-4. **Exam mode × calibration friction.** With calibration on, Submit is disabled
+4. ✅ **Exam mode × calibration friction.** With calibration on, Submit is disabled
    until a confidence is picked (`StudyQueue.tsx:654`) — under an exam
    countdown that's hostile. Auto-suppress the confidence gate in exam mode (or
    make it optional there). One conditional.
