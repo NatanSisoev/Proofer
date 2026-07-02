@@ -909,6 +909,18 @@ export type DependencyCycle = {
 };
 
 /**
+ * Canonicalise a cycle: rotate so the lexicographically smallest id leads,
+ * then key by the joined path so rotations of the same cycle collapse to one
+ * entry. Pure (no DB access) so it's unit-testable directly.
+ */
+export function canonicalizeCycle(path: string[]): { rotated: string[]; key: string } {
+  let min = 0;
+  for (let i = 1; i < path.length; i++) if (path[i] < path[min]) min = i;
+  const rotated = path.slice(min).concat(path.slice(0, min));
+  return { rotated, key: rotated.join("\u0000") };
+}
+
+/**
  * Detect cycles in the `depends_on` graph. A cycle means "A is a prerequisite
  * of B and B is (transitively) a prerequisite of A" — a contradiction that
  * corrupts the readiness/frontier model (you can never be "ready" for either).
@@ -933,13 +945,8 @@ export function dependencyCycles(limit = 40): DependencyCycle[] {
   const seen = new Set<string>();
   const cycles: DependencyCycle[] = [];
 
-  // Canonicalise a cycle: rotate so the lexicographically smallest id leads,
-  // then key by the joined path so rotations/duplicates collapse to one entry.
   function record(path: string[]) {
-    let min = 0;
-    for (let i = 1; i < path.length; i++) if (path[i] < path[min]) min = i;
-    const rotated = path.slice(min).concat(path.slice(0, min));
-    const key = rotated.join("\u0000");
+    const { rotated, key } = canonicalizeCycle(path);
     if (seen.has(key)) return;
     seen.add(key);
     cycles.push({ nodes: rotated, mutual: rotated.length === 2 });

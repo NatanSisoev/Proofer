@@ -21,13 +21,17 @@ pnpm run start             # run a production build
 pnpm run import             # re-import the vault (default: C:\Users\natan\Mathematics\Notes)
 pnpm run import "C:\path\to\OtherVault\Notes"   # import a different vault
 pnpm run check-db           # sanity-check table row counts in data/graph.db
-npx tsc --noEmit            # typecheck — there is no separate lint or test command/framework
+npx tsc --noEmit            # typecheck — there is no separate lint command
+pnpm run test               # node:test seatbelt for the pure math (BKT, entropy, cycles, truncateMath)
 ```
 
 All scripts set `NODE_OPTIONS=--experimental-sqlite` (via `cross-env`) because `node:sqlite`
-is still experimental. There is no test suite — `tsc --noEmit` is the only automated
-correctness check; verify behavior changes by running `pnpm run dev` and exercising the
-flow manually (or via Claude Preview tools if available).
+is still experimental. `pnpm run test` (via `tsx`) covers only the handful of pure functions
+where a silent regression would be hard to notice by eye (`lib/mastery.ts`'s BKT posterior/
+half-life math, `lib/queries.ts`'s cycle canonicalization, `lib/text.ts`'s `truncateMath`) —
+it is a seatbelt, not full coverage. `tsc --noEmit` plus manual exercising via `pnpm run dev`
+(or Claude Preview tools if available) remain the primary correctness checks for everything
+else.
 
 The importer is idempotent: it rebuilds `nodes` and `edges` on every run from the vault
 files, but preserves `mastery`, `attempts`, `bookmarks`, `node_notes`, and `settings`.

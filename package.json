@@ -11,7 +11,8 @@
     "dev": "cross-env NODE_OPTIONS=--experimental-sqlite next dev --turbo",
     "build": "cross-env NODE_OPTIONS=--experimental-sqlite next build",
     "start": "cross-env NODE_OPTIONS=--experimental-sqlite next start",
-    "check-db": "cross-env NODE_OPTIONS=--experimental-sqlite node scripts/check-db.mjs"
+    "check-db": "cross-env NODE_OPTIONS=--experimental-sqlite node scripts/check-db.mjs",
+    "test": "cross-env NODE_OPTIONS=\"--experimental-sqlite --import tsx\" node --test tests/**/*.test.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.100.1",
@@ -33,6 +34,7 @@
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "cross-env": "^7.0.3",
+    "tsx": "^4.22.5",
     "typescript": "^5.7.3"
   }
 }

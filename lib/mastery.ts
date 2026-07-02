@@ -64,6 +64,28 @@ function writeP(id: string, p: number, touch: boolean, halfLifeMultiplier?: numb
 }
 
 /**
+ * Pure BKT posterior + learning-transition step, given a prior mastery and
+ * the grader's evidence (0..1). No DB access, so this is the unit-testable
+ * core of applyAttempt — the seatbelt against silently drifting the math.
+ */
+export function bktUpdate(prior: number, evidence: number): number {
+  const postCorrect = (prior * (1 - P_SLIP)) / (prior * (1 - P_SLIP) + (1 - prior) * P_GUESS);
+  const postIncorrect = (prior * P_SLIP) / (prior * P_SLIP + (1 - prior) * (1 - P_GUESS));
+  const posterior = evidence * postCorrect + (1 - evidence) * postIncorrect;
+  // Learning transition: practice itself teaches.
+  return posterior + (1 - posterior) * P_TRANSIT;
+}
+
+/** Spaced-repetition half-life multiplier for a given evidence score. */
+export function halfLifeFactor(evidence: number): number {
+  return (
+    evidence >= 0.75 ? HL_CORRECT_FACTOR :
+    evidence >= 0.4  ? HL_PARTIAL_FACTOR :
+                       HL_INCORRECT_FACTOR
+  );
+}
+
+/**
  * Update mastery from a graded attempt. `evidence` (0..1) is the grader's
  * calibrated probability the answer demonstrates mastery; we treat it as soft
  * correctness and apply a continuous BKT update, then propagate:
@@ -80,20 +102,8 @@ export function applyAttempt(
   // Use P_INIT as the minimum prior so the BKT formula is well-behaved on the
   // first attempt (getMasteryP returns 0 for never-practiced nodes).
   const prior = Math.max(getMasteryP(nodeId), P_INIT);
-
-  // Posterior given a correct vs incorrect observation.
-  const postCorrect = (prior * (1 - P_SLIP)) / (prior * (1 - P_SLIP) + (1 - prior) * P_GUESS);
-  const postIncorrect = (prior * P_SLIP) / (prior * P_SLIP + (1 - prior) * (1 - P_GUESS));
-  const posterior = evidence * postCorrect + (1 - evidence) * postIncorrect;
-
-  // Learning transition: practice itself teaches.
-  const updated = posterior + (1 - posterior) * P_TRANSIT;
-
-  // Spaced repetition: update half_life based on performance.
-  const hlFactor =
-    evidence >= 0.75 ? HL_CORRECT_FACTOR :
-    evidence >= 0.4  ? HL_PARTIAL_FACTOR :
-                       HL_INCORRECT_FACTOR;
+  const updated = bktUpdate(prior, evidence);
+  const hlFactor = halfLifeFactor(evidence);
 
   writeP(nodeId, updated, true, hlFactor);
 
