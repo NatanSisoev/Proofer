@@ -648,7 +648,12 @@ export default function StudyQueue({
           {!grade && !revealed && (
             <div className="practice-actions">
               <div className="practice-actions-group">
-                <button className="btn-primary" onClick={submit} disabled={busy || !answer.trim()}>
+                <button
+                  className="btn-primary"
+                  onClick={submit}
+                  disabled={busy || !answer.trim() || (!!enableCalibration && confidence === null)}
+                  title={!!enableCalibration && confidence === null ? "Rate how sure you are before submitting" : undefined}
+                >
                   {busy ? <Spinner label="Grading…" /> : "Submit"}
                 </button>
                 <VoiceInput

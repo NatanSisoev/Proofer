@@ -52,7 +52,7 @@ export function ConfidenceSelect({
 }) {
   return (
     <div className="confidence-select">
-      <span className="muted small">How sure are you?</span>
+      <span className="muted small">How sure are you? <span style={{ color: "var(--accent)" }}>*</span></span>
       <div className="confidence-options">
         {CONFIDENCE_OPTIONS.map((o) => (
           <button
