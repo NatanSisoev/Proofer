@@ -695,8 +695,8 @@ export default function StudyQueue({
                 <button
                   className="btn-primary"
                   onClick={submit}
-                  disabled={busy || !answer.trim() || (!!enableCalibration && confidence === null)}
-                  title={!!enableCalibration && confidence === null ? "Rate how sure you are before submitting" : undefined}
+                  disabled={busy || !answer.trim() || (!!enableCalibration && !examMode && confidence === null)}
+                  title={!!enableCalibration && !examMode && confidence === null ? "Rate how sure you are before submitting" : undefined}
                 >
                   {busy ? <Spinner label="Grading…" /> : "Submit"}
                 </button>
