@@ -91,6 +91,14 @@ different URLs for the same thing depending on entry point.
    pre-pivot positioning. The home page's own tagline is "AI tutor that models
    your understanding of mathematics". Update `<title>`/description (and check
    `app/opengraph-image.tsx` for matching copy) to the tutor framing.
+6. ✅ **A garbage answer could still raise mastery.** Found live (not in the
+   original audit) while testing P2 #7's new seatbelt: `bktUpdate()` in
+   `lib/mastery.ts` applied the `P_TRANSIT` (0.12) "practice teaches" bonus
+   unconditionally. A never-practiced concept graded with evidence=0 (an
+   off-topic/nonsense answer) still jumped from 0% to ~14% mastery on the flat
+   bonus alone — exactly backwards for a tutor whose premise is refusing to
+   let you fool yourself. Fixed by scaling the bonus by evidence (a correct
+   answer, evidence=1, is unaffected).
 
 ---
 
@@ -131,7 +139,7 @@ different URLs for the same thing depending on entry point.
    bare form). Add `"check-db": "cross-env NODE_OPTIONS=--experimental-sqlite node scripts/check-db.mjs"`
    to `package.json` and update CLAUDE.md. Consider an `"engines"` field pinning
    the supported Node range while at it.
-7. **A minimal test layer for the math that must not drift.** There is no test
+7. ✅ **A minimal test layer for the math that must not drift.** There is no test
    suite at all; `tsc --noEmit` can't catch a wrong BKT posterior. The highest-value
    targets are pure functions: `applyAttempt`'s posterior math and half-life
    factors (`lib/mastery.ts`), `masteryEntropy`/`infoGainScore`,
