@@ -356,13 +356,10 @@ input.search-box:focus { outline: none; border-color: var(--accent); box-shadow:
 .edge-type.related { background: var(--bg-soft); color: var(--muted); }
 .edge-ctx { color: var(--muted); font-size: 12.5px; }
 
-button.know {
-  border: 1px solid var(--border); background: var(--bg-soft); color: var(--text);
-  padding: 9px 16px; border-radius: var(--radius-md); font-size: 14px; cursor: pointer; font-weight: 500;
-  transition: border-color 0.15s, background 0.15s;
-}
-button.know:hover { border-color: var(--accent); }
-button.know.on { background: var(--green-soft); border-color: var(--green-border); color: var(--green); }
+/* node-page secondary action cluster — all ghost buttons, with active tints */
+.node-action-row { display: flex; flex-wrap: wrap; gap: 6px; width: 100%; justify-content: flex-end; }
+.btn-ghost.is-known { color: var(--green); border-color: var(--green-border); }
+.btn-ghost.is-bookmarked { color: var(--amber); border-color: var(--amber); }
 
 .markdown { font-size: 14.5px; line-height: 1.7; font-family: var(--font-serif, Georgia), serif; }
 .markdown p { margin: 0 0 12px; }
@@ -896,6 +893,57 @@ details[open].practice-history > .attempt-list { animation: accordion-fade 0.25s
 
 /* node page: right-side action column */
 .node-side-col { flex: 0 0 240px; display: flex; flex-direction: column; gap: 8px; align-items: flex-end; }
+
+/* node page: relationship accordion (single-open) */
+.node-panels { display: flex; flex-direction: column; gap: 10px; }
+.node-accordion {
+  border: 1px solid var(--border); border-radius: var(--radius-lg);
+  background: var(--panel); box-shadow: var(--panel-shadow); overflow: hidden;
+  transition: border-color 0.2s var(--ease);
+}
+.node-accordion.open { border-color: var(--muted); }
+.node-accordion-header {
+  width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  padding: 14px 18px; background: none; border: none; cursor: pointer;
+  font-size: 14px; font-weight: 700; color: var(--text); text-align: left;
+  transition: background 0.15s var(--ease);
+}
+.node-accordion-header:hover { background: var(--bg-soft); }
+.node-accordion-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.node-accordion-right { display: flex; align-items: center; gap: 8px; color: var(--muted); flex-shrink: 0; }
+.node-accordion-chevron { transition: transform 0.25s var(--ease); }
+.node-accordion.open .node-accordion-chevron { transform: rotate(180deg); }
+.node-accordion-count { font-size: 11px; font-weight: 600; }
+
+/* circular mastery indicator */
+.mastery-ring { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.mastery-ring svg { display: block; overflow: visible; }
+
+/* node page: the statement is the most important content — give it a real heading */
+.statement-section { margin-bottom: 10px; }
+.statement-head {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+  margin-bottom: 14px; padding-bottom: 8px; border-bottom: 2px solid var(--accent-soft);
+}
+.statement-title {
+  font-family: var(--font-serif, Georgia), serif; font-size: 19px; font-weight: 600;
+  letter-spacing: -0.01em; color: var(--text); margin: 0; text-transform: capitalize;
+}
+
+/* open/close animation — fade + slide. The body only mounts while visible, so
+   the cytoscape graphs inside always start at their real container size; a short
+   "closing" phase animates the outgoing panel out before it unmounts. */
+.node-accordion-body { padding: 0 18px 18px; overflow: hidden; }
+.node-accordion-body.opening { animation: acc-open 0.26s var(--ease); }
+.node-accordion-body.closing { animation: acc-close 0.2s var(--ease) forwards; }
+@keyframes acc-open {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes acc-close {
+  from { opacity: 1; transform: translateY(0); }
+  to   { opacity: 0; transform: translateY(-8px); }
+}
 
 /* node page: practice history */
 .attempt-list { margin-top: 10px; display: flex; flex-direction: column; gap: 10px; }

@@ -24,13 +24,9 @@ export default function BookmarkButton({ nodeId, initial }: { nodeId: string; in
       onClick={toggle}
       disabled={pending}
       title={bookmarked ? "Remove bookmark" : "Bookmark for later"}
-      className="btn-bookmark"
-      style={{
-        color: bookmarked ? "var(--amber)" : "var(--muted)",
-        opacity: pending ? 0.5 : 1,
-      }}
+      className={`btn-ghost btn-sm icon-label${bookmarked ? " is-bookmarked" : ""}`}
     >
-      <Star size={15} filled={bookmarked} />
+      <Star size={14} filled={bookmarked} /> {bookmarked ? "Saved" : "Save"}
     </button>
   );
 }

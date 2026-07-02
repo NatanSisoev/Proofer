@@ -6,6 +6,7 @@ import SnoozeButton from "./components/SnoozeButton";
 import GoalButton from "./components/GoalButton";
 import LearningPath from "./components/LearningPath";
 import MathText from "./components/MathText";
+import MasteryRing from "./components/MasteryRing";
 import UnlockPreview from "./components/UnlockPreview";
 import { frontier, stats, dueForReview, todayStats, recentlyPracticed, bookmarkedNodes, conceptOfDay, areaMastery, overconfidentConcepts, getNode } from "@/lib/queries";
 import { getDailyGoal, getLearningGoal } from "@/lib/settings";
@@ -328,9 +329,7 @@ export default function Home() {
                     <Link href={`/node/${encodeURIComponent(n.id)}`} className="text-link"><MathText>{n.title}</MathText></Link>
                   </div>
                   <div className="item-actions">
-                    <div className="bar" style={{ width: 50 }}>
-                      <span style={{ width: `${Math.round(n.mastery_p * 100)}%` }} />
-                    </div>
+                    <MasteryRing p={n.mastery_p} size={32} />
                     <Link href={`/learn?node=${encodeURIComponent(n.id)}`} className="pill pill-accent icon-label">
                       practice <ArrowRight size={10} />
                     </Link>

@@ -23,7 +23,7 @@ export default function KnownButton({ slug, initial }: { slug: string; initial: 
   }
 
   return (
-    <button className={`know icon-label${known ? " on" : ""}`} onClick={toggle} disabled={pending}>
+    <button className={`btn-ghost btn-sm icon-label${known ? " is-known" : ""}`} onClick={toggle} disabled={pending}>
       {known ? <><Check size={14} /> I know this</> : "Mark as known"}
     </button>
   );

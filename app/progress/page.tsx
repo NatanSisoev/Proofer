@@ -7,6 +7,7 @@ import { VERDICT, type Verdict } from "@/lib/verdict";
 import { VerdictIcon, ArrowRight, Download, Sparkles } from "@/app/components/Icons";
 import EmptyState from "@/app/components/EmptyState";
 import MathText from "@/app/components/MathText";
+import MasteryRing from "@/app/components/MasteryRing";
 
 export const dynamic = "force-dynamic";
 
@@ -443,10 +444,7 @@ export default function ProgressPage() {
                   </Link>
                 </div>
                 <div className="weak-spot-right">
-                  <div className="bar" style={{ width: 60 }}>
-                    <span style={{ width: `${Math.round(n.mastery_p * 100)}%` }} />
-                  </div>
-                  <span className="small muted">{Math.round(n.mastery_p * 100)}%</span>
+                  <MasteryRing p={n.mastery_p} size={34} />
                   <Link href={`/learn?node=${encodeURIComponent(n.id)}`} className="pill pill-accent icon-label">
                     drill <ArrowRight size={10} />
                   </Link>

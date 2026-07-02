@@ -10,12 +10,14 @@ import BookmarkButton from "@/app/components/BookmarkButton";
 import GhostCreate from "@/app/components/GhostCreate";
 import MathText from "@/app/components/MathText";
 import MasterySparkline from "@/app/components/MasterySparkline";
+import MasteryRing from "@/app/components/MasteryRing";
 import PersonalNotes from "@/app/components/PersonalNotes";
 import ReExplain from "@/app/components/ReExplain";
 import CompareWith from "@/app/components/CompareWith";
 import ReadingProgress from "@/app/components/ReadingProgress";
 import GoalButton from "@/app/components/GoalButton";
-import { getNode, edgesOf, isKnown, readiness, prerequisites, attemptCount, isBookmarked, nodeAttempts, nodeAttemptDetails, nextReviewDays, similarConcepts, nodeBlamedPrereqs, egoGraph } from "@/lib/queries";
+import NodePanels, { NodePanel } from "@/app/components/NodePanels";
+import { getNode, edgesOf, isKnown, readiness, prerequisites, attemptCount, isBookmarked, nodeAttempts, nodeAttemptDetails, nextReviewDays, similarConcepts, nodeBlamedPrereqs, egoGraph, prerequisiteGraph } from "@/lib/queries";
 import { truncateMath } from "@/lib/text";
 import { getMasteryP } from "@/lib/mastery";
 import { hasKey } from "@/lib/llm";
@@ -26,6 +28,9 @@ import type { EdgeRow } from "@/lib/db";
 // cytoscape is a heavy client-only lib; defer it to its own chunk so it
 // doesn't bloat the JS every node navigation has to download and parse.
 const EgoGraph = nextDynamic(() => import("@/app/components/EgoGraph"), {
+  loading: () => <div className="graph-shell graph-shell-loading" />,
+});
+const PrereqGraph = nextDynamic(() => import("@/app/components/PrereqGraph"), {
   loading: () => <div className="graph-shell graph-shell-loading" />,
 });
 
@@ -89,6 +94,8 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
   const similar = node.area ? similarConcepts(id, node.area, mastery, 6) : [];
   const blamedPrereqs = attempts >= 2 ? nodeBlamedPrereqs(id, 3) : [];
   const ego = node.exists_ === 1 ? egoGraph(id, 1) : null;
+  const prereqG = node.exists_ === 1 ? prerequisiteGraph(id) : null;
+  const hasPrereqGraph = !!prereqG && prereqG.nodes.length > 1 && prereqG.edges.length > 0;
   const currentGoal = getLearningGoal();
 
   // Most recent non-correct attempt gap — surfaced prominently near the CTA
@@ -101,6 +108,8 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
   const sortByType = (a: EdgeRow, b: EdgeRow) => order.indexOf(a.type) - order.indexOf(b.type);
   outgoing.sort(sortByType);
   incoming.sort(sortByType);
+
+  const count = (n: number) => <span className="node-accordion-count">{n}</span>;
 
   return (
     <div className="wrap">
@@ -156,9 +165,8 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
                 </MathText>
               )}
               <div className="mastery-chip">
+                <MasteryRing p={mastery} size={46} />
                 <span className="muted small">mastery</span>
-                <div className="bar" style={{ width: 120 }}><span style={{ width: `${Math.round(mastery * 100)}%` }} /></div>
-                <span className="mastery-pct">{Math.round(mastery * 100)}%</span>
                 <MasterySparkline nodeId={id} />
                 {reviewDays !== null && (
                   <span
@@ -219,26 +227,26 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
               )}
             </div>
             <div className="node-side-col">
-              <div className="node-cta">
-                <Link href={`/learn?node=${encodeURIComponent(id)}`} className="cta icon-label">Practice this <ArrowRight size={13} /></Link>
+              <Link href={`/learn?node=${encodeURIComponent(id)}`} className="cta icon-label btn-full">Practice this <ArrowRight size={13} /></Link>
+              <div className="node-action-row">
                 <BookmarkButton nodeId={id} initial={bookmarked} />
                 <GoalButton nodeId={id} isCurrentGoal={currentGoal === id} />
+                <KnownButton slug={id} initial={known} />
               </div>
+              {node.area && (
+                <Link
+                  href={`/session?mode=area&area=${encodeURIComponent(node.area)}`}
+                  className="btn-ghost btn-sm icon-label"
+                >
+                  Practice {node.area} <ArrowRight size={12} />
+                </Link>
+              )}
               {lastGapAttempt && (
                 <div className="last-gap-note">
                   <span className="muted small last-gap-label">Last gap identified:</span>
                   <MathText className="small last-gap-text">{lastGapAttempt.gap!.length > 140 ? lastGapAttempt.gap!.slice(0, 140) + "…" : lastGapAttempt.gap!}</MathText>
                 </div>
               )}
-              {node.area && (
-                <Link
-                  href={`/session?mode=area&area=${encodeURIComponent(node.area)}`}
-                  className="pill pill-accent"
-                >
-                  Session: {node.area}
-                </Link>
-              )}
-              <KnownButton slug={id} initial={known} />
             </div>
           </div>
 
@@ -279,18 +287,19 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
           <div className="grid" style={{ marginTop: 20 }}>
             <div>
               {node.content && (
-                <>
-                  {(() => {
-                    const words = node.content!.split(/\s+/).length;
-                    const mins = Math.max(1, Math.round(words / 200));
-                    return (
-                      <p className="muted small content-meta">
-                        ~{mins} min read · {words} words
-                      </p>
-                    );
-                  })()}
+                <div className="statement-section">
+                  <div className="statement-head">
+                    <h2 className="statement-title">{node.type || "Statement"}</h2>
+                    {(() => {
+                      const words = node.content!.split(/\s+/).length;
+                      const mins = Math.max(1, Math.round(words / 200));
+                      return (
+                        <span className="muted small">~{mins} min read · {words} words</span>
+                      );
+                    })()}
+                  </div>
                   <Markdown>{node.content}</Markdown>
-                </>
+                </div>
               )}
               <PersonalNotes nodeId={id} />
               <NodeActions nodeId={id} nodePath={node.path ?? null} hasLLM={llmAvailable} />
@@ -336,47 +345,45 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
               )}
             </div>
             <div>
-              <div className="panel" style={{ marginBottom: 16 }}>
-                <h2>Neighborhood</h2>
-                {ego && <EgoGraph slug={id} depth={1} initialData={ego} />}
-              </div>
-              <div className="panel" style={{ marginBottom: 16 }}>
-                <h2>Outgoing</h2>
-                <RelList rows={outgoing} dir="out" />
-              </div>
-              <div className="panel">
-                <h2>Incoming</h2>
-                <RelList rows={incoming} dir="in" />
-              </div>
-              {similar.length > 0 && (
-                <div className="panel">
-                  <h2>Also in {node.area}</h2>
-                  {similar.map((s) => (
-                    <div key={s.id} className="frontier-item">
-                      <div>
-                        {s.type && <span className={`type-badge t-${s.type}`} style={{ marginRight: 6 }}>{s.type}</span>}
-                        <Link href={`/node/${encodeURIComponent(s.id)}`} className="preview-link">
-                          <MathText>{s.title}</MathText>
-                        </Link>
-                      </div>
-                      <div className="preview-mastery">
-                        <div className="bar" style={{ width: 40 }}>
-                          <span style={{ width: `${Math.round(s.mastery_p * 100)}%` }} />
+              <NodePanels defaultOpen={0}>
+                {hasPrereqGraph && (
+                  <NodePanel key="prereq" id="prereq" title="How to learn this" meta={count(prereqG!.nodes.length - 1)}>
+                    <PrereqGraph data={prereqG!} />
+                    <p className="muted small" style={{ margin: "10px 0 0" }}>
+                      Foundations sit at the bottom — work upward to this concept. Tap a node to open it.
+                    </p>
+                  </NodePanel>
+                )}
+                {ego && (
+                  <NodePanel key="neighborhood" id="neighborhood" title="Neighborhood">
+                    <EgoGraph slug={id} depth={1} initialData={ego} />
+                  </NodePanel>
+                )}
+                <NodePanel key="outgoing" id="outgoing" title="Outgoing" meta={count(outgoing.length)}>
+                  <RelList rows={outgoing} dir="out" />
+                </NodePanel>
+                <NodePanel key="incoming" id="incoming" title="Incoming" meta={count(incoming.length)}>
+                  <RelList rows={incoming} dir="in" />
+                </NodePanel>
+                {similar.length > 0 && (
+                  <NodePanel key="similar" id="similar" title={`Also in ${node.area}`} meta={count(similar.length)}>
+                    {similar.map((s) => (
+                      <div key={s.id} className="frontier-item">
+                        <div>
+                          {s.type && <span className={`type-badge t-${s.type}`} style={{ marginRight: 6 }}>{s.type}</span>}
+                          <Link href={`/node/${encodeURIComponent(s.id)}`} className="preview-link">
+                            <MathText>{s.title}</MathText>
+                          </Link>
                         </div>
-                        <span className="muted small preview-pct">
-                          {Math.round(s.mastery_p * 100)}%
-                        </span>
+                        <MasteryRing p={s.mastery_p} size={34} />
                       </div>
-                    </div>
-                  ))}
-                  <Link
-                    href={`/browse?area=${encodeURIComponent(node.area!)}`}
-                    className="muted small browse-more icon-label"
-                  >
-                    Browse all {node.area} <ArrowRight size={11} />
-                  </Link>
-                </div>
-              )}
+                    ))}
+                    <Link href={`/browse?area=${encodeURIComponent(node.area!)}`} className="muted small browse-more icon-label">
+                      Browse all {node.area} <ArrowRight size={11} />
+                    </Link>
+                  </NodePanel>
+                )}
+              </NodePanels>
             </div>
           </div>
         </>

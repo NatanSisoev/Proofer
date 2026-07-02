@@ -5,20 +5,14 @@ import BrowseFilters from "@/app/components/BrowseFilters";
 import { ArrowLeft, ArrowRight, Search } from "@/app/components/Icons";
 import EmptyState from "@/app/components/EmptyState";
 import MathText from "@/app/components/MathText";
+import MasteryRing from "@/app/components/MasteryRing";
 
 // Mastery data is user-specific but 30s stale is perfectly acceptable for a
 // single-user local app. ISR avoids a full DB round-trip on every /browse nav.
 export const revalidate = 30;
 
 function MasteryBar({ p }: { p: number }) {
-  return (
-    <div className="mastery-bar-row">
-      <div className="bar mastery-bar-flex">
-        <span style={{ width: `${Math.round(p * 100)}%` }} />
-      </div>
-      <span className="small muted">{Math.round(p * 100)}%</span>
-    </div>
-  );
+  return <MasteryRing p={p} size={34} />;
 }
 
 export default async function BrowsePage({

@@ -59,6 +59,63 @@ export function prerequisites(id: string): { closure: NodeRow[]; depth: number }
 }
 
 /**
+ * Prerequisite subgraph for a concept — the `depends_on` closure *under* it plus
+ * the edges among that closure, for a "how to learn this" progression view.
+ * Each node carries its mastery and its dependency depth (0 = the target itself,
+ * larger = more foundational). Capped at `maxNodes` (nearest-depth first) so deep
+ * concepts still render a legible DAG.
+ */
+export function prerequisiteGraph(
+  id: string,
+  maxNodes = 36
+): {
+  center: string;
+  nodes: { id: string; title: string; type: string | null; exists_: number; mastery_p: number; depth: number }[];
+  edges: { src: string; dst: string }[];
+} {
+  const rows = db()
+    .prepare(
+      `WITH RECURSIVE closure(id, depth, path) AS (
+         SELECT dst, 1, '/' || ? || '/' || dst || '/'
+           FROM edges WHERE src = ? AND type = 'depends_on'
+         UNION ALL
+         SELECT e.dst, c.depth + 1, c.path || e.dst || '/'
+           FROM edges e JOIN closure c ON e.src = c.id
+          WHERE e.type = 'depends_on'
+            AND instr(c.path, '/' || e.dst || '/') = 0
+            AND c.depth < 50
+       )
+       SELECT id, MIN(depth) AS depth FROM closure GROUP BY id
+       ORDER BY depth ASC, id ASC
+       LIMIT ?`
+    )
+    .all(id, id, maxNodes - 1) as { id: string; depth: number }[];
+
+  const ids = [id, ...rows.map((r) => r.id)];
+  const depthMap = new Map<string, number>([[id, 0], ...rows.map((r) => [r.id, r.depth] as [string, number])]);
+  const ph = ids.map(() => "?").join(",");
+  const nodes = db()
+    .prepare(
+      `SELECT n.id, n.title, n.type, n.exists_, COALESCE(m.p, 0) AS mastery_p
+         FROM nodes n LEFT JOIN mastery m ON m.node_id = n.id
+        WHERE n.id IN (${ph})`
+    )
+    .all(...ids) as { id: string; title: string; type: string | null; exists_: number; mastery_p: number }[];
+  const edges = db()
+    .prepare(
+      `SELECT src, dst FROM edges
+        WHERE type = 'depends_on' AND src <> dst AND src IN (${ph}) AND dst IN (${ph})`
+    )
+    .all(...ids, ...ids) as { src: string; dst: string }[];
+
+  return {
+    center: id,
+    nodes: nodes.map((n) => ({ ...n, depth: depthMap.get(n.id) ?? 1 })),
+    edges,
+  };
+}
+
+/**
  * Readiness = fraction of the prerequisite closure you've already marked known.
  * This is the personalized signal ChatGPT structurally cannot provide.
  */
