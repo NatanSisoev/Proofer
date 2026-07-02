@@ -36,13 +36,6 @@ CREATE INDEX IF NOT EXISTS idx_edges_dst  ON edges(dst, type);
 CREATE INDEX IF NOT EXISTS idx_nodes_area ON nodes(area);
 CREATE INDEX IF NOT EXISTS idx_nodes_type ON nodes(type);
 
--- Single-user "what I know" state. This is the moat ChatGPT can't have:
--- personalized readiness + frontier are computed against this set.
--- (Kept for back-compat; mastery below is now the source of truth.)
-CREATE TABLE IF NOT EXISTS user_knows (
-  node_id  TEXT PRIMARY KEY
-);
-
 -- MASTERY: the real signal. Not "I clicked known" — an INFERRED probability that
 -- you understand each concept, updated by Bayesian Knowledge Tracing from your
 -- performance on generated problems. A node counts as "known" when p >= 0.8.

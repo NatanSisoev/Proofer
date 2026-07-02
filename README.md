@@ -57,7 +57,7 @@ pnpm run dev             # http://localhost:3000  ·  practice at /learn
 ```
 
 The importer is idempotent: it rebuilds `nodes` and `edges` on each run but preserves
-your `user_knows` state.
+your mastery, attempts, and other user-state tables.
 
 ## Current graph
 

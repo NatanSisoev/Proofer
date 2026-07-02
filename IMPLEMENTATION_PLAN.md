@@ -196,7 +196,7 @@ real accounts — the substrate Phase C requires. The README already flags this 
   `ivfflat`/`hnsw` index.
 
 **Multi-user.** This is the larger change, because today every table is implicitly single-user
-(`mastery`, `attempts`, `bookmarks`, `node_notes`, `settings`, `user_knows`).
+(`mastery`, `attempts`, `bookmarks`, `node_notes`, `settings`).
 - Add `users` + session auth (Auth.js / NextAuth, email + OAuth).
 - Add `user_id` to all per-user tables; the **shared graph** (`nodes`, `edges`) stays global,
   per-user state is scoped. Update every query in `lib/queries.ts` / `lib/mastery.ts` to filter by
