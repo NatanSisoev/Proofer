@@ -363,6 +363,72 @@ export function nodeBlamedPrereqs(nodeId: string, limit = 3): NodeBlamedPrereq[]
     .all(nodeId, limit) as NodeBlamedPrereq[];
 }
 
+// ===========================================================================
+// Misconception clustering (VISION.md bet #2, MVP slice) — an LLM batch pass
+// groups a concept's gap texts into named recurring misconceptions, reviewed
+// via /quality, then saved here for display on the node page.
+// ===========================================================================
+export type MisconceptionCandidate = {
+  id: string; title: string; type: string | null; area: string | null;
+  gap_count: number;      // eligible gap texts (partial/incorrect, non-empty)
+  existing_count: number; // already-saved clusters for this node
+};
+
+/** Concepts with enough failed/partial attempts to look for a recurring
+ *  misconception. Thin today (36 attempts vault-wide) — most concepts won't
+ *  qualify, which is expected; this is the on-ramp, not a mature dataset. */
+export function misconceptionCandidates(minGaps = 2, limit = 50): MisconceptionCandidate[] {
+  return db()
+    .prepare(
+      `SELECT n.id, n.title, n.type, n.area,
+              COUNT(*) AS gap_count,
+              (SELECT COUNT(*) FROM misconceptions mc WHERE mc.node_id = n.id) AS existing_count
+         FROM attempts a
+         JOIN nodes n ON n.id = a.node_id
+        WHERE a.verdict IN ('partial', 'incorrect')
+          AND a.gap IS NOT NULL AND a.gap != ''
+          AND n.exists_ = 1
+        GROUP BY a.node_id
+       HAVING gap_count >= ?
+        ORDER BY gap_count DESC
+        LIMIT ?`
+    )
+    .all(minGaps, limit) as MisconceptionCandidate[];
+}
+
+/** The gap texts to feed the clustering LLM call for one concept. */
+export function gapsForNode(nodeId: string, limit = 20): string[] {
+  return (
+    db()
+      .prepare(
+        `SELECT gap FROM attempts
+          WHERE node_id = ? AND verdict IN ('partial', 'incorrect')
+            AND gap IS NOT NULL AND gap != ''
+          ORDER BY id DESC
+          LIMIT ?`
+      )
+      .all(nodeId, limit) as { gap: string }[]
+  ).map((r) => r.gap);
+}
+
+export type SavedMisconception = { id: number; label: string; gap_count: number; created_at: string };
+
+/** Saved misconception clusters for one concept, strongest (most gaps) first. */
+export function misconceptionsForNode(nodeId: string): SavedMisconception[] {
+  return db()
+    .prepare(`SELECT id, label, gap_count, created_at FROM misconceptions WHERE node_id = ? ORDER BY gap_count DESC, id DESC`)
+    .all(nodeId) as SavedMisconception[];
+}
+
+/** Replace a concept's saved clusters with a fresh analysis result — a
+ *  best-effort snapshot (re-running supersedes, doesn't accumulate). */
+export function saveMisconceptions(nodeId: string, clusters: { label: string; gap_count: number }[]): void {
+  const d = db();
+  d.prepare(`DELETE FROM misconceptions WHERE node_id = ?`).run(nodeId);
+  const ins = d.prepare(`INSERT INTO misconceptions (node_id, label, gap_count) VALUES (?, ?, ?)`);
+  for (const c of clusters) ins.run(nodeId, c.label, c.gap_count);
+}
+
 /** Time series of mastery for one concept, for sparklines. */
 export function masteryHistory(nodeId: string, limit = 30): { p: number; recorded_at: string }[] {
   return db()

@@ -17,7 +17,7 @@ import CompareWith from "@/app/components/CompareWith";
 import ReadingProgress from "@/app/components/ReadingProgress";
 import GoalButton from "@/app/components/GoalButton";
 import NodePanels, { NodePanel } from "@/app/components/NodePanels";
-import { getNode, edgesOf, isKnown, readiness, prerequisites, attemptCount, isBookmarked, nodeAttempts, nodeAttemptDetails, nextReviewDays, similarConcepts, nodeBlamedPrereqs, egoGraph, prerequisiteGraph } from "@/lib/queries";
+import { getNode, edgesOf, isKnown, readiness, prerequisites, attemptCount, isBookmarked, nodeAttempts, nodeAttemptDetails, nextReviewDays, similarConcepts, nodeBlamedPrereqs, misconceptionsForNode, egoGraph, prerequisiteGraph } from "@/lib/queries";
 import { truncateMath } from "@/lib/text";
 import { getMasteryP } from "@/lib/mastery";
 import { hasKey } from "@/lib/llm";
@@ -93,6 +93,7 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
   const reviewDays = nextReviewDays(id);
   const similar = node.area ? similarConcepts(id, node.area, mastery, 6) : [];
   const blamedPrereqs = attempts >= 2 ? nodeBlamedPrereqs(id, 3) : [];
+  const misconceptions = misconceptionsForNode(id);
   const ego = node.exists_ === 1 ? egoGraph(id, 1) : null;
   const prereqG = node.exists_ === 1 ? prerequisiteGraph(id) : null;
   const hasPrereqGraph = !!prereqG && prereqG.nodes.length > 1 && prereqG.edges.length > 0;
@@ -223,6 +224,16 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
                       Practice gaps <ArrowRight size={10} />
                     </Link>
                   )}
+                </div>
+              )}
+              {misconceptions.length > 0 && (
+                <div className="blamed-prereqs">
+                  <span className="muted small">Misconception: </span>
+                  {misconceptions.map((m) => (
+                    <span key={m.id} className="blamed-prereq-chip" title={`${m.gap_count} gap${m.gap_count !== 1 ? "s" : ""}`}>
+                      <MathText>{m.label}</MathText>
+                    </span>
+                  ))}
                 </div>
               )}
             </div>

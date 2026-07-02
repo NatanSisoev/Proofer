@@ -80,6 +80,9 @@ so new tables appear without re-importing):
   ever sees a `problemId`, never the answer key, until they ask to reveal it.
 - `llm_cache` — SHA-256(fn + inputs)-keyed cache for read-only LLM calls (explain/compare),
   7-day TTL enforced in `lib/llm.ts`; cleared on vault sync.
+- `misconceptions` — named misconception clusters per concept, produced by an LLM batch
+  pass over that concept's accumulated `attempts.gap` texts (reviewed/saved via
+  `/quality?tab=misconceptions`), shown on the node page next to "Grader blamed".
 - `bookmarks`, `node_notes`, `settings` — small user-state tables.
 
 **`lib/db.ts`** holds the SQLite singleton (`global.__prooferDb`, survives HMR) and patches

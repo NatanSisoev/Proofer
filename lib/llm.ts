@@ -716,6 +716,82 @@ export async function classifyEdge(a: {
 }
 
 // ===========================================================================
+// Misconception clustering — group a concept's accumulated `attempts.gap`
+// texts into named, recurring misconceptions (VISION.md bet #2, MVP slice).
+// ===========================================================================
+export type MisconceptionCluster = {
+  label: string;    // short, specific phrase naming the confusion
+  gap_count: number; // how many of the input gap texts belong to this cluster
+};
+
+const MISCONCEPTION_SYSTEM = `You are analyzing a student's history of mistakes on ONE mathematical concept, looking for recurring misconceptions.
+You are given a numbered list of "gap" texts — each is a tutor's diagnosis of what the student misunderstood on a single practice attempt.
+Group them into named, specific misconception clusters:
+- Only report a cluster if at least 2 of the gap texts describe the SAME underlying misunderstanding.
+- Each label must name the exact confusion precisely (e.g. "confuses pointwise with uniform convergence"), not a vague restatement like "doesn't understand the concept".
+- A gap text that doesn't recur with any other is NOT a cluster — leave it out.
+- If nothing recurs, return an empty array. Do not force clusters that aren't really there.`;
+
+const MISCONCEPTION_SCHEMA_G = {
+  type: "OBJECT",
+  properties: {
+    clusters: {
+      type: "ARRAY",
+      items: {
+        type: "OBJECT",
+        properties: {
+          label: { type: "STRING" },
+          gap_indices: { type: "ARRAY", items: { type: "NUMBER" } },
+        },
+        required: ["label", "gap_indices"],
+        propertyOrdering: ["label", "gap_indices"],
+      },
+    },
+  },
+  required: ["clusters"],
+  propertyOrdering: ["clusters"],
+};
+
+function reduceMisconceptionClusters(raw: { label: string; gap_indices: number[] }[]): MisconceptionCluster[] {
+  return raw
+    .filter((c) => c.label && Array.isArray(c.gap_indices) && c.gap_indices.length >= 2)
+    .map((c) => ({ label: c.label, gap_count: c.gap_indices.length }));
+}
+
+/** Cluster a concept's gap texts into named recurring misconceptions. Needs
+ *  at least 2 gaps to find anything — returns [] below that, no LLM call. */
+export async function clusterMisconceptions(nodeTitle: string, gaps: string[]): Promise<MisconceptionCluster[]> {
+  const cfg = getLLMConfig();
+  if (cfg.provider === "none") throw new Error("No AI provider configured");
+  if (gaps.length < 2) return [];
+
+  const prompt = [
+    `TARGET CONCEPT: ${nodeTitle}`,
+    `\nGAPS (one per failed/partial attempt, 0-indexed):`,
+    gaps.map((g, i) => `${i}. ${g}`).join("\n"),
+    `\nFind recurring misconception clusters among these. Respond as JSON.`,
+  ].join("\n");
+
+  if (cfg.provider === "gemini") {
+    const result = await geminiCall(MISCONCEPTION_SYSTEM, prompt, MISCONCEPTION_SCHEMA_G, 0.2, cfg);
+    return reduceMisconceptionClusters(result.clusters ?? []);
+  }
+
+  if (cfg.provider === "anthropic" && cfg.anthropic) {
+    const msg = await cfg.anthropic.messages.create({
+      model: ANTHROPIC_GRADE_MODEL,
+      max_tokens: 800,
+      system: MISCONCEPTION_SYSTEM + "\n\nIMPORTANT: Respond ONLY with a single valid JSON object — no markdown fences, no preamble.",
+      messages: [{ role: "user", content: prompt }],
+    });
+    const result = firstJson<{ clusters: { label: string; gap_indices: number[] }[] }>(msg);
+    return reduceMisconceptionClusters(result.clusters ?? []);
+  }
+
+  throw new Error("No AI provider configured");
+}
+
+// ===========================================================================
 // Note improvement
 // ===========================================================================
 const IMPROVE_SYSTEM = `You are an expert mathematician editing atomic notes in an Obsidian math vault.

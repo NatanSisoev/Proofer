@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { unstable_cache } from "next/cache";
-import { noteQuality, linkSuggestions, dependencyCycles, relatedEdgesWithNodes, relatedEdgeCount } from "@/lib/queries";
+import { noteQuality, linkSuggestions, dependencyCycles, relatedEdgesWithNodes, relatedEdgeCount, misconceptionCandidates } from "@/lib/queries";
 import QualityFilters from "@/app/components/QualityFilters";
 import LinkSuggestions from "@/app/components/LinkSuggestions";
 import RelatedEdges from "@/app/components/RelatedEdges";
+import MisconceptionCandidates from "@/app/components/MisconceptionCandidates";
 import MathText from "@/app/components/MathText";
 import { hasKey } from "@/lib/llm";
 import { Check, ArrowRight, ArrowLeftRight } from "@/app/components/Icons";
@@ -58,7 +59,7 @@ export default async function QualityPage({
   searchParams: Promise<{ tab?: string }>;
 }) {
   const { tab: tabParam } = await searchParams;
-  const tab = tabParam === "links" ? "links" : tabParam === "cycles" ? "cycles" : tabParam === "edges" ? "edges" : "issues";
+  const tab = tabParam === "links" ? "links" : tabParam === "cycles" ? "cycles" : tabParam === "edges" ? "edges" : tabParam === "misconceptions" ? "misconceptions" : "issues";
   const llmAvailable = hasKey();
 
   const issues = await getNoteQuality();
@@ -79,6 +80,11 @@ export default async function QualityPage({
   const cycles = await getDependencyCycles(40);
   const relatedEdges = tab === "edges" ? await getRelatedEdges(150) : [];
   const relatedCount = await getRelatedEdgeCount();
+  // Not vault-sync-cached like the above: gap counts change on every practice
+  // attempt, so this is queried fresh each request (page-level ISR still caps
+  // staleness at revalidate=60s). Cheap enough (small, indexed attempts table)
+  // to compute unconditionally for the tab-bar count badge.
+  const misconceptionCands = misconceptionCandidates(2, 50);
 
   // Generate an actionable summary
   const topIssue = Object.entries(byIssue).sort((a, b) => b[1] - a[1])[0];
@@ -133,6 +139,7 @@ export default async function QualityPage({
           { key: "links", label: "Link suggestions" },
           { key: "cycles", label: `Dependency cycles${cycles.length > 0 ? ` (${cycles.length})` : ""}` },
           { key: "edges", label: `Unclassified edges${relatedCount > 0 ? ` (${relatedCount})` : ""}` },
+          { key: "misconceptions", label: `Misconceptions${misconceptionCands.length > 0 ? ` (${misconceptionCands.length})` : ""}` },
         ].map((t) => (
           <Link
             key={t.key}
@@ -177,6 +184,20 @@ export default async function QualityPage({
               : " Add GEMINI_API_KEY or ANTHROPIC_API_KEY to enable AI suggestions."}
           </p>
           <RelatedEdges initial={relatedEdges} hasKey={llmAvailable} />
+        </div>
+      )}
+
+      {tab === "misconceptions" && (
+        <div className="panel">
+          <h2 style={{ marginBottom: 4 }}>Misconceptions</h2>
+          <p className="muted small section-desc">
+            Concepts with at least 2 failed/partial attempts, whose gap texts might describe the
+            same underlying misunderstanding. Analyzing groups them into a named misconception
+            (e.g. &ldquo;confuses pointwise with uniform convergence&rdquo;), shown on the node
+            page next to &ldquo;Grader blamed&rdquo; once saved.
+            {!llmAvailable && " Add GEMINI_API_KEY or ANTHROPIC_API_KEY to enable AI analysis."}
+          </p>
+          <MisconceptionCandidates initial={misconceptionCands} hasKey={llmAvailable} />
         </div>
       )}
 

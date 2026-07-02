@@ -119,6 +119,22 @@ CREATE TABLE IF NOT EXISTS llm_cache (
   created_at INTEGER NOT NULL
 );
 
+-- Named misconception clusters — an LLM-batch pass groups a concept's
+-- accumulated attempts.gap texts into named patterns ("confuses pointwise
+-- with uniform convergence"), reviewed via /quality then saved here. This is
+-- the single-user seed of the misconception dataset VISION.md describes; see
+-- lib/llm.ts's clusterMisconceptions. Re-running analysis for a node replaces
+-- its prior rows (best-effort snapshot, not an accumulating history).
+CREATE TABLE IF NOT EXISTS misconceptions (
+  id         INTEGER PRIMARY KEY AUTOINCREMENT,
+  node_id    TEXT NOT NULL,
+  label      TEXT NOT NULL,             -- e.g. "confuses pointwise with uniform convergence"
+  gap_count  INTEGER NOT NULL DEFAULT 1, -- how many attempts.gap texts this cluster represents
+  created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_misconceptions_node ON misconceptions(node_id);
+
 -- Generated problems live here so the ideal solution / rubric stay server-side
 -- (the student grades against a problemId, never sees the answer key).
 CREATE TABLE IF NOT EXISTS problems (
