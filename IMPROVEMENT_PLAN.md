@@ -241,11 +241,21 @@ Specific candidates found this pass, beyond the memory's running list
 3. **Home page length** — spotlight + due + goal + blind spots + frontier +
    bookmarks + areas + recent is a lot of stacked panels; consider collapsing
    the lower third behind "More" or tightening panel paddings at `<900px`.
-4. **`prefers-reduced-motion` / `:focus-visible` audit** — hover-lift
+4. ✅ **`prefers-reduced-motion` / `:focus-visible` audit** — hover-lift
    micro-interactions landed (`e437709`); make sure keyboard focus and reduced
-   motion get the same care (one CSS block each).
-5. **Keyboard shortcuts drift** — `b`/`g` still point at dead routes (fixed by
-   P0 #1); while in there, add `e` → `/explore` and update the shortcuts modal.
+   motion get the same care (one CSS block each). Added a `prefers-reduced-motion`
+   block (near-zero transition/animation duration, hover-lift transforms
+   cancelled) and fixed a real `:focus-visible` gap: `select:focus` unconditionally
+   set `outline: none` with only a subtle border-color change as the replacement —
+   every dropdown site-wide had no visible keyboard-focus indicator. Now
+   `outline: none` only applies to non-keyboard focus (`:not(:focus-visible)`),
+   same pattern applied to `.global-search-input`.
+5. ✅ **Keyboard shortcuts drift** — `b`/`g` still point at dead routes: already
+   fixed as part of P0 #1 (`KeyboardShortcuts.tsx` routes both to `/explore?view=…`).
+   The "add `e` → `/explore`" sub-suggestion is now stale/superseded — `e` already
+   routes to `/session` ("Study session"), a more valuable binding than a second
+   route to Explore when `b`/`g` already cover its two view modes. No code change
+   needed beyond the P0 #1 fix already shipped.
 
 ---
 
