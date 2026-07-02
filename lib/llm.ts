@@ -265,30 +265,7 @@ export async function explainConcept(
     .filter(Boolean)
     .join("\n");
 
-  let result = "";
-  if (cfg.provider === "gemini") {
-    const resp = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${cfg.geminiModel}:generateContent?key=${cfg.geminiKey}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 0.7, maxOutputTokens: 1800, thinkingConfig: { thinkingBudget: 0 } },
-        }),
-      }
-    );
-    if (!resp.ok) throw new Error(await resp.text());
-    const data = await resp.json();
-    result = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ?? "";
-  } else if (cfg.provider === "anthropic" && cfg.anthropic) {
-    const msg = await cfg.anthropic.messages.create({
-      model: ANTHROPIC_GRADE_MODEL,
-      max_tokens: 1200,
-      messages: [{ role: "user", content: prompt }],
-    });
-    result = (msg.content[0] as any)?.text?.trim() ?? "";
-  }
+  const result = await llmText(prompt, { temperature: 0.7, maxTokens: 1800 }, cfg);
   if (result) cacheSet(ck, result);
   return result;
 }
@@ -336,12 +313,7 @@ export async function generateHint(args: {
   }
 
   if (cfg.provider === "anthropic" && cfg.anthropic) {
-    const msg = await cfg.anthropic.messages.create({
-      model: ANTHROPIC_GRADE_MODEL,
-      max_tokens: 200,
-      messages: [{ role: "user", content: prompt }],
-    });
-    return (msg.content[0] as any)?.text?.trim() ?? "";
+    return anthropicText(prompt, { maxTokens: 200 }, cfg.anthropic);
   }
 
   return "";
@@ -369,33 +341,11 @@ export async function diagnoseWeakness(
     .filter(Boolean)
     .join("\n");
 
-  if (cfg.provider === "gemini") {
-    const resp = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${cfg.geminiModel}:generateContent?key=${cfg.geminiKey}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 0.5, maxOutputTokens: 600, thinkingConfig: { thinkingBudget: 0 } },
-        }),
-      }
-    );
-    if (!resp.ok) return "";
-    const data = await resp.json();
-    return data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ?? "";
+  try {
+    return await llmText(prompt, { temperature: 0.5, maxTokens: 600 }, cfg);
+  } catch {
+    return "";
   }
-
-  if (cfg.provider === "anthropic" && cfg.anthropic) {
-    const msg = await cfg.anthropic.messages.create({
-      model: ANTHROPIC_GRADE_MODEL,
-      max_tokens: 300,
-      messages: [{ role: "user", content: prompt }],
-    });
-    return (msg.content[0] as any)?.text?.trim() ?? "";
-  }
-
-  return "";
 }
 
 // ===========================================================================
@@ -478,37 +428,48 @@ async function geminiGrade(a: Parameters<typeof gradeAnswer>[0], cfg: LLMConfig)
 }
 
 // ===========================================================================
-// Anthropic (kept for when the API is funded)
+// Shared free-text helpers — for the explain/diagnose/compare/re-explain
+// family, which want plain prose back, not structured JSON. Both send the
+// API key via header (never a URL query string, which leaks into logs).
 // ===========================================================================
-const A_PROBLEM_SCHEMA = {
-  type: "object",
-  additionalProperties: false,
-  properties: {
-    problem: { type: "string" },
-    kind: { type: "string", enum: ["compute", "prove", "counterexample", "explain"] },
-    ideal_solution: { type: "string" },
-    rubric: { type: "array", items: { type: "string" } },
-    prerequisites_used: { type: "array", items: { type: "string" } },
-  },
-  required: ["problem", "kind", "ideal_solution", "rubric", "prerequisites_used"],
-};
-
-function aGradeSchema(prereqs: string[]) {
-  return {
-    type: "object",
-    additionalProperties: false,
-    properties: {
-      verdict: { type: "string", enum: ["correct", "partial", "incorrect"] },
-      mastery_evidence: { type: "number" },
-      understood: { type: "array", items: { type: "string" } },
-      gap: { type: "string" },
-      blamed_prerequisite: { type: "string", enum: [...prereqs, "none"] },
-      socratic_hint: { type: "string" },
-    },
-    required: ["verdict", "mastery_evidence", "understood", "gap", "blamed_prerequisite", "socratic_hint"],
-  };
+async function geminiText(prompt: string, opts: { temperature: number; maxTokens: number }, cfg: LLMConfig): Promise<string> {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${cfg.geminiModel}:generateContent`;
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "x-goog-api-key": cfg.geminiKey },
+    body: JSON.stringify({
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: {
+        temperature: opts.temperature,
+        maxOutputTokens: opts.maxTokens,
+        thinkingConfig: { thinkingBudget: 0 },
+      },
+    }),
+  });
+  const data = await res.json().catch(() => ({}) as any);
+  if (!res.ok) throw new ProviderError(res.status, data?.error?.message || `Gemini HTTP ${res.status}`);
+  return (data.candidates?.[0]?.content?.parts?.[0]?.text ?? "").trim();
 }
 
+async function anthropicText(prompt: string, opts: { maxTokens: number }, anthropic: Anthropic): Promise<string> {
+  const msg = await anthropic.messages.create({
+    model: ANTHROPIC_GRADE_MODEL,
+    max_tokens: opts.maxTokens,
+    messages: [{ role: "user", content: prompt }],
+  });
+  return ((msg.content[0] as any)?.text ?? "").trim();
+}
+
+/** Dispatches a free-text prompt to whichever provider is configured; "" in demo mode. */
+async function llmText(prompt: string, opts: { temperature: number; maxTokens: number }, cfg: LLMConfig): Promise<string> {
+  if (cfg.provider === "gemini") return geminiText(prompt, opts, cfg);
+  if (cfg.provider === "anthropic" && cfg.anthropic) return anthropicText(prompt, opts, cfg.anthropic);
+  return "";
+}
+
+// ===========================================================================
+// Anthropic (kept for when the API is funded)
+// ===========================================================================
 function firstJson<T>(msg: Anthropic.Message): T {
   const block = msg.content.find((b) => b.type === "text");
   if (!block || block.type !== "text") throw new Error("no text block in response");
@@ -569,30 +530,7 @@ export async function compareConcepts(
     `Be concise and precise. Use LaTeX ($...$) for all mathematics. Address the student as "you".`,
   ].filter(Boolean).join("\n");
 
-  let result = "";
-  if (cfg.provider === "gemini") {
-    const resp = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${cfg.geminiModel}:generateContent?key=${cfg.geminiKey}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 0.5, maxOutputTokens: 2000, thinkingConfig: { thinkingBudget: 0 } },
-        }),
-      }
-    );
-    if (!resp.ok) throw new Error(await resp.text());
-    const data = await resp.json();
-    result = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ?? "";
-  } else if (cfg.provider === "anthropic" && cfg.anthropic) {
-    const msg = await cfg.anthropic.messages.create({
-      model: ANTHROPIC_GRADE_MODEL,
-      max_tokens: 2000,
-      messages: [{ role: "user", content: prompt }],
-    });
-    result = (msg.content[0] as any)?.text?.trim() ?? "";
-  }
+  const result = await llmText(prompt, { temperature: 0.5, maxTokens: 2000 }, cfg);
   if (result) cacheSet(ck, result);
   return result;
 }
@@ -632,30 +570,7 @@ export async function reExplainConcept(
     `\nWrite 2–4 focused paragraphs. Use LaTeX ($...$) for mathematics. Address the student as "you". Do NOT just restate the definition — add genuine insight from this angle.`,
   ].filter(Boolean).join("\n");
 
-  let result = "";
-  if (cfg.provider === "gemini") {
-    const resp = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${cfg.geminiModel}:generateContent?key=${cfg.geminiKey}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 0.75, maxOutputTokens: 1500, thinkingConfig: { thinkingBudget: 0 } },
-        }),
-      }
-    );
-    if (!resp.ok) throw new Error(await resp.text());
-    const data = await resp.json();
-    result = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ?? "";
-  } else if (cfg.provider === "anthropic" && cfg.anthropic) {
-    const msg = await cfg.anthropic.messages.create({
-      model: ANTHROPIC_GRADE_MODEL,
-      max_tokens: 1500,
-      messages: [{ role: "user", content: prompt }],
-    });
-    result = (msg.content[0] as any)?.text?.trim() ?? "";
-  }
+  const result = await llmText(prompt, { temperature: 0.75, maxTokens: 1500 }, cfg);
   if (result) cacheSet(ck, result);
   return result;
 }
