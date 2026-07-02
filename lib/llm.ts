@@ -245,15 +245,15 @@ export async function gradeAnswer(args: {
   return r;
 }
 
-export async function explainConcept(
+export async function* explainConcept(
   node: import("./db").NodeRow,
   prereqs: string[]
-): Promise<string> {
+): AsyncGenerator<string> {
   const cfg = getLLMConfig();
-  if (cfg.provider === "none") return "";
+  if (cfg.provider === "none") return;
   const ck = cacheKey("explainConcept", { id: node.id, prereqs });
   const hit = cacheGet(ck);
-  if (hit) return hit;
+  if (hit) { yield hit; return; }
   const prompt = [
     `Explain the concept "${node.title}" to a student who already knows: ${prereqs.join(", ") || "the basics"}.`,
     node.type ? `This is a ${node.type}.` : "",
@@ -265,9 +265,12 @@ export async function explainConcept(
     .filter(Boolean)
     .join("\n");
 
-  const result = await llmText(prompt, { temperature: 0.7, maxTokens: 1800 }, cfg);
-  if (result) cacheSet(ck, result);
-  return result;
+  let buf = "";
+  for await (const chunk of llmTextStream(prompt, { temperature: 0.7, maxTokens: 1800 }, cfg)) {
+    buf += chunk;
+    yield chunk;
+  }
+  if (buf) cacheSet(ck, buf);
 }
 
 const HINT_SCHEMA_G = {
@@ -467,6 +470,69 @@ async function llmText(prompt: string, opts: { temperature: number; maxTokens: n
   return "";
 }
 
+// ---------------------------------------------------------------------------
+// Streaming variants of the above, for the long-form calls where the UI
+// renders incrementally instead of waiting ~5-15s for the full response.
+// ---------------------------------------------------------------------------
+async function* geminiTextStream(prompt: string, opts: { temperature: number; maxTokens: number }, cfg: LLMConfig): AsyncGenerator<string> {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${cfg.geminiModel}:streamGenerateContent?alt=sse`;
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "x-goog-api-key": cfg.geminiKey },
+    body: JSON.stringify({
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: {
+        temperature: opts.temperature,
+        maxOutputTokens: opts.maxTokens,
+        thinkingConfig: { thinkingBudget: 0 },
+      },
+    }),
+  });
+  if (!res.ok || !res.body) {
+    const data = await res.json().catch(() => ({}) as any);
+    throw new ProviderError(res.status, data?.error?.message || `Gemini HTTP ${res.status}`);
+  }
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buf = "";
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buf += decoder.decode(value, { stream: true });
+    const lines = buf.split("\n");
+    buf = lines.pop() ?? ""; // keep the trailing partial line for the next read
+    for (const line of lines) {
+      if (!line.startsWith("data:")) continue;
+      const jsonStr = line.slice(5).trim();
+      if (!jsonStr) continue;
+      let obj: any;
+      try { obj = JSON.parse(jsonStr); } catch { continue; }
+      const text = obj?.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (text) yield text;
+    }
+  }
+}
+
+async function* anthropicTextStream(prompt: string, opts: { maxTokens: number }, anthropic: Anthropic): AsyncGenerator<string> {
+  const stream = await anthropic.messages.create({
+    model: ANTHROPIC_GRADE_MODEL,
+    max_tokens: opts.maxTokens,
+    messages: [{ role: "user", content: prompt }],
+    stream: true,
+  });
+  for await (const event of stream) {
+    if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
+      yield event.delta.text;
+    }
+  }
+}
+
+/** Streaming counterpart to llmText; yields nothing in demo mode. */
+async function* llmTextStream(prompt: string, opts: { temperature: number; maxTokens: number }, cfg: LLMConfig): AsyncGenerator<string> {
+  if (cfg.provider === "gemini") { yield* geminiTextStream(prompt, opts, cfg); return; }
+  if (cfg.provider === "anthropic" && cfg.anthropic) { yield* anthropicTextStream(prompt, opts, cfg.anthropic); return; }
+}
+
 // ===========================================================================
 // Anthropic (kept for when the API is funded)
 // ===========================================================================
@@ -501,15 +567,15 @@ async function anthropicGrade(a: Parameters<typeof gradeAnswer>[0], anthropic: A
 // ===========================================================================
 // Compare two concepts
 // ===========================================================================
-export async function compareConcepts(
+export async function* compareConcepts(
   nodeA: NodeRow,
   nodeB: NodeRow
-): Promise<string> {
+): AsyncGenerator<string> {
   const cfg = getLLMConfig();
-  if (cfg.provider === "none") return "";
+  if (cfg.provider === "none") return;
   const ck = cacheKey("compareConcepts", { a: nodeA.id, b: nodeB.id });
   const hit = cacheGet(ck);
-  if (hit) return hit;
+  if (hit) { yield hit; return; }
   const prompt = [
     `Compare and contrast these two mathematical concepts:\n`,
     `CONCEPT A: ${nodeA.title}`,
@@ -530,9 +596,12 @@ export async function compareConcepts(
     `Be concise and precise. Use LaTeX ($...$) for all mathematics. Address the student as "you".`,
   ].filter(Boolean).join("\n");
 
-  const result = await llmText(prompt, { temperature: 0.5, maxTokens: 2000 }, cfg);
-  if (result) cacheSet(ck, result);
-  return result;
+  let buf = "";
+  for await (const chunk of llmTextStream(prompt, { temperature: 0.5, maxTokens: 2000 }, cfg)) {
+    buf += chunk;
+    yield chunk;
+  }
+  if (buf) cacheSet(ck, buf);
 }
 
 // ===========================================================================
@@ -548,16 +617,16 @@ const ANGLE_DESC: Record<ExplainAngle, string> = {
   example:   "Teach through a concrete worked example first, then generalise. Start with a specific, illuminating case and extract the pattern.",
 };
 
-export async function reExplainConcept(
+export async function* reExplainConcept(
   node: NodeRow,
   prereqs: string[],
   angle: ExplainAngle = "intuitive"
-): Promise<string> {
+): AsyncGenerator<string> {
   const cfg = getLLMConfig();
-  if (cfg.provider === "none") return "";
+  if (cfg.provider === "none") return;
   const ck = cacheKey("reExplainConcept", { id: node.id, prereqs, angle });
   const hit = cacheGet(ck);
-  if (hit) return hit;
+  if (hit) { yield hit; return; }
   const angleGuide = ANGLE_DESC[angle];
   const prompt = [
     `Re-explain the mathematical concept "${node.title}" from a DIFFERENT ANGLE than a standard textbook.`,
@@ -570,9 +639,12 @@ export async function reExplainConcept(
     `\nWrite 2–4 focused paragraphs. Use LaTeX ($...$) for mathematics. Address the student as "you". Do NOT just restate the definition — add genuine insight from this angle.`,
   ].filter(Boolean).join("\n");
 
-  const result = await llmText(prompt, { temperature: 0.75, maxTokens: 1500 }, cfg);
-  if (result) cacheSet(ck, result);
-  return result;
+  let buf = "";
+  for await (const chunk of llmTextStream(prompt, { temperature: 0.75, maxTokens: 1500 }, cfg)) {
+    buf += chunk;
+    yield chunk;
+  }
+  if (buf) cacheSet(ck, buf);
 }
 
 // ===========================================================================

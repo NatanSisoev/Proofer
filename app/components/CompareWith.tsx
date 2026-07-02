@@ -7,6 +7,7 @@ import Spinner from "./Spinner";
 import MathText from "./MathText";
 import { Scale, X, ArrowRight } from "./Icons";
 import ErrorBanner from "./ErrorBanner";
+import { consumeStream } from "@/lib/stream";
 
 const Markdown = dynamic(() => import("./Markdown"));
 
@@ -50,9 +51,12 @@ export default function CompareWith({ nodeId, nodeTitle }: { nodeId: string; nod
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ nodeIdA: nodeId, nodeIdB: other.id }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed");
-      setComparison(data.comparison);
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Failed");
+      }
+      setComparison("");
+      await consumeStream(res, setComparison);
     } catch (e: any) {
       setError(e.message || "Something went wrong");
     } finally {
@@ -140,10 +144,10 @@ export default function CompareWith({ nodeId, nodeTitle }: { nodeId: string; nod
         </div>
       )}
 
-      {busy && <div className="muted small" style={{ padding: "8px 0" }}><Spinner label="Generating comparison…" /></div>}
+      {busy && !comparison && <div className="muted small" style={{ padding: "8px 0" }}><Spinner label="Generating comparison…" /></div>}
       {error && <ErrorBanner>{error}</ErrorBanner>}
 
-      {comparison && !busy && (
+      {comparison && (
         <div className="divider-top">
           <div className="markdown" style={{ fontSize: 13.5 }}>
             <Markdown>{comparison}</Markdown>

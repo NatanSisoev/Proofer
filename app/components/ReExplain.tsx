@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import Spinner from "./Spinner";
 import { Sparkles, X, RefreshCw, Lightbulb, Triangle, Palette, BookOpen, Hash } from "./Icons";
 import ErrorBanner from "./ErrorBanner";
+import { consumeStream } from "@/lib/stream";
 import type { ComponentType } from "react";
 
 const Markdown = dynamic(() => import("./Markdown"));
@@ -39,9 +40,12 @@ export default function ReExplain({ nodeId }: { nodeId: string }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ nodeId, angle: a }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed");
-      setExplanation(data.explanation);
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Failed");
+      }
+      setExplanation("");
+      await consumeStream(res, setExplanation);
     } catch (e: any) {
       setError(e.message || "Something went wrong");
     } finally {
@@ -93,13 +97,13 @@ export default function ReExplain({ nodeId }: { nodeId: string }) {
       </div>
 
       {/* Output */}
-      {busy && (
+      {busy && !explanation && (
         <div className="muted small" style={{ padding: "12px 0" }}>
           <Spinner label={`Generating ${lastAngle} explanation…`} />
         </div>
       )}
       {error && <ErrorBanner>{error}</ErrorBanner>}
-      {explanation && !busy && (
+      {explanation && (
         <div className="divider-top">
           <div className="panel-label label-xs icon-label" style={{ marginBottom: 8 }}>
             {(() => {

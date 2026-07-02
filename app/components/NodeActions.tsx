@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import Spinner from "./Spinner";
 import { ExternalLink, Sparkles, Check } from "./Icons";
 import ErrorBanner from "./ErrorBanner";
+import { consumeStream } from "@/lib/stream";
 
 // Markdown pulls in katex + react-markdown + remark; defer it out of this
 // component's initial chunk since it only renders after "Explain this" is clicked.
@@ -37,9 +38,12 @@ export default function NodeActions({ nodeId, nodePath, hasLLM }: Props) {
     setExplainError("");
     try {
       const res = await fetch(`/api/node/${encodeURIComponent(nodeId)}/explain`);
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to explain");
-      setExplanation(data.explanation);
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Failed to explain");
+      }
+      setExplanation(""); // clear the spinner as soon as the first chunk can render
+      await consumeStream(res, setExplanation);
     } catch (e: any) {
       setExplainError(e.message);
     } finally {
