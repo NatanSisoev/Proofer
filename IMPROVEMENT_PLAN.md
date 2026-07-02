@@ -126,7 +126,7 @@ different URLs for the same thing depending on entry point.
 5. ✅ **Drop the dead `user_knows` table.** `db/schema.sql:42` admits it's
    "kept for back-compat; mastery is now the source of truth" — nothing reads
    it. Remove from schema + importer preserve-list + `check-db.mjs`.
-6. **Make `check-db` runnable as documented.** `node scripts/check-db.mjs`
+6. ✅ **Make `check-db` runnable as documented.** `node scripts/check-db.mjs`
    fails on modern Node without `--experimental-sqlite` (CLAUDE.md documents the
    bare form). Add `"check-db": "cross-env NODE_OPTIONS=--experimental-sqlite node scripts/check-db.mjs"`
    to `package.json` and update CLAUDE.md. Consider an `"engines"` field pinning
