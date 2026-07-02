@@ -112,7 +112,7 @@ different URLs for the same thing depending on entry point.
    `streamGenerateContent` / Anthropic streaming and render incrementally in
    `ReExplain` / `CompareWith` / the explain flow. Do it *after* (1) so there's
    exactly one streaming implementation.
-3. **`conceptOfDay()` loads every candidate's full note body on every home
+3. ✅ **`conceptOfDay()` loads every candidate's full note body on every home
    render.** `lib/queries.ts:1114–1157` does `SELECT n.*` (including `content`)
    for **all** frontier candidates, then keeps one row — on the full 767-node
    vault that's potentially hundreds of full markdown bodies per `/` visit
