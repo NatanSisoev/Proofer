@@ -1,286 +1,259 @@
-# Proofer — Master Improvement Plan
+# Proofer — Improvement Plan (2026-07-02)
 
-A prioritized roadmap from first-hand code review (Next.js 15 App Router + TS,
-embedded `node:sqlite`, Gemini/Claude LLM layer, Cytoscape graph). Organized by
-**performance** (top priority — "extremely slow"), **bugs**, **redundant
-features**, **new features**, and **design polish** (building on the Phase 1
-light redesign already shipped in `adb1765`/`f2dab18`/`241a6a7`).
+A fresh, prioritized roadmap from a full code audit (every page, `lib/*`, the LLM
+layer, schema, and all planning docs). The previous plan (2026-06-25) is **fully
+shipped** — its P0–P4 items all landed (see git history for the old file). This
+plan is the successor backlog.
 
-Dataset is tiny (4.1MB, 36 problems, 17 attempts) — slowness is **architectural**,
-not data volume. Fix architecture first; everything else compounds on top of it.
+**Companion docs:** [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) (the four
+next-level bets — status recap below), [LAUNCH_PLAN.md](LAUNCH_PLAN.md) (hosting/
+multi-user), [LEARNING_PATHWAYS.md](LEARNING_PATHWAYS.md) (guided-lane concept),
+[DESIGN_MIGRATION_PLAN.md](DESIGN_MIGRATION_PLAN.md) (Claude-aesthetic migration,
+essentially complete).
 
----
+## Where the app stands
 
-## ✅ Status as of 2026-06-25
-
-Most P0–P3 items are complete. Summary of what's shipped:
-
-- **P0 #1** ✅ `/browse` ISR (revalidate=30), `/quality` ISR (revalidate=60/120). Remaining `force-dynamic` routes are correctly per-user (mastery, attempts).
-- **P0 #2** ✅ `loading.tsx` Suspense skeletons added for all 8 major routes.
-- **P0 #3** ✅ Vault sync is async (`execFileAsync`), module-scoped lock prevents double-sync.
-- **P0 #4** ✅ `thinkingConfig: { thinkingBudget: 0 }` on all 5 free-form LLM call sites.
-- **P0 #5** ✅ LLM response cache — SQLite-backed, 7-day TTL, cleared on vault sync.
-- **P0 #6** ✅ `/quality` ISR means `linkSuggestions` O(n²) runs at most once per 120s.
-- **P0 #7** ✅ Cytoscape layout positions persisted to localStorage per area.
-- **P1 #1** ✅ DB singleton race — stale handle left open on sync (WAL coexistence), no close.
-- **P1 #2** ✅ StudyQueue "Retry missed" uses `setActiveQueue` (no `window.location` reload).
-- **P2 #1** ✅ `/learn?node=X` is a 1-item `StudyQueue` — fully merged.
-- **P3 #1** ✅ Search results show readiness state per hit: "mastered" / "ready" (all prereqs known) / "N prereqs" badge via `DIRECT_UNMASTERED_SQ` correlated subquery in `searchWithMastery()`. Both `SearchBox` and `GlobalSearch` updated.
-- **P3 #3** ✅ AI edge-typing: `classifyEdge()` + `/api/quality/edges/classify` approval queue.
-- **P3 #4** ✅ Misconception signals: `nodeBlamedPrereqs` on node page, `recurringWeakPrerequisites` on `/progress`. **New (2026-06-21):** "Last gap identified" panel surfaced prominently in node page side column from most recent non-correct attempt — no longer buried in collapsed history.
-- **P3 #5** ✅ `dependencyCycles()` query exists; DAG hygiene surfaced in `/quality`.
-- **P3 #6** ✅ Provider/model badge in `/settings` LLM panel.
-- **P4 #2** ✅ (partial) `.t-Algorithm`, `.t-Example`, `.t-ghost` backgrounds now use `var(--green-soft)` / `var(--amber-soft)` / `var(--red-soft)`; `.t-ghost` color → `var(--red)`. Dark-mode bg overrides removed for these three (CSS vars carry dark values). Text colors for Algorithm/Example still hardcoded (no exact variable match exists yet).
-- **New** ✅ Exam mode: timed session with countdown clock, auto-finish, exam-branded summary.
-- **New (2026-06-25)** ✅ `masteryVelocity()` bug fixed — now counts distinct concepts first mastered in the timeframe (previously overcounted repeated practice on already-mastered concepts).
-- **New (2026-06-25)** ✅ Streak bug fixed — `todayStats()` streak no longer zeroes out if the student hasn't practiced yet today; stays alive until midnight (was showing 0 instead of the true streak day-count).
-- **New (2026-06-25)** ✅ Unlock preview — "unlocks N" pill on home-page frontier items is now interactive: click to fetch and display the specific concepts that would become learnable if this concept is mastered (`UnlockPreview.tsx` + `/api/newly-unlocked`).
-
-**Remaining backlog below.**
+- **Everything in the 2026-06-25 plan shipped**: ISR + `loading.tsx` everywhere it
+  matters, async vault sync with lock, LLM cache + thinking disabled, the
+  `/learn`→`StudyQueue` merge (shared `ProblemCard`), exam mode, unlock preview,
+  streak/velocity fixes, edge-classification approval queue.
+- **From IMPLEMENTATION_PLAN's bets**: 4b Calibration ✅ (confidence gate + Brier +
+  blind spots), 4a info-gain selection ✅ (`selectNext` policy + difficulty
+  targeting). Lean verification (1), Postgres/pgvector/multi-user (0), course
+  ingestion (3), misconception clustering (2) — **not started**.
+- **Cut features**: study plan (`dcf4286`), flashcards (`0879252`) — both
+  deliberate; don't resurrect.
+- **Half-finished**: the browse/map→explore merge. `/explore` shipped with three
+  view modes (`973f9f2`) but the old routes and most links to them survive — see
+  P0 #1, the single biggest cleanup in this plan.
 
 ---
 
-## P0 — Performance (do these first)
+## P0 — Finish the explore merge (one coherent navigation model)
 
-### 1. Remove blanket `export const dynamic = "force-dynamic"`
-Every one of the 34 page/route files opts out of all Next.js caching and
-prerendering. Every navigation re-runs every server query from scratch with
-zero cache.
+### 1. `/browse` and `/graph` duplicate `/explore` wholesale
+`app/explore/page.tsx` `SectionsView` (L61–160) is a near-verbatim copy of
+`app/browse/page.tsx`, and its `MapView` (L162–179) copies `app/graph/page.tsx`.
+Both old routes still render, and most of the app still links to them:
 
-- **Fix**: Only routes that truly need per-request freshness (anything reading
-  `mastery`/`attempts`/session state) need `force-dynamic`. Static-ish pages
-  (`/browse`, `/quality` issue lists, area listings) can drop it or use
-  `revalidate = 30` / `unstable_cache()` for the heavy aggregate queries
-  (`noteQuality()`, `linkSuggestions()`, `stats()`, `browseAreas()`).
-- **Effort**: Medium — audit each page, pick `force-dynamic` vs `revalidate`.
-- **Impact**: Largest single perceived-speed win.
+- `app/page.tsx:345` ("Browse all") and `:352` (area rows → `/browse?area=`)
+- `app/node/[slug]/page.tsx:118` (breadcrumb), `:120` (area link), `:381`
+  ("Browse all {area}")
+- `app/components/StudyQueue.tsx:419` (summary area links)
+- `app/components/KeyboardShortcuts.tsx:49–50` (`b` → `/browse`, `g` → `/graph`)
 
-### 2. Add `loading.tsx` Suspense boundaries
-Zero `loading.tsx` files exist anywhere in `app/`. Every nav shows a blank
-white screen until the full server component (including all its DB + LLM
-calls) resolves.
+Any styling or behavior change now has to be made twice, and users land on two
+different URLs for the same thing depending on entry point.
 
-- **Fix**: Add `loading.tsx` skeletons for `/`, `/graph`, `/browse`, `/progress`,
-  `/quality`, `/node/[slug]`, `/session`, `/study-plan`. Even a simple
-  "panel skeleton" matching the new light design instantly fixes the "is this
-  app frozen?" feeling.
-- **Effort**: Low — one file per route, reuse a shared `<PageSkeleton/>`.
-- **Impact**: High — turns "frozen" into "loading", same backend speed.
-
-### 3. Fix the synchronous vault-sync route
-`app/api/vault/sync/route.ts` runs `execSync(...)` with `timeout: 90_000` —
-**this blocks the entire single-threaded Node process for up to 90 seconds**.
-Every other request (every page, every API call) queues behind it while sync
-runs.
-
-- **Fix**: Run the import as a detached child process (`spawn` with
-  `detached: true` + polling for completion / a `sync_status` row in
-  `settings`), or move it to a background job queue. At minimum, switch
-  `execSync` → `exec`/`spawn` (async) so the event loop isn't blocked.
-- **Effort**: Medium.
-- **Impact**: High if `SyncButton` is used regularly — currently every sync
-  click freezes the whole app for everyone for up to 90s.
-
-### 4. Disable Gemini "thinking" + stream the free-form LLM calls
-`geminiCall()` (used for problem generation/grading) correctly sets
-`thinkingConfig: { thinkingBudget: 0 }`. But **`explainConcept`,
-`diagnoseWeakness`, `compareConcepts`, `reExplainConcept`, and
-`generateStudyPlan`** in `lib/llm.ts` call raw `fetch()` with only
-`generationConfig: { temperature, maxOutputTokens }` — no `thinkingConfig`,
-no streaming. Gemini 2.5 Flash's default thinking budget can add many seconds
-of latency per call, and the UI blocks fully until the whole response lands.
-
-- **Fix**: Add `thinkingConfig: { thinkingBudget: 0 }` to all five call sites
-  (or a low fixed budget if quality regresses). For `explainConcept` /
-  `generateStudyPlan` (long-form output), switch to `streamGenerateContent`
-  and stream tokens to the client — these are the slowest-feeling features
-  today (`/study-plan`, "Explain first →", re-explain, compare).
-- **Effort**: Medium (shared helper + UI streaming consumers).
-- **Impact**: High — these are the features most likely to feel "stuck".
-
-### 5. Cache LLM explain/compare/study-plan responses
-No caching anywhere for LLM output. Every "Explain first →", "Compare", or
-re-explain click hits the API fresh, even for the same node + same mastery
-state.
-
-- **Fix**: Cache by `(nodeId, prereqHash)` (or `(nodeId, otherNodeId)` for
-  compare) in a small SQLite table or `unstable_cache`, with a short TTL (or
-  invalidate on mastery change). Saves API calls and makes repeat visits instant.
-- **Effort**: Low–Medium.
-- **Impact**: Medium — big win for `/node/[slug]` repeat visits.
-
-### 6. Audit `linkSuggestions()` O(n²) scan
-`lib/queries.ts`'s `linkSuggestions` does a double loop over **all** nodes'
-content. At 767 nodes (the full vault, per README) this is ~588K comparisons
-on every `/quality?tab=links` load, computed synchronously in the request
-thread — with `force-dynamic` it reruns every visit.
-
-- **Fix**: Cache the result (it only needs to change when the graph changes —
-  tie invalidation to vault sync), or precompute during `import-vault.mjs`
-  and store suggestions in a table.
-- **Effort**: Low (cache) → Medium (precompute).
-- **Impact**: Medium, but **high once the full 767-node vault is imported** —
-  currently masked by the small dev DB.
-
-### 7. Cytoscape graph layout cost
-`GlobalGraph.tsx` runs a `cose` layout with `numIter: 500` and only disables
-animation above 300 nodes — at 767 nodes this is a heavy client-side layout
-computed on every `/graph` visit (no caching of node positions).
-
-- **Fix**: Persist computed layout positions (localStorage or a `node_positions`
-  table) and reuse them; only re-layout on structural change. Consider a
-  faster preset for >500 nodes (`grid`/`concentric` first paint, `cose` as
-  progressive enhancement).
-- **Effort**: Medium.
-- **Impact**: Medium — mainly affects `/graph` on the full vault.
+- **Fix**: migrate every link/shortcut to `/explore?view=…&area=…`; replace
+  `app/browse/page.tsx` and `app/graph/page.tsx` with `redirect()` stubs that
+  preserve `area` (keep old URLs working — they're in browser histories); delete
+  the `ALIASES` entries in `NavLinks.tsx` once nothing links to the old paths.
+- **Also**: `ListView` (`app/explore/page.tsx:198–203`) does an N+1 loop —
+  `nodesInArea()` per area — then re-filters and re-sorts in JS what SQL already
+  did. Add one `allNodesWithMastery(type?, sort?)` query instead.
+- **Effort**: Low–Medium. **Impact**: High — kills ~340 duplicated lines and the
+  "two names for the same page" confusion.
 
 ---
 
-## P1 — Bugs / correctness
+## P1 — Correctness bugs (all small, all real)
 
-1. **Vault-sync DB singleton race**: `app/api/vault/sync/route.ts` closes
-   `global.__prooferDb` and sets it to `undefined` mid-sync. If another request
-   runs concurrently (likely once #3 above makes sync async/non-blocking), it
-   could hit a closed/`undefined` handle. Needs a lock or a recreated
-   connection guard in `lib/db.ts`.
-2. **`StudyQueue` "Retry missed" does a full page reload**: clicking "Retry N
-   missed" (`StudyQueue.tsx` ~L382) does `window.location.href =
-   "/learn?node=..."`, dropping straight into the single-concept `/learn` flow
-   and discarding the rest of the retry list — only the *first* missed concept
-   is retried, the comment in the code even acknowledges this is a workaround.
-   Fixing this is also a forcing function for the `/learn` vs `/session` merge
-   below (#1 in Redundant Features).
-3. **`StudyQueue` prefetch cache never evicted on skip**: if a user hits "Skip"
-   repeatedly, `prefetchCache` entries for skipped nodes are never consumed or
-   cleared — minor memory/API-call leak over a long session (low severity,
-   but free to fix alongside the queue refactor).
-4. **Emoji/UI debris missed in Phase 1 redesign**: `app/study-plan/page.tsx`
-   still has `📅 Study Plan` in the `<h1>`, and `PracticeSession.tsx` still has
-   `💡 Hint`. The Phase 1 redesign explicitly aimed to remove all emoji —
-   these two were missed (see Design Polish below).
-
----
-
-## P2 — Redundant / overlapping features (merge candidates)
-
-### 1. `/learn` vs `/session` — near-duplicate practice UIs
-`PracticeSession.tsx` (~500 lines) and `StudyQueue.tsx` (~700 lines) implement
-**nearly identical** logic: same `Problem`/`Grade` types, same
-`VERDICT_STYLE` color map (duplicated verbatim), same hint/reveal/follow-up/
-explain flow, same Ctrl+Enter handling. The only real difference is
-`StudyQueue` wraps it in a queue with progress dots and a summary screen.
-
-- **Recommendation**: Make `/learn?node=X` simply launch a **1-item
-  `StudyQueue`** (or extract a shared `<ProblemCard>` component used by both).
-  This also fixes bug #2 above for free, and halves the surface area for
-  future practice-flow changes (hints, voice input, etc. only need to be built
-  once).
-- **Effort**: Medium-High (careful refactor, but high long-term payoff —
-  currently *every* practice-flow feature must be implemented twice).
-
-### 2. Flashcards vs Session "weak spots"/"smart" modes
-`/flashcard` builds a deck from `weakSpots(20) + bookmarkedNodes() +
-frontier(30)` — the same signals `SessionSetup`'s "Weak spots" and "★
-Bookmarked" session modes use, just rendered as flip-cards instead of a
-problem queue. Not pure duplication (flashcards are a lighter-weight recall
-mode vs. graded practice), but worth deciding: is `/flashcard` a distinct
-product surface (Anki-style recall) or should it become a "mode" option inside
-`/session` (e.g. a `display: "card" | "problem"` toggle)? Given VISION.md
-explicitly positions Proofer *against* "Anki, except it tests whether you truly
-understand" — pure flashcards arguably contradict the thesis and could either
-be (a) cut, or (b) repositioned purely as a *review/skim* tool before a real
-session, clearly labeled as such.
-
-- **Recommendation**: Keep, but relabel as "Quick review" and link it from
-  `/session` as a pre-session warm-up rather than a top-level nav item — reduces
-  nav clutter (see Design Polish) without removing functionality.
-
-### 3. Five near-identical "free-form LLM explanation" endpoints
-`explain`, `reexplain`, `compare`, `diagnose`, and `study-plan` routes each
-independently call `fetch()` to Gemini with their own prompt-building and error
-handling in `lib/llm.ts`. Not removable (each serves a distinct UI need), but
-**should share one streaming/caching helper** (see P0 #4/#5) instead of five
-copies of the same fetch boilerplate — this is a refactor that *enables* the
-performance fixes, not a separate feature cut.
+1. **NUL byte in `lib/queries.ts:903`.** The cycle-dedup key is
+   `rotated.join("<literal \0>")` — a raw NUL character in the source. It's valid
+   TS (tsc passes) but makes the repo's most important file **binary to
+   ripgrep/grep**: `Grep` on `lib/queries.ts` returns "binary file matches" and
+   content searches silently skip it. Replace the literal with the escape
+   `"\u0000"` (identical semantics — NUL can't occur in node ids, which is why it
+   was chosen as separator).
+2. **Day boundaries are UTC; the user is in Europe/Madrid.** `todayStats()`
+   (`lib/queries.ts:934`), `activityCalendar()` (`:971`), `masteryVelocity()`
+   (`:994`), `reviewForecast()` (`:217`), and `masteryMilestones()` (`:1215`) all
+   bucket by `date(created_at)` / `date('now')` / `toISOString().slice(0,10)` —
+   UTC days. Practicing at 00:30 local counts toward *yesterday*: the streak can
+   falsely break (or falsely survive), the daily goal resets at 1–2 AM instead of
+   midnight, and the heatmap shifts. Fix consistently: use SQLite's
+   `'localtime'` modifier (`date(created_at,'localtime')`, `date('now','localtime')`)
+   and local-date formatting on the JS side (both sides must agree).
+3. **`MASTERY_THRESHOLD` isn't the single source of truth it claims to be.**
+   Hardcoded `0.8` appears in `browseAreas` (`lib/queries.ts:445`),
+   `masteryVelocity` (`:1002`), `masteryMilestones` (`:1223`), `areaMastery`
+   (`:1251`), and the node-page "mastered" badge
+   (`app/node/[slug]/page.tsx:154`). If the threshold is ever tuned, these
+   silently disagree with the frontier/readiness model. One sweep to interpolate
+   the constant.
+4. **Search mangles literal `%`/`_`.** `searchWithMastery`
+   (`lib/queries.ts:670`) strips `%` and `_` from the query instead of escaping
+   them (`LIKE ? ESCAPE '\'`). Searching `a_n` or anything with an underscore
+   (common in math slugs) silently matches the wrong thing.
+5. **Stale site metadata.** `app/layout.tsx:13–16` still says *"Proofer — a map
+   of mathematics · A typed knowledge graph of mathematical concepts"* — the
+   pre-pivot positioning. The home page's own tagline is "AI tutor that models
+   your understanding of mathematics". Update `<title>`/description (and check
+   `app/opengraph-image.tsx` for matching copy) to the tutor framing.
 
 ---
 
-## P3 — New features (aligned with VISION.md roadmap)
+## P2 — Code health (pays for itself on the next feature)
 
-Roughly in order of value vs. effort, given the app is "at its beginnings":
-
-1. **Surface `learningPath()` more prominently.** The recursive-CTE shortest
-   known→target path already exists (`LearningPath.tsx` on `/node/[slug]`) but
-   is buried in the node page. Promote it to a first-class "How do I get here?"
-   action from the graph and from search results — directly serves the "always
-   knows what you're ready to learn next" pitch in VISION.md.
-2. **Async vault sync with progress UI.** Once #3 (P0) makes sync
-   non-blocking, add a simple progress indicator (polling a `sync_status` row)
-   so "Sync vault" feels safe to click instead of freezing the app.
-3. **AI edge-typing pass for `related` edges** (VISION.md Phase 2): the 1,972
-   `related` edges in the full vault are unclassified. An LLM batch pass to
-   suggest `depends_on`/`generalizes`/etc. with a confidence score, surfaced in
-   `/quality` as an approval queue, directly improves the prerequisite graph
-   that the whole mastery model depends on — high leverage for a "beginnings"
-   app.
-4. **Misconception logging (the stated 3-year moat).** `attempts` already
-   stores `gap`/`blamed_prerequisite` per attempt — nothing yet aggregates this
-   across users/sessions into a "common misconceptions for concept X" view.
-   Even a single-user version (show your own recurring gaps on a concept's
-   page) is a cheap first step toward the dataset VISION.md describes.
-5. **DAG hygiene view**: surface `depends_on` cycles (mentioned as a "next
-   step" in README) — `prerequisites()` is already cycle-safe via path
-   tracking, so detecting and listing cycles is mostly a query away, and feeds
-   the `/quality` page as another issue type.
-6. **Settings: provider/model visibility.** With three LLM tiers (Gemini →
-   Anthropic → demo stub), surface *which* provider is currently answering
-   (already partially done via `mode: "ai"|"demo"` on problems) consistently
-   across explain/compare/study-plan too, so users understand demo-mode
-   limitations everywhere, not just in practice.
+1. **Unify the LLM call paths.** `lib/llm.ts` has a good shared `geminiCall()`
+   (header auth, structured JSON, thinking disabled) — but four functions still
+   hand-roll their own `fetch`: `explainConcept` (L269), `diagnoseWeakness`
+   (L372), `compareConcepts` (L572), `reExplainConcept` (L635). Each duplicates
+   error handling and passes the **API key in the URL query string** (`?key=`),
+   which leaks into any server/proxy log line, unlike `geminiCall`'s
+   `x-goog-api-key` header. Add one `geminiText(system, prompt, opts)` helper +
+   one `anthropicText(...)` helper; each feature becomes a prompt + cache-key
+   pair. Also delete the **dead Anthropic JSON schemas** (`A_PROBLEM_SCHEMA`,
+   `aGradeSchema`, L483–510) — defined, never referenced.
+2. **Stream the long-form calls.** The one surviving piece of the old "P0 #4":
+   explain / re-explain / compare block the UI until the whole response lands
+   (~5–15 s perceived freeze). Switch those routes to
+   `streamGenerateContent` / Anthropic streaming and render incrementally in
+   `ReExplain` / `CompareWith` / the explain flow. Do it *after* (1) so there's
+   exactly one streaming implementation.
+3. **`conceptOfDay()` loads every candidate's full note body on every home
+   render.** `lib/queries.ts:1114–1157` does `SELECT n.*` (including `content`)
+   for **all** frontier candidates, then keeps one row — on the full 767-node
+   vault that's potentially hundreds of full markdown bodies per `/` visit
+   (which is `force-dynamic`). Select only the columns the spotlight card needs,
+   or `LIMIT 1 OFFSET (dayIdx % count)`.
+4. **`StudyQueue` keyboard effect re-subscribes every render.** The
+   `useEffect` at `app/components/StudyQueue.tsx:198–219` has **no dependency
+   array**, so every keystroke-triggered render tears down and re-adds the
+   window listener. Harmless today, but it's the kind of thing that bites when
+   the handler gains state. Give it deps (or a ref-based handler).
+5. **Drop the dead `user_knows` table.** `db/schema.sql:42` admits it's
+   "kept for back-compat; mastery is now the source of truth" — nothing reads
+   it. Remove from schema + importer preserve-list + `check-db.mjs`.
+6. **Make `check-db` runnable as documented.** `node scripts/check-db.mjs`
+   fails on modern Node without `--experimental-sqlite` (CLAUDE.md documents the
+   bare form). Add `"check-db": "cross-env NODE_OPTIONS=--experimental-sqlite node scripts/check-db.mjs"`
+   to `package.json` and update CLAUDE.md. Consider an `"engines"` field pinning
+   the supported Node range while at it.
+7. **A minimal test layer for the math that must not drift.** There is no test
+   suite at all; `tsc --noEmit` can't catch a wrong BKT posterior. The highest-value
+   targets are pure functions: `applyAttempt`'s posterior math and half-life
+   factors (`lib/mastery.ts`), `masteryEntropy`/`infoGainScore`,
+   `dependencyCycles` canonicalization, `truncateMath`. The built-in `node:test`
+   runner + `tsx` loader covers these with zero framework lock-in
+   (`pnpm run test` → `node --test`). Keep it to ~a dozen assertions; this is a
+   seatbelt, not a testing culture shift.
 
 ---
 
-## P4 — Design polish (continuing the Phase 1 light redesign)
+## P3 — Product features (thesis-aligned, no new infra)
 
-Phase 1 (`adb1765`, `f2dab18`, `241a6a7`) established the light academic
-palette and removed most dark-mode/emoji cruft. Remaining inconsistencies
-found this pass:
+Ranked by value-per-effort given VISION.md's pillars:
 
-1. **Remaining emoji**: `📅` in `app/study-plan/page.tsx` `<h1>`, `💡 Hint` in
-   `PracticeSession.tsx`. Remove both (StudyQueue's equivalent hint button
-   already has no emoji — make `/learn` consistent with it).
-2. **Hardcoded hex colors bypassing CSS variables**: `VERDICT_STYLE` in both
-   `PracticeSession.tsx` and `StudyQueue.tsx` hardcodes `#E8F2EC` / `#F5F0E0` /
-   `#F5E8E8` instead of using `var(--green-soft)`/`var(--amber-soft)`/
-   `var(--red-soft)`-style tokens. Same issue in `GlobalGraph.tsx`'s
-   `EDGE_COLOR` map and `masteryColor()` function (`#C9CDD8`, `#5B8A6B`, etc.)
-   and the tooltip's inline `#FAFAF8`. Centralize these into CSS variables in
-   `globals.css` so the whole app (including the graph) stays in sync if the
-   palette is ever tuned again, and dark mode (if added later) doesn't require
-   re-touching every component.
-3. **Consolidate `VERDICT_STYLE`/`VERDICT_ICON`** into a shared module (this
-   falls out naturally from the `/learn`+`/session` merge in P2 #1).
-4. **`/study-plan` header** uses `borderBottom: "none"` inline override on
-   `<header className="top">` — check this against the Phase 1 nav/header
-   conventions for consistency with other pages' headers.
+1. **Show calibration on the session summary.** Confidence is collected on every
+   attempt (when enabled), but the done screen (`StudyQueue` L352–507) never
+   reflects it back — the loop "you said 80 %, you scored 50 %" closes only on
+   `/progress`, later, if ever. Thread `predicted` into `resultsByIndex`, and on
+   the summary show per-session Brier + a one-liner ("overconfident by ~20 pp on
+   3 concepts"). Small change, and it's the *"refuses to let you fool yourself"*
+   moment made visible at the exact time it lands hardest.
+2. **Misconception clustering MVP — single-user, no pgvector.** VISION bet #2
+   scoped down to what today's stack supports: a batch job (reuse the
+   `/quality` approval-queue pattern) that feeds each concept's accumulated
+   `attempts.gap` texts to the LLM and asks for named misconception clusters
+   ("confuses pointwise with uniform convergence"), stored in a small
+   `misconceptions` table and surfaced on the node page next to "Grader blamed".
+   With 36 attempts it's thin today — but it turns the log into the *product*
+   the vision describes, and the schema/UX survive the later multi-user +
+   embeddings upgrade intact.
+3. **Learning Pathways, phase 1.** The concept doc is written
+   ([LEARNING_PATHWAYS.md](LEARNING_PATHWAYS.md)); the ingredients exist
+   (`learningPath()` ordering, note sections from the importer, generate/grade
+   loop, mastery gate at the threshold, half-life scheduler). Ship the minimal
+   lane: pick target (default = the existing Learning Goal), render the
+   unit/dot lane, read-dots from note sections, quiz-dots via the existing
+   problem flow, gate on p ≥ 0.8. This is the guided-learning surface that
+   replaced the cut "study plan" feature — and the most differentiated UI the
+   app would have.
+4. **Exam mode × calibration friction.** With calibration on, Submit is disabled
+   until a confidence is picked (`StudyQueue.tsx:654`) — under an exam
+   countdown that's hostile. Auto-suppress the confidence gate in exam mode (or
+   make it optional there). One conditional.
+5. **"Why this problem" transparency.** Queue items already carry a `reason`
+   tag (due / weak / blind spot). Extend the info-gain path to say *why* ("closest
+   to your mastery edge", "you rate this 30 pp above your results") in the
+   `reason-tag` tooltip — selection policy becomes legible, which builds trust in
+   smart mode.
+
+---
+
+## P4 — The big bets (unchanged, status updated)
+
+Tracked in detail in [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md); current
+status:
+
+| Bet | Status | Next concrete step |
+|---|---|---|
+| 4b Calibration | ✅ shipped | P3 #1 above (summary readout) |
+| 4a Info-gain selection | ✅ shipped | P3 #5 above (legibility) |
+| 1 Lean verification | not started — **the flagship** | M1: standalone verifier container + `/verify` + `LEAN_VERIFIER_URL` health badge in `/settings`; no grading change yet |
+| 0 Postgres + pgvector + auth | not started | Decide **after** the launch question (P5) — Option A launch doesn't need it; Option B does |
+| 2 Misconception graph (full) | not started | P3 #2 is the deliberate on-ramp |
+| 3 Course ingestion | not started | blocked on bet 0 (embeddings + accounts) |
+
+---
+
+## P5 — Launch readiness (decision gate)
+
+[LAUNCH_PLAN.md](LAUNCH_PLAN.md) is thorough; nothing from it has been executed.
+The concrete Option-A slice (shared demo, "look but don't trust it"):
+
+1. `LAUNCH_MODE=shared` env flag: hides the API-key fields in `/settings`
+   (env-only keys), disables `SyncButton` and vault write-back routes
+   (`/api/node/[id]/improve`, `/api/node/[id]/create` — they `writeFileSync`
+   into the local vault and mean nothing on a server).
+2. Rate-limit `/api/practice/*` + `/api/node/*` (simple in-memory token bucket —
+   one instance is the plan anyway) + provider spend alert.
+3. Fresh `data/graph.db` for the public instance (mastery/attempts are personal
+   history; the importer only rebuilds nodes/edges).
+4. Fly.io/Railway with a persistent volume; smoke-test generate→grade→quality.
+
+Worth doing when there's someone to show it to; P0–P2 first regardless.
+
+---
+
+## P6 — Design & UX polish (standing directive, continuous)
+
+The design overhaul directive stands (owner still iterating toward liking it).
+Specific candidates found this pass, beyond the memory's running list
+(SessionSetup chips, breadcrumb separator, tab-CSS consistency):
+
+1. **Three different "tab" implementations** — `/quality` filter tabs,
+   `/progress` `ProgressTabs`, node-page `NodePanels` accordion headers. One
+   `.tabs` class family would unify hover/active/focus treatment.
+2. **Node page two-column `grid` on mobile** — the side column (`node-side-col`,
+   panels) stacks below the full note; on long notes the practice CTA is a
+   screen-height away. Consider a sticky compact action bar on small viewports.
+3. **Home page length** — spotlight + due + goal + blind spots + frontier +
+   bookmarks + areas + recent is a lot of stacked panels; consider collapsing
+   the lower third behind "More" or tightening panel paddings at `<900px`.
+4. **`prefers-reduced-motion` / `:focus-visible` audit** — hover-lift
+   micro-interactions landed (`e437709`); make sure keyboard focus and reduced
+   motion get the same care (one CSS block each).
+5. **Keyboard shortcuts drift** — `b`/`g` still point at dead routes (fixed by
+   P0 #1); while in there, add `e` → `/explore` and update the shortcuts modal.
 
 ---
 
 ## Suggested execution order
 
-1. **Week 1 — perceived speed**: `loading.tsx` everywhere (P0 #2) +
-   `force-dynamic` audit (P0 #1) — biggest bang-for-buck, low risk.
-2. **Week 1–2 — unblock the process**: async vault sync (P0 #3) + DB
-   singleton race fix (P1 #1).
-3. **Week 2 — LLM latency**: disable thinking + stream explain/study-plan
-   (P0 #4), add response caching (P0 #5).
-4. **Week 3 — practice flow consolidation**: merge `/learn` into `/session`
-   (P2 #1), which also fixes the retry bug (P1 #2/#3) and the verdict-style
-   duplication (P4 #3).
-5. **Week 3–4 — design cleanup**: emoji removal + CSS variable
-   centralization (P4 #1–2), reposition flashcards (P2 #2).
-6. **Ongoing**: link-suggestions caching (P0 #6) and graph layout caching
-   (P0 #7) become urgent once the full 767-node vault is imported — do before
-   that import if possible.
-7. **Backlog**: VISION.md-aligned features (P3), prioritized by what's needed
-   for the "does this beat Anki + ChatGPT for one real course?" test.
+1. **Day 1–2:** P0 #1 (explore consolidation + link/shortcut migration) and all
+   of P1 — every item is under an hour, several are one-liners.
+2. **Week 1:** P2 #1–2 (LLM unification, then streaming) — the biggest remaining
+   *felt* latency win; P2 #3–6 as filler commits; P3 #1 and #4 (both small).
+3. **Week 2:** P2 #7 (test seatbelt) before touching mastery math again; then
+   P3 #2 (misconception MVP).
+4. **Week 3+:** P3 #3 (Pathways phase 1) — the flagship product surface; Lean M1
+   (P4) in parallel as the flagship *correctness* bet.
+5. **Continuous:** one P6 design tick per loop iteration, as established.
+6. **Gate:** revisit P5 (launch) once P0–P2 are clean; the answer decides whether
+   bet 0 (Postgres/auth) enters the critical path.
+
+Each item ships as its own `type: summary` commit on `main`, typecheck green,
+per CLAUDE.md.
