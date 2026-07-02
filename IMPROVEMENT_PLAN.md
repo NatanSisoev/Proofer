@@ -183,7 +183,7 @@ Ranked by value-per-effort given VISION.md's pillars:
    until a confidence is picked (`StudyQueue.tsx:654`) — under an exam
    countdown that's hostile. Auto-suppress the confidence gate in exam mode (or
    make it optional there). One conditional.
-5. **"Why this problem" transparency.** Queue items already carry a `reason`
+5. ✅ **"Why this problem" transparency.** Queue items already carry a `reason`
    tag (due / weak / blind spot). Extend the info-gain path to say *why* ("closest
    to your mastery edge", "you rate this 30 pp above your results") in the
    `reason-tag` tooltip — selection policy becomes legible, which builds trust in
