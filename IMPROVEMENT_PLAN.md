@@ -161,7 +161,7 @@ Ranked by value-per-effort given VISION.md's pillars:
    the summary show per-session Brier + a one-liner ("overconfident by ~20 pp on
    3 concepts"). Small change, and it's the *"refuses to let you fool yourself"*
    moment made visible at the exact time it lands hardest.
-2. **Misconception clustering MVP — single-user, no pgvector.** VISION bet #2
+2. ✅ **Misconception clustering MVP — single-user, no pgvector.** VISION bet #2
    scoped down to what today's stack supports: a batch job (reuse the
    `/quality` approval-queue pattern) that feeds each concept's accumulated
    `attempts.gap` texts to the LLM and asks for named misconception clusters
@@ -202,7 +202,7 @@ status:
 | 4a Info-gain selection | ✅ shipped | P3 #5 above (legibility) |
 | 1 Lean verification | not started — **the flagship** | M1: standalone verifier container + `/verify` + `LEAN_VERIFIER_URL` health badge in `/settings`; no grading change yet |
 | 0 Postgres + pgvector + auth | not started | Decide **after** the launch question (P5) — Option A launch doesn't need it; Option B does |
-| 2 Misconception graph (full) | not started | P3 #2 is the deliberate on-ramp |
+| 2 Misconception graph (full) | MVP on-ramp shipped (P3 #2) | Full version needs embeddings + multi-user (bet 0) to cluster *across* students, not just within one concept |
 | 3 Course ingestion | not started | blocked on bet 0 (embeddings + accounts) |
 
 ---
