@@ -11,8 +11,8 @@ import NavLinks from "./components/NavLinks";
 import { Settings } from "./components/Icons";
 
 export const metadata: Metadata = {
-  title: "Proofer — a map of mathematics",
-  description: "A typed knowledge graph of mathematical concepts.",
+  title: "Proofer — an AI tutor for mathematics",
+  description: "An AI tutor that models your understanding of mathematics.",
 };
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans", display: "swap" });

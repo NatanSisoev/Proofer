@@ -33,7 +33,7 @@ export default function OpengraphImage() {
           Proofer
         </div>
         <div style={{ fontSize: 28, color: "#87867E" }}>
-          A typed knowledge graph of mathematical concepts
+          An AI tutor that models your understanding of mathematics
         </div>
       </div>
     ),

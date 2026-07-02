@@ -86,7 +86,7 @@ different URLs for the same thing depending on entry point.
    (`lib/queries.ts:670`) strips `%` and `_` from the query instead of escaping
    them (`LIKE ? ESCAPE '\'`). Searching `a_n` or anything with an underscore
    (common in math slugs) silently matches the wrong thing.
-5. **Stale site metadata.** `app/layout.tsx:13–16` still says *"Proofer — a map
+5. ✅ **Stale site metadata.** `app/layout.tsx:13–16` still says *"Proofer — a map
    of mathematics · A typed knowledge graph of mathematical concepts"* — the
    pre-pivot positioning. The home page's own tagline is "AI tutor that models
    your understanding of mathematics". Update `<title>`/description (and check
