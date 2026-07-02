@@ -118,7 +118,7 @@ different URLs for the same thing depending on entry point.
    vault that's potentially hundreds of full markdown bodies per `/` visit
    (which is `force-dynamic`). Select only the columns the spotlight card needs,
    or `LIMIT 1 OFFSET (dayIdx % count)`.
-4. **`StudyQueue` keyboard effect re-subscribes every render.** The
+4. ✅ **`StudyQueue` keyboard effect re-subscribes every render.** The
    `useEffect` at `app/components/StudyQueue.tsx:198–219` has **no dependency
    array**, so every keystroke-triggered render tears down and re-adds the
    window listener. Harmless today, but it's the kind of thing that bites when
