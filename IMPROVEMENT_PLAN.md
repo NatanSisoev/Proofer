@@ -66,7 +66,7 @@ different URLs for the same thing depending on entry point.
    content searches silently skip it. Replace the literal with the escape
    `"\u0000"` (identical semantics — NUL can't occur in node ids, which is why it
    was chosen as separator).
-2. **Day boundaries are UTC; the user is in Europe/Madrid.** `todayStats()`
+2. ✅ **Day boundaries are UTC; the user is in Europe/Madrid.** `todayStats()`
    (`lib/queries.ts:934`), `activityCalendar()` (`:971`), `masteryVelocity()`
    (`:994`), `reviewForecast()` (`:217`), and `masteryMilestones()` (`:1215`) all
    bucket by `date(created_at)` / `date('now')` / `toISOString().slice(0,10)` —

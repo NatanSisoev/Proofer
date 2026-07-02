@@ -1,6 +1,18 @@
 import { db, MASTERED_SUBQUERY, MASTERY_THRESHOLD, type NodeRow, type EdgeRow } from "./db";
 import { getMasteryP, setKnown as masterySetKnown, P_INIT } from "./mastery";
 
+// The student is in Europe/Madrid, not UTC. `Date#toISOString().slice(0,10)`
+// buckets by UTC day, which shifts the whole day boundary by 1-2 hours and
+// can falsely break/survive a streak or reset the daily goal at 1-2am local
+// time. Every JS-side day key must use this instead, matching the SQL side's
+// `'localtime'` modifier.
+function localDateStr(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
 export function getNode(id: string): NodeRow | undefined {
   return db().prepare("SELECT * FROM nodes WHERE id = ?").get(id) as NodeRow | undefined;
 }
@@ -218,13 +230,13 @@ export function reviewForecast(): { date: string; count: number }[] {
   const rows = db()
     .prepare(
       `SELECT
-         date(m.last_seen, '+' || CAST(m.half_life * 0.8 AS INTEGER) || ' days') AS due_date,
+         date(m.last_seen, 'localtime', '+' || CAST(m.half_life * 0.8 AS INTEGER) || ' days') AS due_date,
          COUNT(*) AS count
          FROM mastery m
          JOIN nodes n ON n.id = m.node_id
         WHERE n.exists_ = 1 AND m.last_seen IS NOT NULL AND m.p > 0.1
-          AND date(m.last_seen, '+' || CAST(m.half_life * 0.8 AS INTEGER) || ' days') >= date('now')
-          AND date(m.last_seen, '+' || CAST(m.half_life * 0.8 AS INTEGER) || ' days') < date('now', '+8 days')
+          AND date(m.last_seen, 'localtime', '+' || CAST(m.half_life * 0.8 AS INTEGER) || ' days') >= date('now', 'localtime')
+          AND date(m.last_seen, 'localtime', '+' || CAST(m.half_life * 0.8 AS INTEGER) || ' days') < date('now', 'localtime', '+8 days')
         GROUP BY due_date
         ORDER BY due_date`
     )
@@ -234,7 +246,7 @@ export function reviewForecast(): { date: string; count: number }[] {
   const map = new Map(rows.map((r) => [r.due_date, r.count]));
   return Array.from({ length: 8 }, (_, i) => {
     const d = new Date(Date.now() + i * 86400000);
-    const key = d.toISOString().slice(0, 10);
+    const key = localDateStr(d);
     return { date: key, count: map.get(key) ?? 0 };
   });
 }
@@ -954,13 +966,13 @@ export function todayStats(): { today_concepts: number; today_attempts: number; 
   const d = db();
   const today = (d.prepare(
     `SELECT COUNT(DISTINCT node_id) AS concepts, COUNT(*) AS attempts
-       FROM attempts WHERE date(created_at) = date('now')`
+       FROM attempts WHERE date(created_at, 'localtime') = date('now', 'localtime')`
   ).get() as any);
 
   // streak: longest run of consecutive days ending today (or yesterday, if the
   // student hasn't practiced yet today — the streak is still alive until midnight).
   const days = d.prepare(
-    `SELECT DISTINCT date(created_at) AS day
+    `SELECT DISTINCT date(created_at, 'localtime') AS day
        FROM attempts
       ORDER BY day DESC
       LIMIT 365`
@@ -968,12 +980,12 @@ export function todayStats(): { today_concepts: number; today_attempts: number; 
 
   let streak = 0;
   if (days.length > 0) {
-    const todayStr = new Date(Date.now()).toISOString().slice(0, 10);
+    const todayStr = localDateStr(new Date());
     // If today has no practice yet, start the consecutive-day check from yesterday
     // so an in-progress streak isn't falsely zeroed out before midnight.
     const startOffset = days[0].day === todayStr ? 0 : 1;
     for (let i = 0; i < days.length; i++) {
-      const expected = new Date(Date.now() - (i + startOffset) * 86400000).toISOString().slice(0, 10);
+      const expected = localDateStr(new Date(Date.now() - (i + startOffset) * 86400000));
       if (days[i].day === expected) streak++;
       else break;
     }
@@ -990,9 +1002,9 @@ export function todayStats(): { today_concepts: number; today_attempts: number; 
 export function activityCalendar(): { date: string; count: number }[] {
   const rows = db()
     .prepare(
-      `SELECT date(created_at) AS day, COUNT(*) AS count
+      `SELECT date(created_at, 'localtime') AS day, COUNT(*) AS count
          FROM attempts
-        WHERE created_at >= date('now', '-84 days')
+        WHERE created_at >= date('now', 'localtime', '-84 days')
         GROUP BY day`
     )
     .all() as { day: string; count: number }[];
@@ -1000,7 +1012,7 @@ export function activityCalendar(): { date: string; count: number }[] {
   const map = new Map(rows.map((r) => [r.day, r.count]));
   return Array.from({ length: 84 }, (_, i) => {
     const d = new Date(Date.now() - (83 - i) * 86400000);
-    const key = d.toISOString().slice(0, 10);
+    const key = localDateStr(d);
     return { date: key, count: map.get(key) ?? 0 };
   });
 }
@@ -1021,7 +1033,7 @@ export function masteryVelocity(): { last7: number; last30: number } {
             WHERE p >= ${MASTERY_THRESHOLD}
             GROUP BY node_id
          )
-        WHERE first_mastered >= date('now', '-${days} days')`
+        WHERE date(first_mastered, 'localtime') >= date('now', 'localtime', '-${days} days')`
     ).get() as any).n as number;
   return { last7: count(7), last30: count(30) };
 }
@@ -1235,14 +1247,14 @@ export function masteryMilestones(): { day: string; cumulative: number }[] {
   // Find the date each concept first crossed the mastery threshold
   const firstMastered = db()
     .prepare(
-      `SELECT DATE(MIN(recorded_at)) AS day, COUNT(*) AS count
+      `SELECT DATE(MIN(recorded_at), 'localtime') AS day, COUNT(*) AS count
          FROM (
            SELECT node_id, MIN(recorded_at) AS recorded_at
              FROM mastery_history
             WHERE p >= ${MASTERY_THRESHOLD}
             GROUP BY node_id
          )
-        GROUP BY DATE(recorded_at)
+        GROUP BY DATE(recorded_at, 'localtime')
         ORDER BY day ASC`
     )
     .all() as { day: string; count: number }[];
