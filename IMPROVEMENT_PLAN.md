@@ -336,9 +336,21 @@ There's now enough review history to start checking it instead of trusting it.
   phone. Full `pnpm run build` passes cleanly with the new special files.
 - **Time-boxed sessions**: "give me 20 minutes" in `SessionSetup` → queue length
   from the tracked avg seconds/problem.
-- **Interleaved smart queue**: mix due-reviews into `smart` mode (currently
-  separate modes) — spacing science says interleave, and it uses signals that
-  already exist.
+- **Interleaved smart queue.** ✅ done — "smart" mode already surfaced due
+  reviews, but clustered all of them at the front (`[...due, ...newContent]`)
+  before the rest of the queue — blocked practice, which spacing-science
+  research finds worse for retention than mixing retrieval practice
+  throughout a session. New `interleave()` in
+  `app/api/session/queue/route.ts` spreads due items evenly across the
+  queue's slots instead (priority ordering *within* each group — due by
+  urgency, rest by info-gain/greedy relevance — unchanged), applied to both
+  the info-gain and greedy selection policies. Updated `SessionSetup`'s
+  "Smart" mode description to match. **Verified live**: fetched the queue
+  directly at both policies — reasons came back
+  `due, edge, due, edge, due, ready, due, ready, due, ready` (evenly spread)
+  instead of all 5 `due` entries first; confirmed the same in the actual
+  `/session` Queue preview UI for both `limit=5` (no room to interleave,
+  correctly falls back to all-due) and `limit=10`.
 - **Streak insurance**: one earned "freeze" token per week of hits — habit
   design; keeps the streak honest but not brittle.
 
