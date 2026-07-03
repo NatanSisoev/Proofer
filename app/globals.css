@@ -236,16 +236,22 @@ select {
 select:focus { border-color: var(--accent); }
 select:focus:not(:focus-visible) { outline: none; }
 
-input[type="text"], input[type="email"], input[type="search"], input[type="number"], input[type="password"] {
+input[type="text"], input[type="email"], input[type="search"], input[type="number"], input[type="password"], input[type="date"] {
   background: var(--bg-soft); border: 1px solid var(--border); color: var(--text);
   border-radius: 8px; padding: 7px 12px; font-size: 13px; font-family: inherit;
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 input[type="text"]:focus, input[type="email"]:focus,
-input[type="search"]:focus, input[type="number"]:focus, input[type="password"]:focus {
+input[type="search"]:focus, input[type="number"]:focus, input[type="password"]:focus,
+input[type="date"]:focus {
   outline: none; border-color: var(--accent);
   box-shadow: 0 0 0 3px var(--focus-ring);
 }
+/* Native date-picker widget (calendar icon, popup) follows OS light/dark
+   rendering by default regardless of our own theme — without this it stays a
+   jarring white square in dark mode even though the input box itself is
+   themed via the rule above. */
+[data-theme="dark"] input[type="date"] { color-scheme: dark; }
 
 a { color: var(--accent); text-decoration: none; }
 a:hover { text-decoration: underline; }
