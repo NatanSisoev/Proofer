@@ -170,7 +170,7 @@ mechanically if bet 0 ever happens.
   **Impact**: search already gets semantic recall; 3 more features are a
   short reuse of the same primitives.
 
-### 4. Point it at the real degree (multi-source import + exam pacing)
+### 4. Point it at the real degree (multi-source import + exam pacing) — 🟡 mostly shipped
 
 The falsifiable test is *"beats Anki + ChatGPT for one real course"* — and the
 real courses are MatCAD/Mates, not the polished Mathematics vault. Make Proofer
@@ -203,14 +203,29 @@ the daily driver for an actual UAB course.
   content, which doesn't exist yet (4b's content pipeline is a manual
   workflow the user runs later; there's no second vault in Proofer's note
   format to point the UI at today).
-- **4b. Content pipeline (workflow, not app code).** Lecture PDFs → atomic notes
-  via the existing `summarize-pdf`/`math-note` skills into a course folder →
-  `pnpm run import -- --source=<course> <path>`. Document it in the README so
-  the loop doesn't try to build an in-app uploader (that's bet 3, deferred).
-- **4c. Exam pacing.** Per-source/area exam date (settings key), and a home
-  panel: days left, unmastered count in scope, required pace vs. actual 7-day
-  velocity ("23 to go · 2.1/day needed · you're at 1.4 — behind"). Links to
-  `/session?mode=area&…`. Reuses `masteryVelocity`/`areaMastery` math.
+- **4b. Content pipeline (workflow, not app code).** ✅ done — README now
+  walks through the actual conversion (`summarize-pdf`/`math-note` skills →
+  course folder → `pnpm run import -- --source=<course> <path>`), so the
+  loop doesn't try to build an in-app uploader (blocked on the multi-user/
+  Postgres bet, deferred with launch).
+- **4c. Exam pacing.** ✅ done — Per-area exam date, stored as one JSON-blob
+  settings key (`exam_dates`, `lib/settings.ts#getExamDates/setExamDate`;
+  scoped keys like `"area:Topology"` — a dedicated table would be overkill
+  for a handful of concurrent targets). New `examPacing()` in
+  `lib/queries.ts` computes days-left / unmastered / required-pace /
+  actual-7-day-pace per target (actual pace queried straight off
+  `mastery_history` scoped by `n.area`, same first-crossing-in-window logic
+  as `masteryVelocity()`). New `/api/settings/exam` route (GET areas +
+  current targets, POST to set/clear) backs a `Settings` panel
+  (`ExamPacingSettings.tsx`) and a home-page panel that only renders once a
+  target exists, each row linking to `/session?mode=area&area=…`.
+  **Verified live**: set an Analysis target 43 days out → panel read
+  "43d left · 47 to go · 1.1/day needed · you're at 0.0 — behind" (exactly
+  the format the plan specified), "drill" linked correctly, removed cleanly
+  after. Scoped to **area only** for now, matching 4a's own deferral —
+  `source` targets are accepted by the data model (`scopeType: "area"|
+  "source"`) but there's no source-scoped session mode yet to drill into,
+  so the Settings UI doesn't offer it as a choice.
 - **Effort**: 4a Medium, 4c Low–Medium. **Impact**: the app starts answering its
   own 3-month test with real coursework — and every later feature gets real
   usage data.
