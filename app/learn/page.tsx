@@ -35,7 +35,8 @@ export default async function LearnPage({
   return (
     <div className="wrap">
       <div className="breadcrumb">
-        <Link href={`/node/${encodeURIComponent(node)}`} className="icon-label"><ArrowLeft size={12} /> <MathText>{nodeData.title}</MathText></Link> · practice
+        <Link href={`/node/${encodeURIComponent(node)}`} className="icon-label"><ArrowLeft size={12} /> <MathText>{nodeData.title}</MathText></Link>
+        · practice
       </div>
       <StudyQueue queue={[queueNode]} enableCalibration={getCalibrationEnabled()} />
     </div>

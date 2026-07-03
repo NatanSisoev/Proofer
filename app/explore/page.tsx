@@ -79,7 +79,7 @@ async function SectionsView({
     return (
       <div className="wrap">
         <div className="breadcrumb">
-          <Link href="/explore" className="icon-label"><ArrowLeft size={12} /> Explore</Link> · <strong>{area}</strong>
+          <Link href="/explore" className="icon-label"><ArrowLeft size={12} /> Explore</Link>·<strong>{area}</strong>
         </div>
 
         {/* Area header: mastery summary + actions */}

@@ -22,7 +22,7 @@ export default async function PathwayPage({
       <div className="breadcrumb">
         <Link href={`/node/${encodeURIComponent(path.targetId)}`} className="icon-label">
           <ArrowLeft size={12} /> <MathText>{path.targetTitle}</MathText>
-        </Link>{" "}
+        </Link>
         · guided path
       </div>
       <div className="page-top">
