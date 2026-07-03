@@ -8,7 +8,7 @@ import LearningPath from "./components/LearningPath";
 import MathText from "./components/MathText";
 import MasteryRing from "./components/MasteryRing";
 import UnlockPreview from "./components/UnlockPreview";
-import { frontier, stats, dueForReview, todayStats, recentlyPracticed, bookmarkedNodes, conceptOfDay, areaMastery, overconfidentConcepts, getNode } from "@/lib/queries";
+import { frontier, stats, dueForReview, todayStats, recentlyPracticed, bookmarkedNodes, conceptOfDay, areaMastery, overconfidentConcepts, getNode, examPacing } from "@/lib/queries";
 import { getDailyGoal, getLearningGoal } from "@/lib/settings";
 import { ArrowRight, ArrowDown, Star } from "./components/Icons";
 
@@ -41,6 +41,7 @@ export default function Home() {
   const blindSpots = overconfidentConcepts(5);
   const goalId = getLearningGoal();
   const goalNode = goalId ? getNode(goalId) : null;
+  const pacing = examPacing();
 
   return (
     <div className="wrap">
@@ -93,6 +94,40 @@ export default function Home() {
           }} />
         </div>
       </div>
+
+      {/* Exam pacing — only shown once a target is set (Settings) */}
+      {pacing.length > 0 && (
+        <div className="panel" style={{ marginBottom: 20 }}>
+          <h2>Exam pacing</h2>
+          <div className="flex-col" style={{ gap: 10 }}>
+            {pacing.map((p) => (
+              <div key={p.scopeKey} className="area-row">
+                <Link href={`/session?mode=area&area=${encodeURIComponent(p.scopeValue)}`} className="area-name">
+                  {p.scopeValue}
+                </Link>
+                <span className="muted small" style={{ flexShrink: 0 }}>
+                  {p.daysLeft >= 0 ? `${p.daysLeft}d left` : "past due"}
+                </span>
+                <span className="muted small" style={{ flexShrink: 0 }}>{p.unmastered} to go</span>
+                <span
+                  className={`small ${p.behind ? "pill-red" : "pill-green"}`}
+                  style={{ flexShrink: 0 }}
+                >
+                  {Number.isFinite(p.requiredPace) ? p.requiredPace.toFixed(1) : "∞"}/day needed · you&rsquo;re at {p.actualPace.toFixed(1)}
+                  {p.behind ? " — behind" : ""}
+                </span>
+                <Link
+                  href={`/session?mode=area&area=${encodeURIComponent(p.scopeValue)}`}
+                  className="pill pill-accent pill-xs"
+                  style={{ flexShrink: 0 }}
+                >
+                  drill
+                </Link>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="search-row">
         <div className="search-flex">

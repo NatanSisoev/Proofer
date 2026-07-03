@@ -46,6 +46,34 @@ export function setLearningGoal(nodeId: string): void {
   }
 }
 
+// Exam pacing (Cycle 2 #4c) — target dates keyed by scope ("area:<name>",
+// later "source:<name>" once source-scoped sessions exist). One settings
+// key holding a small JSON map, rather than a dedicated table — there are
+// only ever a handful of concurrent targets.
+export type ExamDates = Record<string, string>; // scopeKey -> "YYYY-MM-DD"
+
+export function getExamDates(): ExamDates {
+  try {
+    const parsed = JSON.parse(getSetting("exam_dates") || "{}");
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+/** Set (date truthy) or clear (date falsy) the exam date for one scope key. */
+export function setExamDate(scopeKey: string, date: string | null): void {
+  if (!scopeKey) return;
+  const dates = getExamDates();
+  if (date) dates[scopeKey] = date;
+  else delete dates[scopeKey];
+  try {
+    db().prepare("INSERT OR REPLACE INTO settings (key, value) VALUES ('exam_dates', ?)").run(JSON.stringify(dates));
+  } catch {
+    // ignore — pacing is a convenience panel, not critical state
+  }
+}
+
 export type SelectionPolicy = "infogain" | "greedy";
 
 // How the tutor picks what to practice next. "infogain" prefers concepts whose

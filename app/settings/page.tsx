@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import SyncButton from "@/app/components/SyncButton";
 import ThemeToggle from "@/app/components/ThemeToggle";
+import ExamPacingSettings from "@/app/components/ExamPacingSettings";
 import { Download, ArrowLeft } from "@/app/components/Icons";
 
 type Settings = {
@@ -189,6 +190,16 @@ export default function SettingsPage() {
                 Weakest first
               </button>
             </div>
+          </div>
+
+          {/* Exam pacing */}
+          <div className="panel">
+            <h2>Exam pacing</h2>
+            <p className="muted small panel-desc">
+              Set a target date for an area and your home page will show days left,
+              how many concepts remain, and whether your last-7-days pace is on track.
+            </p>
+            <ExamPacingSettings />
           </div>
 
           {/* Saved indicator */}

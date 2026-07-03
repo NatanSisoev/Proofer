@@ -2,6 +2,7 @@ import { db, MASTERED_SUBQUERY, MASTERY_THRESHOLD, type NodeRow, type EdgeRow } 
 import { getMasteryP, setKnown as masterySetKnown, P_INIT } from "./mastery";
 import { hasEmbeddings, embedText } from "./llm";
 import { decodeVector, cosineSimilarity } from "./vectors";
+import { getExamDates } from "./settings";
 
 // The student is in Europe/Madrid, not UTC. `Date#toISOString().slice(0,10)`
 // buckets by UTC day, which shifts the whole day boundary by 1-2 hours and
@@ -1211,6 +1212,85 @@ export function masteryVelocity(): { last7: number; last30: number } {
         WHERE date(first_mastered, 'localtime') >= date('now', 'localtime', '-${days} days')`
     ).get() as any).n as number;
   return { last7: count(7), last30: count(30) };
+}
+
+export type ExamPacing = {
+  scopeKey: string;      // "area:Topology" — the settings key this target is stored under
+  scopeType: "area" | "source";
+  scopeValue: string;    // "Topology"
+  examDate: string;      // "YYYY-MM-DD"
+  daysLeft: number;      // negative once the date has passed
+  total: number;         // concepts in scope
+  unmastered: number;
+  requiredPace: number;  // concepts/day still needed to finish by examDate
+  actualPace: number;    // concepts/day mastered in the last 7 days, scoped
+  behind: boolean;
+};
+
+/** Cycle 2 #4c: days-left / required-pace / actual-pace for each exam target
+ *  the student has set (lib/settings.ts#getExamDates). Scoped to "area" only
+ *  today — "source" targets are accepted by the data model but there's no
+ *  source-scoped session mode yet to drill into, so the UI doesn't offer it. */
+export function examPacing(): ExamPacing[] {
+  const dates = getExamDates();
+  const today = db().prepare("SELECT date('now','localtime') AS d").get() as { d: string };
+  const targets: ExamPacing[] = [];
+
+  for (const [scopeKey, examDate] of Object.entries(dates)) {
+    const sep = scopeKey.indexOf(":");
+    if (sep < 0) continue;
+    const scopeType = scopeKey.slice(0, sep);
+    const scopeValue = scopeKey.slice(sep + 1);
+    if ((scopeType !== "area" && scopeType !== "source") || !scopeValue || !examDate) continue;
+    const col = scopeType === "area" ? "n.area" : "n.source";
+
+    const totals = db()
+      .prepare(
+        `SELECT COUNT(*) AS total,
+                COUNT(CASE WHEN COALESCE(m.p, 0) >= ${MASTERY_THRESHOLD} THEN 1 END) AS mastered
+           FROM nodes n
+           LEFT JOIN mastery m ON m.node_id = n.id
+          WHERE n.exists_ = 1 AND ${col} = ?`
+      )
+      .get(scopeValue) as { total: number; mastered: number };
+
+    const last7 = (
+      db()
+        .prepare(
+          `SELECT COUNT(*) AS n FROM (
+             SELECT mh.node_id, MIN(mh.recorded_at) AS first_mastered
+               FROM mastery_history mh
+               JOIN nodes n ON n.id = mh.node_id
+              WHERE mh.p >= ${MASTERY_THRESHOLD} AND ${col} = ?
+              GROUP BY mh.node_id
+           )
+           WHERE date(first_mastered, 'localtime') >= date('now', 'localtime', '-7 days')`
+        )
+        .get(scopeValue) as { n: number }
+    ).n;
+
+    const daysLeft = Math.ceil(
+      (new Date(examDate + "T12:00:00").getTime() - new Date(today.d + "T12:00:00").getTime()) / 86400000
+    );
+    const unmastered = totals.total - totals.mastered;
+    const actualPace = last7 / 7;
+    const requiredPace = daysLeft > 0 ? unmastered / daysLeft : unmastered > 0 ? Infinity : 0;
+
+    targets.push({
+      scopeKey,
+      scopeType,
+      scopeValue,
+      examDate,
+      daysLeft,
+      total: totals.total,
+      unmastered,
+      requiredPace,
+      actualPace,
+      behind: unmastered > 0 && actualPace < requiredPace,
+    });
+  }
+
+  return targets.sort((a, b) => a.daysLeft - b.daysLeft);
 }
 
 export type Calibration = {
