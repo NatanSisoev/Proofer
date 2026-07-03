@@ -8,6 +8,34 @@ export const dynamic = "force-dynamic";
 
 type QueueNode = { id: string; title: string; type: string | null; area: string | null; mastery_p?: number; reason?: string; reasonDetail?: string };
 
+/**
+ * Spreads `due` review items evenly across a queue of `length` slots instead
+ * of clustering them all at the front (Cycle 2 #7 "interleaved smart
+ * queue") — spacing-science research finds blocked practice (all reviews,
+ * then all new material) is worse for retention than interleaving retrieval
+ * practice throughout a session. Priority ordering *within* each group
+ * (due sorted by urgency, rest by info-gain/greedy relevance) is preserved.
+ */
+function interleave<T>(due: T[], rest: T[], length: number): T[] {
+  if (due.length === 0) return rest.slice(0, length);
+  if (rest.length === 0) return due.slice(0, length);
+
+  const totalDue = Math.min(due.length, length);
+  const step = length / totalDue;
+  const duePositions = new Set<number>();
+  for (let i = 0; i < totalDue; i++) duePositions.add(Math.round(i * step));
+
+  const result: T[] = [];
+  let dueIdx = 0;
+  let restIdx = 0;
+  for (let pos = 0; pos < length; pos++) {
+    if (duePositions.has(pos) && dueIdx < due.length) result.push(due[dueIdx++]);
+    else if (restIdx < rest.length) result.push(rest[restIdx++]);
+    else if (dueIdx < due.length) result.push(due[dueIdx++]);
+  }
+  return result;
+}
+
 export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl;
   const mode = searchParams.get("mode") || "smart";
@@ -80,9 +108,10 @@ export async function GET(req: NextRequest) {
       LIMIT ?
     `).all(area, MASTERY_THRESHOLD, limit) as QueueNode[]).map((r) => ({ ...r, reason: undefined }));
   } else {
-    // smart: due reviews first (retention is time-critical), then either
-    // information-gain ranking (the default policy) or the classic greedy
-    // in-progress → fresh frontier → weak ordering.
+    // smart: due reviews interleaved evenly through either information-gain
+    // ranking (the default policy) or the classic greedy in-progress →
+    // fresh frontier → weak ordering — see interleave() above for why this
+    // isn't just "due reviews first, then everything else".
     const due = db().prepare(`
       SELECT n.id, n.title, n.type, n.area
       FROM nodes n
@@ -94,13 +123,15 @@ export async function GET(req: NextRequest) {
       ORDER BY (julianday('now') - julianday(m.last_seen)) / m.half_life DESC
       LIMIT 5
     `).all(P_INIT) as QueueNode[];
+    const dueReasoned: QueueNode[] = due.map((r) => ({ ...r, reason: "due for review" }));
+    const seen = new Set(due.map((r) => r.id));
+    const rest: QueueNode[] = [];
+    const restBudget = () => Math.max(0, limit - dueReasoned.length);
 
     if (getSelectionPolicy() === "infogain") {
-      const seen = new Set(due.map((r) => r.id));
-      const combined: QueueNode[] = due.map((r) => ({ ...r, reason: "due for review" }));
       // Pull extra candidates so de-duping against `due` can't starve the queue.
       for (const c of infoGainRanked(limit * 2)) {
-        if (combined.length >= limit) break;
+        if (rest.length >= restBudget()) break;
         if (seen.has(c.id)) continue;
         seen.add(c.id);
         // Surface *why* this concept was chosen — the policy made visible.
@@ -112,84 +143,81 @@ export async function GET(req: NextRequest) {
           : c.attempts === 0
           ? "Never practiced, but every prerequisite is already mastered."
           : `Your mastery here (~${Math.round(c.p * 100)}%) is genuinely uncertain — practicing this teaches the most right now.`;
-        combined.push({ id: c.id, title: c.title, type: c.type, area: c.area, reason, reasonDetail });
+        rest.push({ id: c.id, title: c.title, type: c.type, area: c.area, reason, reasonDetail });
       }
-      rows = combined; // falls through to the shared mastery-attach + return below
     } else {
-    // frontier concepts you've already started (mastery > 0 but not yet mastered).
-    // Ghost prereqs (exists_=0) are excluded — matches frontier() semantics in lib/queries.ts.
-    const inProgress = db().prepare(`
-      SELECT n.id, n.title, n.type, n.area
-      FROM nodes n
-      JOIN mastery m ON m.node_id = n.id
-      WHERE n.exists_ = 1
-        AND m.p > ? AND m.p < ?
-        AND NOT EXISTS (
-          SELECT 1 FROM edges e
-          LEFT JOIN mastery m2 ON m2.node_id = e.dst
-          WHERE e.src = n.id AND e.type = 'depends_on'
-            AND e.dst IN (SELECT id FROM nodes WHERE exists_ = 1)
-            AND COALESCE(m2.p, 0) < ?
-        )
-      ORDER BY m.p DESC
-      LIMIT 5
-    `).all(0, MASTERY_THRESHOLD, MASTERY_THRESHOLD) as QueueNode[];
-
-    // brand-new frontier concepts (never touched, all prereqs known)
-    const frontier = db().prepare(`
-      SELECT n.id, n.title, n.type, n.area
-      FROM nodes n
-      LEFT JOIN mastery m ON m.node_id = n.id
-      WHERE n.exists_ = 1
-        AND COALESCE(m.p, 0) = 0
-        AND NOT EXISTS (
-          SELECT 1 FROM edges e
-          LEFT JOIN mastery m2 ON m2.node_id = e.dst
-          WHERE e.src = n.id AND e.type = 'depends_on'
-            AND e.dst IN (SELECT id FROM nodes WHERE exists_ = 1)
-            AND COALESCE(m2.p, 0) < ?
-        )
-      ORDER BY (SELECT COUNT(*) FROM edges e3 WHERE e3.dst = n.id AND e3.type='depends_on') DESC
-      LIMIT 8
-    `).all(MASTERY_THRESHOLD) as QueueNode[];
-
-    const seen = new Set([...due.map((r) => r.id)]);
-    const combined: QueueNode[] = [...due.map((r) => ({ ...r, reason: "due for review" }))];
-    for (const r of inProgress) {
-      if (!seen.has(r.id) && combined.length < limit) {
-        seen.add(r.id);
-        combined.push({ ...r, reason: "in progress" });
-      }
-    }
-    for (const r of frontier) {
-      if (!seen.has(r.id) && combined.length < limit) {
-        seen.add(r.id);
-        combined.push({ ...r, reason: "ready to learn" });
-      }
-    }
-
-    // fill remaining with weak spots
-    if (combined.length < limit) {
-      const weak = db().prepare(`
+      // frontier concepts you've already started (mastery > 0 but not yet mastered).
+      // Ghost prereqs (exists_=0) are excluded — matches frontier() semantics in lib/queries.ts.
+      const inProgress = db().prepare(`
         SELECT n.id, n.title, n.type, n.area
         FROM nodes n
         JOIN mastery m ON m.node_id = n.id
         WHERE n.exists_ = 1
-          AND m.p < ?
-          AND m.p >= ?
-        ORDER BY m.p ASC
-        LIMIT ?
-      `).all(MASTERY_THRESHOLD, P_INIT * 0.9, limit - combined.length) as QueueNode[];
-      for (const r of weak) {
-        if (!seen.has(r.id)) {
+          AND m.p > ? AND m.p < ?
+          AND NOT EXISTS (
+            SELECT 1 FROM edges e
+            LEFT JOIN mastery m2 ON m2.node_id = e.dst
+            WHERE e.src = n.id AND e.type = 'depends_on'
+              AND e.dst IN (SELECT id FROM nodes WHERE exists_ = 1)
+              AND COALESCE(m2.p, 0) < ?
+          )
+        ORDER BY m.p DESC
+        LIMIT 5
+      `).all(0, MASTERY_THRESHOLD, MASTERY_THRESHOLD) as QueueNode[];
+
+      // brand-new frontier concepts (never touched, all prereqs known)
+      const frontier = db().prepare(`
+        SELECT n.id, n.title, n.type, n.area
+        FROM nodes n
+        LEFT JOIN mastery m ON m.node_id = n.id
+        WHERE n.exists_ = 1
+          AND COALESCE(m.p, 0) = 0
+          AND NOT EXISTS (
+            SELECT 1 FROM edges e
+            LEFT JOIN mastery m2 ON m2.node_id = e.dst
+            WHERE e.src = n.id AND e.type = 'depends_on'
+              AND e.dst IN (SELECT id FROM nodes WHERE exists_ = 1)
+              AND COALESCE(m2.p, 0) < ?
+          )
+        ORDER BY (SELECT COUNT(*) FROM edges e3 WHERE e3.dst = n.id AND e3.type='depends_on') DESC
+        LIMIT 8
+      `).all(MASTERY_THRESHOLD) as QueueNode[];
+
+      for (const r of inProgress) {
+        if (!seen.has(r.id) && rest.length < restBudget()) {
           seen.add(r.id);
-          combined.push({ ...r, reason: "weak spot" });
+          rest.push({ ...r, reason: "in progress" });
         }
       }
-    }
+      for (const r of frontier) {
+        if (!seen.has(r.id) && rest.length < restBudget()) {
+          seen.add(r.id);
+          rest.push({ ...r, reason: "ready to learn" });
+        }
+      }
 
-    rows = combined;
+      // fill remaining with weak spots
+      if (rest.length < restBudget()) {
+        const weak = db().prepare(`
+          SELECT n.id, n.title, n.type, n.area
+          FROM nodes n
+          JOIN mastery m ON m.node_id = n.id
+          WHERE n.exists_ = 1
+            AND m.p < ?
+            AND m.p >= ?
+          ORDER BY m.p ASC
+          LIMIT ?
+        `).all(MASTERY_THRESHOLD, P_INIT * 0.9, restBudget() - rest.length) as QueueNode[];
+        for (const r of weak) {
+          if (!seen.has(r.id)) {
+            seen.add(r.id);
+            rest.push({ ...r, reason: "weak spot" });
+          }
+        }
+      }
     } // end greedy policy
+
+    rows = interleave(dueReasoned, rest, Math.min(limit, dueReasoned.length + rest.length));
   }
 
   // Attach mastery data in one batch query

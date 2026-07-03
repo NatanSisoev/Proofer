@@ -25,7 +25,7 @@ type QueueNode = { id: string; title: string; type: string | null; area: string 
 type Mode = "smart" | "due" | "weak" | "blindspots" | "area" | "bookmarks" | "custom" | "exam";
 
 const MODES: { key: Mode; label: string; desc: string }[] = [
-  { key: "smart", label: "Smart", desc: "Due reviews first, then your frontier, then weak spots" },
+  { key: "smart", label: "Smart", desc: "Due reviews interleaved with your frontier and weak spots" },
   { key: "due", label: "Due for review", desc: "Concepts whose mastery is decaying — review them now" },
   { key: "weak", label: "Weak spots", desc: "Practiced but still below mastery threshold" },
   { key: "blindspots", label: "Blind spots", desc: "Concepts you rate higher than your results justify" },
