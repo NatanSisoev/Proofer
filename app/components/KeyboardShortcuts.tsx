@@ -7,6 +7,7 @@ import { toggleTheme } from "./ThemeToggle";
 const SHORTCUTS = [
   { key: "s / /", desc: "Focus search" },
   { key: "e",     desc: "Study session" },
+  { key: "p",     desc: "Guided path" },
   { key: "b",     desc: "Browse topics" },
   { key: "g",     desc: "Knowledge map" },
   { key: "r",     desc: "Progress" },
@@ -46,6 +47,7 @@ export default function KeyboardShortcuts() {
         return;
       }
       if (e.key === "e") { router.push("/session"); return; }
+      if (e.key === "p") { router.push("/path"); return; }
       if (e.key === "b") { router.push("/explore?view=sections"); return; }
       if (e.key === "g") { router.push("/explore?view=map"); return; }
       if (e.key === "r") { router.push("/progress"); return; }
