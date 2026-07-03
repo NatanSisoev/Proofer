@@ -411,9 +411,29 @@ write-back routes on the server, rate-limit practice/node APIs, fresh
 ## Design & UX — standing directive (continuous)
 
 Owner is still iterating toward a design he likes. One polish tick per loop
-iteration stays the rule; remaining known candidates: empty-state audit on
-the new `/path` and misconceptions surfaces.
+iteration stays the rule. The known candidate list below is now exhausted —
+next tick should do a fresh look-through of the live app for new candidates
+rather than inventing items.
 
+- **Empty-state audit — `/path` and misconceptions.** ✅ done (2026-07-03) —
+  two inconsistencies found: `MisconceptionCandidates`' "not enough attempts
+  yet" state was a bare `<p className="muted empty-state">` — the only empty
+  state in the app not using the shared `EmptyState` icon-circle component
+  (`LinkSuggestions`/`QualityFilters`/`SessionSetup`/`explore`/`progress` all
+  already did). Switched it to `EmptyState` with a `Lightbulb` icon; removed
+  the now-dead `.empty-state` CSS rule. Separately, `/path`'s no-goal-set
+  landing was a bare `<h1>` flush at the very top of an otherwise-empty page
+  — no `page-top` header treatment (unlike its `/path/[target]` sibling), no
+  icon, just a paragraph and a button in a lot of dead space. Gave it the
+  same `page-top` (h1 + subtitle) pattern as `/path/[target]`, and swapped
+  the plain paragraph for an `EmptyState` (`Sparkles` icon) with the CTA
+  button centered underneath. **Verified live**: temporarily raised
+  `misconceptionCandidates`' `minGaps` to 999 and cleared/restored the
+  `learning_goal` setting to exercise both empty states directly (10 real
+  misconception candidates and a real learning goal both exist normally, so
+  neither empty state is reachable without this), screenshotted both,
+  confirmed no console errors, then restored the real data/setting.
+  `tsc --noEmit` and `pnpm run test` clean.
 - **Breadcrumb separator refinement.** ✅ done (2026-07-03) — `.breadcrumb`
   is a flex container (`display: flex; gap: 6px`), but each of the four
   breadcrumbs (`node/[slug]`, `explore` area view, `learn`, `path/[target]`)
