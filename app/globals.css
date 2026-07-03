@@ -940,6 +940,27 @@ details[open].practice-history > .attempt-list { animation: accordion-fade 0.25s
 .node-accordion.open .node-accordion-chevron { transform: rotate(180deg); }
 .node-accordion-count { font-size: 11px; font-weight: 600; }
 
+/* Learning Pathways — the guided dot lane (see LEARNING_PATHWAYS.md) */
+.pathway-lane { display: flex; flex-direction: column; gap: 6px; }
+.pathway-unit {
+  display: flex; align-items: center; gap: 10px; padding: 10px 4px;
+  border-bottom: 1px solid var(--border);
+}
+.pathway-unit-dot {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 24px; height: 24px; border-radius: 999px; flex-shrink: 0;
+}
+.pathway-unit-done .pathway-unit-dot { background: var(--green-soft); color: var(--green); }
+.pathway-unit-locked .pathway-unit-dot { background: var(--bg-soft); color: var(--muted); }
+.pathway-unit-locked { opacity: 0.6; }
+.pathway-unit-title { display: flex; align-items: center; gap: 8px; min-width: 0; text-decoration: none; color: var(--text); }
+.pathway-unit-title:hover { text-decoration: underline; }
+.pathway-target-star { color: var(--accent); margin-left: auto; flex-shrink: 0; }
+.pathway-unit-current { margin: 4px 0; }
+.pathway-read-dot { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+.pathway-read-actions { display: flex; gap: 8px; margin-top: 14px; }
+.pathway-quiz-section { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+
 /* circular mastery indicator */
 .mastery-ring { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .mastery-ring svg { display: block; overflow: visible; }

@@ -15,12 +15,17 @@ export default function LearningPath({ nodeId }: { nodeId: string }) {
     <div className="panel" style={{ marginTop: 16 }}>
       <div className="panel-header">
         <h2>Learning path — {path.length} unmastered prerequisite{path.length !== 1 ? "s" : ""}</h2>
-        <Link
-          href={`/session?mode=custom&nodes=${sessionIds}`}
-          className="pill pill-accent icon-label"
-        >
-          Practice all <ArrowRight size={11} />
-        </Link>
+        <div style={{ display: "flex", gap: 8 }}>
+          <Link href={`/path/${encodeURIComponent(nodeId)}`} className="pill pill-accent icon-label">
+            Start guided path <ArrowRight size={11} />
+          </Link>
+          <Link
+            href={`/session?mode=custom&nodes=${sessionIds}`}
+            className="pill icon-label"
+          >
+            Practice all <ArrowRight size={11} />
+          </Link>
+        </div>
       </div>
       <p className="muted small path-subtitle">
         Master these in order to be fully ready for this concept.

@@ -196,10 +196,16 @@ export default function Home() {
             </div>
             <div style={{ display: "flex", gap: 8, alignItems: "center", flexShrink: 0 }}>
               <Link
-                href={`/node/${encodeURIComponent(goalId)}`}
+                href={`/path/${encodeURIComponent(goalId)}`}
                 className="cta cta-sm icon-label"
               >
-                View <ArrowRight size={12} />
+                Guided path <ArrowRight size={12} />
+              </Link>
+              <Link
+                href={`/node/${encodeURIComponent(goalId)}`}
+                className="btn-ghost btn-sm icon-label"
+              >
+                View
               </Link>
               <GoalButton nodeId={goalId} isCurrentGoal={true} />
             </div>
