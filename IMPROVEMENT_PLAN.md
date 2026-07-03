@@ -268,19 +268,37 @@ quick patch). A real tutor iterates instead.
 - **Effort**: Medium. **Impact**: the most tutor-like surface in the app; pure
   prompt + state work on existing plumbing.
 
-### 6. Validate the retention model against real data
+### 6. Validate the retention model against real data — ✅ done
 
 The half-life rule (×2 on success, ×0.5 on failure, ×1.2 partial) was hand-tuned.
 There's now enough review history to start checking it instead of trusting it.
 
-- **Fix**: for every attempt on a previously-practiced concept, compute predicted
-  recall at attempt time (`0.5^(days_elapsed / half_life)`) and compare with the
-  outcome. New `/progress` panel: predicted-vs-actual pass rate in recall
-  buckets (calibration curve for the *scheduler*, mirroring the student Brier
-  panel). If systematically off, tune the multipliers (they're constants in
-  `lib/mastery.ts`, now covered by tests). Guard the panel behind a minimum
-  sample size — with today's ~40 attempts it should say "collecting data", not
-  draw noise.
+- **Fix**: new `retentionCalibration()` in `lib/queries.ts`. No history of
+  each node's half-life over time is stored (only the current value), so it
+  replays it from scratch: half-life is a pure function of the evidence
+  sequence (`HL_INIT` — now exported from `lib/mastery.ts` — then
+  `× halfLifeFactor(evidence)` per attempt, clamped 1..365, identical math to
+  `applyAttempt`), so walking each node's attempts in chronological order
+  reconstructs the exact sequence that produced today's stored half-life.
+  For every attempt after a node's first, treats the prior attempt as "the
+  last review" and computes predicted recall (`0.5^(days_elapsed /
+  half_life)`) vs. actual (verdict === correct), bucketed into five 20%-wide
+  predicted-recall bands with per-bucket predicted/actual/n and an overall
+  bias (`mean(actual − predicted)`). New "Retention model" panel on
+  `/progress`, styled like the student Calibration panel next to it, guarded
+  behind `RETENTION_MIN_SAMPLE = 30` qualifying transitions — below that it
+  says "Collecting data — N/30 reviews needed" instead of drawing a noisy
+  curve. **Known limitation, accepted**: a manual "mark known"
+  (`lib/mastery.ts#setKnown`) also bumps half-life but isn't an `attempts`
+  row, so it's invisible to the replay — fine for what's explicitly a
+  diagnostic panel, not a source of truth.
+  **Verified live**: today's real data gives exactly 23 qualifying
+  transitions (out of 43 total attempts, matching the plan's own prediction
+  of "~40 attempts ⇒ collecting data"), confirmed both by direct calculation
+  and the panel showing "Collecting data — 23/30". Temporarily lowered the
+  threshold to 10 to confirm the "ready" bucket/bias UI renders correctly
+  (it does — e.g. "You retain less than the model predicts"), then reverted
+  before committing.
 - **Effort**: Low–Medium. **Impact**: keeps "due today" honest; groundwork for
   FSRS-style parameters later.
 
