@@ -78,13 +78,17 @@ VISION's honest gap #1 ("grading still trusts an LLM about math") survives the
 Lean cut — but the failure mode (the grader blesses a wrong proof) has cheaper
 attacks than a kernel. Three independent sub-items, in order:
 
-- **2a. Rubric-point grading.** Problems already carry a `rubric` (JSON array on
-  `problems`). Change the grade schema (`gGradeSchema` / the Anthropic prompt in
-  `lib/llm.ts`) so the grader returns a per-point `{point, met, note}` array
-  instead of only a holistic verdict; derive `mastery_evidence` from weighted
-  rubric coverage and pin `gap` to the first failed point. Render the checklist
-  in `GradeFeedback` (`ProblemCard.tsx`). Sharper evidence, sharper diagnosis,
-  same number of LLM calls.
+- **2a. Rubric-point grading.** ✅ done — Problems already carry a `rubric`
+  (JSON array on `problems`). Changed the grade schema (`gGradeSchema` / the
+  Anthropic prompt in `lib/llm.ts`) so the grader returns a per-point
+  `{met, note}` array (zipped against our own rubric text so the model never
+  retypes it) instead of a holistic verdict; `gradeAnswer` derives
+  `verdict`/`mastery_evidence` from rubric coverage and pins `gap` to the
+  first unmet point. Checklist rendered in `GradeFeedback`
+  (`ProblemCard.tsx`, replacing the old "What you got" list) — green/red rows
+  with per-point notes. Demo-mode `stubGrade` updated to the same shape.
+  Verified live against Gemini in the preview (Fourier Coefficient problem,
+  1/5 points met → 13% mastery, correct gap pin).
 - **2b. Adversarial verification pass.** When the verdict is `correct` on a
   `prove`/`counterexample` problem, fire one extra call prompted purely to
   *refute* the student's argument (find a false step, missing case, or circular
