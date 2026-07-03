@@ -411,9 +411,25 @@ write-back routes on the server, rate-limit practice/node APIs, fresh
 ## Design & UX — standing directive (continuous)
 
 Owner is still iterating toward a design he likes. One polish tick per loop
-iteration stays the rule; remaining known candidates: breadcrumb separator
-refinement, empty-state audit on the new `/path` and misconceptions surfaces.
+iteration stays the rule; remaining known candidates: empty-state audit on
+the new `/path` and misconceptions surfaces.
 
+- **Breadcrumb separator refinement.** ✅ done (2026-07-03) — `.breadcrumb`
+  is a flex container (`display: flex; gap: 6px`), but each of the four
+  breadcrumbs (`node/[slug]`, `explore` area view, `learn`, `path/[target]`)
+  built its "·" separator ad hoc. Most just padded the dot with literal
+  spaces — harmless, since CSS collapses whitespace at the edges of its own
+  flex item, so it was a no-op visually — but `path/[target]` additionally
+  wrapped an explicit `{" "}` in its own JSX expression *before* the
+  separator text, which floats it in as a fourth, distinct flex item and
+  earns its own 6px gap — giving that one breadcrumb an extra ~6px of dead
+  space the other three didn't have. Removed the stray `{" "}` and stopped
+  padding "·" with spaces everywhere, so every breadcrumb relies solely on
+  the flex gap for spacing. **Verified live**: measured the DOM gap (via
+  `Range.getBoundingClientRect()` on the separator text node) on all four
+  breadcrumbs — all now read an identical 6px, where `path/[target]`
+  previously measured wider; screenshotted a node page to confirm no visual
+  regression; `tsc --noEmit` and `pnpm run test` clean.
 - **SessionSetup custom chip styles.** ✅ done (2026-07-03) — the chip itself
   (`.selected-chip`, accent-soft background/border) was already fine; the
   bug was its remove (×) button. `.chip-remove:hover` used a hardcoded
