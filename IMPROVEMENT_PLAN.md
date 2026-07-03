@@ -119,33 +119,56 @@ attacks than a kernel. Three independent sub-items, in order:
 - **Effort**: 2a Medium, 2b Low–Medium, 2c Low. **Impact**: directly attacks the
   "tutor wrong about math is fatal" risk VISION names, with measurable results.
 
-### 3. Local embedding layer — the pgvector dividend without Postgres
+### 3. Local embedding layer — the pgvector dividend without Postgres — 🟡 slice 1 shipped
 
 Embed every node once; store the vector in SQLite; brute-force cosine over ~767
 nodes is sub-millisecond in JS. No new infra, and the code ports to pgvector
 mechanically if bet 0 ever happens.
 
-- **Schema**: additive `nodes.embedding BLOB` + `nodes.embedding_hash TEXT`
-  (hash of `title+overview+statement` so unchanged notes skip re-embedding on
-  re-import; embeddings survive `DELETE FROM nodes` via re-embed-if-hash-known…
-  simplest: keep an `embeddings(node_id, hash, vector)` table that the importer
-  preserves, like mastery).
-- **Provider**: `lib/llm.ts` gains `embedText(texts[])` — Gemini embeddings
-  endpoint on the free tier (default `gemini-embedding-001`, env-overridable);
-  no key → feature off everywhere (same `hasKey()` gating pattern).
-- **Backfill**: `scripts/embed.mjs` (+ `pnpm run embed`), batched, cached by
-  hash; also invoked at the end of vault sync when a key exists.
-- **Consumers, in order of payoff**:
-  1. `searchWithMastery` becomes **hybrid**: vector recall + exact/prefix boost
-     (keeps the readiness badges untouched).
-  2. `linkSuggestions` v2: nearest-neighbor pairs with no existing edge replace
-     the O(n²) substring scan — better recall (paraphrases, notation variants),
-     same `/quality` approval UX.
-  3. `similarConcepts` goes cross-area (currently same-area only).
-  4. Misconception clustering upgrade: embed `attempts.gap` texts and cluster
-     by cosine before LLM labeling (better groups than text-only prompting).
-- **Effort**: Medium. **Impact**: four features from one column, plus the
-  ingestion on-ramp.
+- **Schema**: ✅ `embeddings(node_id, hash, vector, updated_at)` table added to
+  `db/schema.sql` (not columns on `nodes` — a separate table needs no importer
+  changes at all, since `node_id` TEXT survives the importer's
+  `DELETE FROM nodes` as long as a note's title doesn't change, exactly like
+  `mastery`). `hash = sha256(model + title+overview+content)` so both content
+  edits *and* a future model change trigger re-embedding.
+- **Provider**: ✅ `lib/llm.ts` gains `embedText(texts[])` / `hasEmbeddings()`.
+  Gemini only — Anthropic has no public embeddings endpoint, so this checks
+  for a Gemini key specifically, independent of which provider is "active"
+  for problems/grading. **Found live**: Gemini's `batchEmbedContents` counts
+  every sub-request against the free tier's embedding quota in one shot — a
+  single 100-item batch call returned `429 RESOURCE_EXHAUSTED` instantly.
+  Switched to the singular `embedContent` endpoint, called one text at a
+  time with a 700ms pace (~85 req/min, under the observed ~100/min-ish cap).
+- **Backfill**: ✅ `scripts/embed.mjs` (+ `pnpm run embed`, with
+  `--env-file-if-exists=.env.local` since a bare `node script.mjs` doesn't
+  auto-load Next's env file), hash-cached, prunes embeddings for
+  deleted/renamed notes. Chained from `/api/vault/sync` as fire-and-forget
+  (doesn't block the sync response) when `hasEmbeddings()`. **Free-tier
+  reality**: the quota is tight enough that a full 767-node backfill takes
+  several runs (confirmed live: run 1 got 30/767 before a 429, run 2 picked
+  up exactly the remaining 737 and got 52 more before its own 429) — this is
+  expected and fine, not a bug: each run is idempotent and hash-cached, so
+  repeated `pnpm run embed` calls (or repeated syncs) eventually converge on
+  full coverage with zero wasted API calls.
+- **Consumer 1 (shipped)**: `searchHybrid()` in `lib/queries.ts` wraps the
+  existing synchronous `searchWithMastery` (unchanged, still the fast path)
+  — only when LIKE-based hits are thin (<5) AND `hasEmbeddings()`, it embeds
+  the query, ranks all stored vectors by cosine (`lib/vectors.ts`, threshold
+  0.55), and appends the top semantic matches. Wired into `/api/search` (the
+  live typeahead) only — `/explore`'s SSR page load stays on the plain sync
+  version, since that surface can't tolerate an embedding round-trip.
+  **Verified live**: "when does an infinite sum add up to a finite total"
+  (zero literal keyword overlap with any note) returned 25 correct
+  series-convergence concepts via the semantic fallback; a normal keyword
+  query ("convergence") stayed on the fast LIKE-only path with no API call.
+- **Remaining consumers (not done — future ticks)**: 2. `linkSuggestions` v2
+  (nearest-neighbor replacing the O(n²) substring scan), 3. `similarConcepts`
+  cross-area, 4. misconception clustering pre-clustered by cosine. All three
+  reuse `lib/vectors.ts` + the `embeddings` table already shipped — no new
+  schema/provider work, just new consumers once backfill coverage is higher.
+- **Effort**: Medium (schema+provider+backfill+consumer 1 done this tick).
+  **Impact**: search already gets semantic recall; 3 more features are a
+  short reuse of the same primitives.
 
 ### 4. Point it at the real degree (multi-source import + exam pacing)
 
