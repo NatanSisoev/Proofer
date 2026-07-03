@@ -232,9 +232,22 @@ The design overhaul directive stands (owner still iterating toward liking it).
 Specific candidates found this pass, beyond the memory's running list
 (SessionSetup chips, breadcrumb separator, tab-CSS consistency):
 
-1. **Three different "tab" implementations** — `/quality` filter tabs,
+1. ✅ **Three different "tab" implementations** — `/quality` filter tabs,
    `/progress` `ProgressTabs`, node-page `NodePanels` accordion headers. One
-   `.tabs` class family would unify hover/active/focus treatment.
+   `.tabs` class family would unify hover/active/focus treatment. Turned out
+   `/quality`'s top-level tabs and `ProgressTabs` already share `.tab-bar`/
+   `.tab-link`; the real gap was `.tab-link` and `QualityFilters`' `.filter-btn`
+   using the browser's default transition easing instead of the site's custom
+   `var(--ease)` curve that every other interactive element (`.btn-primary`,
+   `.btn-ghost`, `.cta`, `.node-accordion-header`) already uses — a subtle but
+   real "this one feels different" inconsistency. Added `var(--ease)` to both
+   (plus the `background`/`border-color` transitions that were missing
+   entirely, e.g. `.tab-link.active`'s background snapped instead of easing
+   in). `NodePanels`' accordion is a genuinely different interaction model
+   (expand/collapse, not switch-view) and correctly keeps its own visual
+   treatment — forcing it into the tab-pill look would be a mismatch, not a
+   fix. No colors/layout changed, so nothing here should look different at a
+   glance — only the *feel* of the hover/active transitions.
 2. **Node page two-column `grid` on mobile** — the side column (`node-side-col`,
    panels) stacks below the full note; on long notes the practice CTA is a
    screen-height away. Consider a sticky compact action bar on small viewports.
