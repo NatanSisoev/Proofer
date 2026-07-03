@@ -1197,6 +1197,37 @@ export function activityCalendar(): { date: string; count: number }[] {
  *  falls within the window — repeated practice on already-mastered concepts
  *  is NOT counted again.
  */
+const AVG_PACE_FALLBACK_SEC = 240; // ~4 min/problem — used until there's real tracked data
+const AVG_PACE_MIN_SAMPLE = 5;
+
+/**
+ * Cycle 2 #7 "time-boxed sessions": median wall-clock seconds spent per
+ * problem over your last 50 timed attempts, so SessionSetup can turn "give
+ * me 20 minutes" into a concept count from your own pace instead of a
+ * generic guess. Median (not mean) so one 20-minute proof you got up and
+ * walked away from doesn't blow out the estimate for everything else.
+ * Give-up ("I don't know") attempts never get an elapsed_sec, so they're
+ * automatically excluded — they're not representative solving pace.
+ */
+export function avgSecondsPerProblem(): { seconds: number; sample: number } {
+  const rows = db()
+    .prepare(
+      `SELECT elapsed_sec FROM attempts
+        WHERE elapsed_sec IS NOT NULL
+        ORDER BY id DESC
+        LIMIT 50`
+    )
+    .all() as { elapsed_sec: number }[];
+
+  if (rows.length < AVG_PACE_MIN_SAMPLE) {
+    return { seconds: AVG_PACE_FALLBACK_SEC, sample: rows.length };
+  }
+  const sorted = rows.map((r) => r.elapsed_sec).sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  const median = sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid];
+  return { seconds: Math.round(median), sample: rows.length };
+}
+
 export function masteryVelocity(): { last7: number; last30: number } {
   const d = db();
   const count = (days: number) =>

@@ -272,6 +272,10 @@ export default function StudyQueue({
     if (!problem || !answer.trim()) return;
     setBusy(true);
     setError(null);
+    // Measured at submit time, not after grading resolves — LLM latency isn't
+    // "time spent on the problem" (Cycle 2 #7 "time-boxed sessions" tracks
+    // this so SessionSetup can turn a time budget into a concept count).
+    const elapsedSec = Math.round((Date.now() - questionStart.current) / 1000);
     try {
       const res = await fetch("/api/practice/grade", {
         method: "POST",
@@ -279,13 +283,13 @@ export default function StudyQueue({
         body: JSON.stringify({
           problemId: problem.problemId,
           answer,
+          elapsedSec,
           ...(enableCalibration && confidence !== null ? { predicted: confidence } : {}),
         }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "grading failed");
       setGrade(data);
-      const elapsedSec = Math.round((Date.now() - questionStart.current) / 1000);
       setResultsByIndex((prev) => ({
         ...prev,
         [index]: {

@@ -294,11 +294,12 @@ export function recordAttempt(row: {
   predicted_correct?: number | null;
   trust?: "model-judged" | "cross-checked" | "refuted" | null;
   problem_id?: number | null;
+  elapsed_sec?: number | null;
 }): number {
   const info = db()
     .prepare(
-      `INSERT INTO attempts(node_id,kind,problem,answer,verdict,evidence,gap,blamed_prereq,created_at,mode,predicted_correct,trust,problem_id)
-       VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)`
+      `INSERT INTO attempts(node_id,kind,problem,answer,verdict,evidence,gap,blamed_prereq,created_at,mode,predicted_correct,trust,problem_id,elapsed_sec)
+       VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
     )
     .run(
       row.node_id, row.kind, row.problem, row.answer,
@@ -306,7 +307,8 @@ export function recordAttempt(row: {
       new Date().toISOString(), row.mode,
       row.predicted_correct ?? null,
       row.trust ?? null,
-      row.problem_id ?? null
+      row.problem_id ?? null,
+      row.elapsed_sec ?? null
     );
   return Number(info.lastInsertRowid);
 }

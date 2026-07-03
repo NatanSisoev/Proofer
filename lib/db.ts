@@ -104,6 +104,11 @@ const MIGRATIONS = [
   // dialogue transcript for this attempt, JSON array of {role, text}. NULL/
   // absent means no dialogue has happened yet.
   "ALTER TABLE attempts ADD COLUMN dialogue TEXT",
+  // Time-boxed sessions (Cycle 2 #7) — wall-clock seconds spent on this
+  // problem (question shown -> submit), so SessionSetup can turn "give me
+  // 20 minutes" into a concept count from your own tracked pace instead of
+  // a generic guess. NULL on attempts recorded before this column existed.
+  "ALTER TABLE attempts ADD COLUMN elapsed_sec INTEGER",
 ];
 
 function migrate(d: DatabaseSync) {

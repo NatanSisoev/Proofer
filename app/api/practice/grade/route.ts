@@ -13,11 +13,16 @@ export const maxDuration = 120;
 const ADVERSARIAL_KINDS = new Set(["prove", "counterexample"]);
 
 export async function POST(req: NextRequest) {
-  const { problemId, answer, predicted } = await req.json();
+  const { problemId, answer, predicted, elapsedSec } = await req.json();
   // The student's pre-answer self-rating (0..1), only sent on the first attempt.
   // Clamp to a valid probability; anything missing/invalid is recorded as NULL.
   const predictedCorrect =
     typeof predicted === "number" && predicted >= 0 && predicted <= 1 ? predicted : null;
+  // Wall-clock seconds spent on this problem (Cycle 2 #7 "time-boxed
+  // sessions") — sanity-clamped so a browser tab left open overnight doesn't
+  // poison the tracked average.
+  const elapsed =
+    typeof elapsedSec === "number" && elapsedSec >= 0 && elapsedSec <= 3600 ? Math.round(elapsedSec) : null;
   const prob = db().prepare("SELECT * FROM problems WHERE id = ?").get(problemId) as any;
   if (!prob) return NextResponse.json({ error: "unknown problem" }, { status: 404 });
 
@@ -86,6 +91,7 @@ export async function POST(req: NextRequest) {
     predicted_correct: predictedCorrect,
     trust,
     problem_id: prob.id,
+    elapsed_sec: elapsed,
   });
 
   const masteryAfter = getMasteryP(node.id);

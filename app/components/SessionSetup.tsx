@@ -14,6 +14,10 @@ import { SESSION_KEY, type SavedSession } from "./session-types";
 const MIN_COUNT = 1;
 const MAX_COUNT = 30;
 const PRESET_COUNTS = [3, 5, 8, 10, 15, 20];
+const TIME_BUDGETS_MIN = [10, 20, 30, 45];
+// Used for the "~N min" hint until there's enough tracked pace data (see
+// lib/queries.ts's avgSecondsPerProblem, which needs 5+ timed attempts).
+const DEFAULT_SEC_PER_PROBLEM = 240;
 
 // StudyQueue (and the ProblemCard/Markdown/katex chain it pulls in) only
 // matters once a queue is actually started — keep it out of the setup
@@ -42,7 +46,14 @@ const EXAM_TIME_OPTIONS = [
   { label: "60 min", value: 60 },
 ];
 
-type ModeCounts = { due: number; weak: number; frontier: number; bookmarks: number; blindspots: number };
+type ModeCounts = {
+  due: number;
+  weak: number;
+  frontier: number;
+  bookmarks: number;
+  blindspots: number;
+  pace?: { seconds: number; sample: number };
+};
 type ProblemKind = "any" | "compute" | "prove" | "counterexample" | "explain";
 const KIND_OPTIONS: { key: ProblemKind; label: string; desc: string }[] = [
   { key: "any",           label: "Any",          desc: "Mix of all problem types" },
@@ -148,6 +159,8 @@ export default function SessionSetup({
     }, 120);
     return () => { if (customDebounce.current) clearTimeout(customDebounce.current); };
   }, [customSearch, mode, customPicked]);
+
+  const secPerProblem = counts?.pace?.seconds ?? DEFAULT_SEC_PER_PROBLEM;
 
   function setCountClamped(n: number) {
     const clamped = Math.min(MAX_COUNT, Math.max(MIN_COUNT, n));
@@ -438,8 +451,26 @@ export default function SessionSetup({
             ))}
           </div>
           <p className="muted small field-hint">
-            {count} concept{count !== 1 ? "s" : ""} · ~{count * 3}–{count * 5} min
+            {count} concept{count !== 1 ? "s" : ""} ·{" "}
+            {secPerProblem
+              ? `~${Math.round((count * secPerProblem) / 60)} min`
+              : `~${count * 3}–${count * 5} min`}
           </p>
+          <div style={{ marginTop: 10 }}>
+            <label className="muted small field-label">Or give me…</label>
+            <div className="btn-row">
+              {TIME_BUDGETS_MIN.map((min) => (
+                <button
+                  key={min}
+                  type="button"
+                  className="filter-btn"
+                  onClick={() => setCountClamped(Math.round((min * 60) / secPerProblem))}
+                >
+                  {min} min
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
         )}
 
