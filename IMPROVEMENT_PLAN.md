@@ -334,8 +334,27 @@ There's now enough review history to start checking it instead of trusting it.
   a mobile-viewport pass (375×812) through a live session — including the
   Cycle 2 #5 dialogue thread — confirmed the practice flow is usable on a
   phone. Full `pnpm run build` passes cleanly with the new special files.
-- **Time-boxed sessions**: "give me 20 minutes" in `SessionSetup` → queue length
-  from the tracked avg seconds/problem.
+- **Time-boxed sessions.** ✅ done (2026-07-03) — every graded live-session
+  attempt now records `attempts.elapsed_sec` (new additive column;
+  question-shown → submit-click, measured client-side in `StudyQueue.tsx`
+  before the grading fetch so LLM latency isn't counted; server-side clamped
+  to `[0, 3600]` so an abandoned tab can't poison the average). New
+  `lib/queries.ts#avgSecondsPerProblem()` takes the median (not mean, so one
+  outlier problem doesn't skew it) over the last 50 timed attempts, falling
+  back to a 240s default below a 5-sample floor; wired into
+  `/api/session/stats`'s existing response as `pace: {seconds, sample}`.
+  `SessionSetup`'s "Session length" panel now has "Or give me… 10/20/30/45
+  min" buttons that solve `count = round(minutes*60/paceSeconds)` and the
+  existing `~N min` hint uses the same tracked pace once available (falls
+  back to the old 3–5 min/concept heuristic otherwise). Give-up ("I don't
+  know") attempts are deliberately excluded — they never get an
+  `elapsed_sec`, so they don't skew the pace average. **Verified live**:
+  confirmed `elapsed_sec` round-trips through a direct DB write/read/cleanup;
+  inserted synthetic timed attempts (`[60,90,120,150,300,600]`s) and
+  confirmed `/api/session/stats` returned the correct median (135s, sample
+  6); confirmed the "20 min" button in a live `/session` page then set the
+  stepper to exactly `round(1200/135) = 9` concepts and updated the hint to
+  "9 concepts · ~20 min"; cleaned up all synthetic rows afterward.
 - **Interleaved smart queue.** ✅ done — "smart" mode already surfaced due
   reviews, but clustered all of them at the front (`[...due, ...newContent]`)
   before the rest of the queue — blocked practice, which spacing-science
