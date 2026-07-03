@@ -4,8 +4,9 @@ import { useState, useCallback } from "react";
 import Link from "next/link";
 import type { MisconceptionCandidate } from "@/lib/queries";
 import MathText from "./MathText";
-import { Check, ArrowRight } from "./Icons";
+import { Check, ArrowRight, Lightbulb } from "./Icons";
 import ErrorBanner from "./ErrorBanner";
+import EmptyState from "./EmptyState";
 
 type Cluster = { label: string; gap_count: number };
 
@@ -59,10 +60,10 @@ export default function MisconceptionCandidates({ initial, hasKey }: { initial: 
 
   if (candidates.length === 0) {
     return (
-      <p className="muted empty-state">
+      <EmptyState icon={<Lightbulb size={18} />}>
         No concept has enough failed/partial attempts yet (need at least 2) to look for a
         recurring misconception. This grows as you practice.
-      </p>
+      </EmptyState>
     );
   }
 

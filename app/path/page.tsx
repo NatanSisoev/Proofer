@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getLearningGoal } from "@/lib/settings";
-import { ArrowRight } from "@/app/components/Icons";
+import { ArrowRight, Sparkles } from "@/app/components/Icons";
+import EmptyState from "@/app/components/EmptyState";
 
 export const dynamic = "force-dynamic";
 
@@ -11,14 +12,23 @@ export default async function PathIndexPage() {
 
   return (
     <div className="wrap">
-      <h1>Guided path</h1>
-      <p className="muted" style={{ marginTop: 8 }}>
-        Set a Learning Goal on any concept's page to get a guided, gated lane toward it —
+      <div className="page-top">
+        <div>
+          <h1>Guided path</h1>
+          <p className="muted small" style={{ marginTop: 4 }}>
+            A guided, gated lane toward any concept you&rsquo;re aiming for.
+          </p>
+        </div>
+      </div>
+      <EmptyState icon={<Sparkles size={18} />}>
+        Set a Learning Goal on any concept&rsquo;s page to get a guided, gated lane toward it —
         or open a specific concept and click &ldquo;Start guided path&rdquo; from its learning path panel.
-      </p>
-      <Link href="/explore?view=sections" className="cta icon-label" style={{ marginTop: 16 }}>
-        Browse concepts <ArrowRight size={13} />
-      </Link>
+      </EmptyState>
+      <div style={{ textAlign: "center", marginTop: -8 }}>
+        <Link href="/explore?view=sections" className="cta icon-label">
+          Browse concepts <ArrowRight size={13} />
+        </Link>
+      </div>
     </div>
   );
 }
