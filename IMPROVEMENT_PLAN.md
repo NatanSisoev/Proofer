@@ -170,15 +170,26 @@ Ranked by value-per-effort given VISION.md's pillars:
    With 36 attempts it's thin today — but it turns the log into the *product*
    the vision describes, and the schema/UX survive the later multi-user +
    embeddings upgrade intact.
-3. **Learning Pathways, phase 1.** The concept doc is written
-   ([LEARNING_PATHWAYS.md](LEARNING_PATHWAYS.md)); the ingredients exist
-   (`learningPath()` ordering, note sections from the importer, generate/grade
-   loop, mastery gate at the threshold, half-life scheduler). Ship the minimal
-   lane: pick target (default = the existing Learning Goal), render the
-   unit/dot lane, read-dots from note sections, quiz-dots via the existing
-   problem flow, gate on p ≥ 0.8. This is the guided-learning surface that
-   replaced the cut "study plan" feature — and the most differentiated UI the
-   app would have.
+3. ✅ **Learning Pathways, phase 1.** Shipped the M1+M2+M3 slice from
+   [LEARNING_PATHWAYS.md](LEARNING_PATHWAYS.md): `lib/sections.ts` (runtime
+   H2 splitter mirroring the importer's), `lib/pathway.ts`'s pure `pathway(targetId)`
+   — reuses `learningPath()`'s topological unmastered-prereq order, expands each
+   concept into read-dots (Intuition/Motivation/Overview → Statement, sourced
+   from the note's own content, never LLM-authored) + quiz-dots (kind ramp by
+   concept type), target unit last, `currentIndex` marking the one active gate.
+   `/path/[target]` renders the lane (done/current/locked rows); the current
+   unit's read-dots step through with "Got it / Not sure", then hand off to the
+   existing `/learn?node=` generate→grade→BKT loop for the quiz dots — no new
+   quiz UI, no new LLM prompts. No persistence table: the lane is recomputed
+   live from current mastery every visit, so practicing elsewhere (or via the
+   pathway's own practice link) is what advances it. Entry points: node page's
+   Learning Path panel ("Start guided path"), home page's Learning Goal panel,
+   and `/path` redirecting to the current goal. 9 new unit tests
+   (`sections.test.ts`, `pathway.test.ts`); verified end-to-end in the preview
+   (read-dots advance, quiz hand-off reaches a real generated problem, `/path`
+   redirect, single-unit target-only pathway, 404 for an unknown target).
+   Remaining LEARNING_PATHWAYS.md phases (M4 adaptive remediation detours, M5
+   polish/streaks/review-interleaving) are follow-on work, not part of this slice.
 4. ✅ **Exam mode × calibration friction.** With calibration on, Submit is disabled
    until a confidence is picked (`StudyQueue.tsx:654`) — under an exam
    countdown that's hostile. Auto-suppress the confidence gate in exam mode (or
