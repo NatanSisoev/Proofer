@@ -86,6 +86,10 @@ patchStatementSync();
 // ignore the "duplicate column name" error when it has already been applied.
 const MIGRATIONS = [
   "ALTER TABLE attempts ADD COLUMN predicted_correct REAL",
+  // 'model-judged' (single-pass) | 'cross-checked' (adversarial pass ran, found
+  // no hole) | 'refuted' (adversarial pass found a hole, verdict was downgraded).
+  // NULL on attempts recorded before this column existed.
+  "ALTER TABLE attempts ADD COLUMN trust TEXT",
 ];
 
 function migrate(d: DatabaseSync) {

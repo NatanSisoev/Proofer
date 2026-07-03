@@ -32,6 +32,8 @@ export type Grade = {
   halfLife?: number;
   justMastered?: boolean;
   unlocked?: ProblemNode[];
+  trust?: "model-judged" | "cross-checked" | "refuted";
+  refutation?: string; // set when an adversarial second pass found a hole in an initially "correct" verdict
 };
 
 // Pre-answer confidence options. The values are the probability the student is
@@ -232,6 +234,16 @@ export function GradeFeedback({
               </li>
             ))}
           </ul>
+        </div>
+      )}
+
+      {grade.refutation && (
+        <div className="fb-block">
+          <h4 className="red">Second look</h4>
+          <p className="muted small" style={{ margin: "0 0 8px" }}>
+            Every rubric point checked out, but a rigorous second pass found a hole:
+          </p>
+          <div className="markdown"><Markdown>{grade.refutation}</Markdown></div>
         </div>
       )}
 

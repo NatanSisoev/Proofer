@@ -151,6 +151,11 @@ type RawGradeResult = {
   socratic_hint: string;
 };
 
+export type RefutationResult = {
+  holds: boolean;     // true = the refuter found no defensible flaw
+  refutation: string; // the specific flaw found, or "" when holds is true
+};
+
 // ---------------------------------------------------------------------------
 // Shared, FROZEN system prompts.
 // ---------------------------------------------------------------------------
@@ -171,6 +176,15 @@ You must:
 - Attribute the gap to ONE prerequisite concept from the provided list when an unmet point traces to a missing prerequisite; otherwise use "none".
 - Give a Socratic hint that guides without revealing the full solution. NEVER hand the student the answer — make them produce it.
 Do not output a holistic verdict or a mastery score — those are computed from your per-point judgements, not authored by you.`;
+
+// Adversarial second pass — only fired when the primary grader already called
+// a prove/counterexample answer "correct" (Cycle 2 #2b). The primary grader
+// checks rubric coverage; this one is prompted purely to break the argument,
+// catching the failure mode where every rubric point is technically hit but
+// the argument itself has a hole the rubric didn't anticipate.
+const REFUTER_SYSTEM = `You are an adversarial mathematics reviewer. Another grader has already judged this student's proof or counterexample CORRECT — your ONLY job is to try to break it.
+Actively look for: a false step, an unjustified leap, a missing case, circular reasoning, an implicit unproven assumption, or (for a counterexample) an example that doesn't actually satisfy the required conditions.
+Be adversarial but honest: if you genuinely cannot find a concrete, defensible flaw after real scrutiny, say the argument holds. Do NOT invent a nitpick just to disagree — only report a flaw you could explain to the student precisely.`;
 
 export type ProblemKind = "compute" | "prove" | "counterexample" | "explain";
 
@@ -279,6 +293,52 @@ export async function gradeAnswer(args: {
     blamed_prerequisite: raw.blamed_prerequisite === "none" ? "" : raw.blamed_prerequisite,
     socratic_hint: raw.socratic_hint,
   };
+}
+
+const REFUTE_SCHEMA_G = {
+  type: "OBJECT",
+  properties: {
+    holds: { type: "BOOLEAN" },
+    refutation: { type: "STRING" },
+  },
+  required: ["holds", "refutation"],
+  propertyOrdering: ["holds", "refutation"],
+};
+
+function refuteUserText(a: { node: NodeRow; problem: string; idealSolution: string; answer: string }): string {
+  return [
+    `TARGET CONCEPT: ${a.node.title}` + (a.node.type ? ` (${a.node.type})` : ""),
+    `\nPROBLEM:\n${a.problem}`,
+    `\nIDEAL SOLUTION (reference):\n${a.idealSolution}`,
+    `\nSTUDENT'S ARGUMENT (already judged correct by another grader — try to break it):\n${a.answer}`,
+    `\nDoes this argument actually hold up? Respond as JSON.`,
+  ].filter(Boolean).join("\n");
+}
+
+/** Adversarial second pass on an answer another grader already called "correct"
+ *  (Cycle 2 #2b). Callers decide when to fire this (prove/counterexample kind,
+ *  verdict already correct) — this function is just the raw capability. */
+export async function refuteAnswer(args: {
+  node: NodeRow;
+  problem: string;
+  idealSolution: string;
+  answer: string;
+}): Promise<RefutationResult> {
+  const cfg = getLLMConfig();
+  if (cfg.provider === "gemini") {
+    return geminiCall(REFUTER_SYSTEM, refuteUserText(args), REFUTE_SCHEMA_G, 0.3, cfg);
+  }
+  if (cfg.provider === "anthropic" && cfg.anthropic) {
+    const msg = await cfg.anthropic.messages.create({
+      model: ANTHROPIC_GRADE_MODEL,
+      max_tokens: 500,
+      system: [{ type: "text", text: REFUTER_SYSTEM + "\n\nIMPORTANT: Respond ONLY with a single valid JSON object — no markdown fences, no preamble.", cache_control: { type: "ephemeral" } }],
+      messages: [{ role: "user", content: refuteUserText(args) }],
+    });
+    return firstJson<RefutationResult>(msg);
+  }
+  // Demo mode: no adversarial pass possible without a real model — assume it holds.
+  return { holds: true, refutation: "" };
 }
 
 export async function* explainConcept(

@@ -2,10 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { db, type NodeRow, MASTERY_THRESHOLD } from "@/lib/db";
 import { getNode, newlyUnlocked } from "@/lib/queries";
 import { applyAttempt, getMasteryP, recordAttempt } from "@/lib/mastery";
-import { gradeAnswer, friendlyLLMError, hasKey } from "@/lib/llm";
+import { gradeAnswer, refuteAnswer, friendlyLLMError, hasKey } from "@/lib/llm";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 120;
+
+// Only proofs and counterexamples get the adversarial second pass — the
+// failure mode it targets (a rubric-satisfying argument with a hidden logical
+// hole) is specific to open-ended arguments, not compute/explain answers.
+const ADVERSARIAL_KINDS = new Set(["prove", "counterexample"]);
 
 export async function POST(req: NextRequest) {
   const { problemId, answer, predicted } = await req.json();
@@ -37,6 +42,32 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: message }, { status });
   }
 
+  // Adversarial pass: a rigorous check tries to break an already-"correct"
+  // proof/counterexample. Every rubric point can be satisfied and the argument
+  // still have a hole the rubric didn't anticipate — this is what catches it.
+  let trust: "model-judged" | "cross-checked" | "refuted" = "model-judged";
+  let refutation = "";
+  if (grade.verdict === "correct" && ADVERSARIAL_KINDS.has(prob.kind) && hasKey()) {
+    try {
+      const ref = await refuteAnswer({
+        node,
+        problem: prob.problem,
+        idealSolution: prob.ideal_solution || "",
+        answer: answer || "",
+      });
+      if (ref.holds) {
+        trust = "cross-checked";
+      } else {
+        trust = "refuted";
+        refutation = ref.refutation;
+        grade = { ...grade, verdict: "partial", mastery_evidence: Math.min(grade.mastery_evidence, 0.5) };
+      }
+    } catch {
+      // The adversarial pass is a bonus check, not the primary grade — a
+      // failure here (network, malformed JSON) must not block the student's result.
+    }
+  }
+
   const masteryBefore = getMasteryP(node.id);
   const wasAlreadyMastered = masteryBefore >= MASTERY_THRESHOLD;
   const blamed = grade.blamed_prerequisite && prereqs.includes(grade.blamed_prerequisite) ? grade.blamed_prerequisite : null;
@@ -53,6 +84,7 @@ export async function POST(req: NextRequest) {
     blamed_prereq: blamed || "",
     mode: hasKey() ? "ai" : "demo",
     predicted_correct: predictedCorrect,
+    trust,
   });
 
   const masteryAfter = getMasteryP(node.id);
@@ -68,6 +100,8 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({
     ...grade,
     blamed_prerequisite: blamed || "",
+    trust,
+    refutation,
     masteryBefore,
     masteryAfter,
     halfLife: Math.round(masteryRow?.half_life ?? 7),

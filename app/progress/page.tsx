@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { masteryHistogram, recentAttemptsGlobal, weakSpots, stats, todayStats, reviewForecast, masteryVelocity, activityCalendar, areaMastery, masteryMilestones, recurringWeakPrerequisites, calibration } from "@/lib/queries";
+import { masteryHistogram, recentAttemptsGlobal, weakSpots, stats, todayStats, reviewForecast, masteryVelocity, activityCalendar, areaMastery, masteryMilestones, recurringWeakPrerequisites, calibration, gradingTrustStats } from "@/lib/queries";
 import ActivityCalendar from "@/app/components/ActivityCalendar";
 import ProgressTabs from "@/app/components/ProgressTabs";
 import { getDailyGoal } from "@/lib/settings";
@@ -36,6 +36,7 @@ export default function ProgressPage() {
   const milestones = masteryMilestones();
   const weakPrereqs = recurringWeakPrerequisites(6);
   const calib = calibration();
+  const trust = gradingTrustStats();
 
   const masteredPct = s.real > 0 ? Math.round((s.known / s.real) * 100) : 0;
   const maxBucket = Math.max(...hist.map((h) => h.count), 1);
@@ -286,6 +287,29 @@ export default function ProgressPage() {
               </div>
             );
           })()}
+
+          {/* Grading trust — how often the adversarial pass actually finds a hole
+              in an answer the primary grader already called "correct". Guarded
+              behind a minimum sample so a couple of proofs don't draw noise. */}
+          {trust.checked >= 3 && trust.disagreementRate !== null && (
+            <div className="panel">
+              <div className="panel-header">
+                <h2>Grading trust</h2>
+                <span className="muted small">{trust.checked} cross-checked</span>
+              </div>
+              <p className="muted small panel-desc">
+                On proofs and counterexamples the grader calls correct, a second
+                adversarial pass tries to find a hole. This is how often it succeeded —
+                the honest failure rate of single-pass grading.
+              </p>
+              <div className="calib-headline">
+                <span className="calib-score" style={{ color: trust.disagreementRate > 0.15 ? "var(--red)" : "var(--green)" }}>
+                  {Math.round(trust.disagreementRate * 100)}%
+                </span>
+                <span className="muted small">disagreement rate</span>
+              </div>
+            </div>
+          )}
 
           {/* Per-area mastery breakdown */}
           {areas.length > 0 && (

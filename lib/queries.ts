@@ -1190,6 +1190,30 @@ export function calibration(): Calibration {
   };
 }
 
+export type GradingTrust = {
+  checked: number;              // adversarially cross-checked attempts (cross-checked + refuted)
+  refuted: number;               // of those, how many the adversarial pass actually broke
+  disagreementRate: number | null; // refuted / checked — the honest single-pass-grading failure rate
+};
+
+// Cycle 2 #2b: how often the adversarial second pass (grade/route.ts) actually
+// finds a hole in an answer the primary grader already called "correct". This
+// is the measurable justification for running rubric grading + a refuter at
+// all — see IMPROVEMENT_PLAN.md Cycle 2 #2.
+export function gradingTrustStats(): GradingTrust {
+  const row = db()
+    .prepare(
+      `SELECT
+         SUM(CASE WHEN trust IN ('cross-checked', 'refuted') THEN 1 ELSE 0 END) AS checked,
+         SUM(CASE WHEN trust = 'refuted' THEN 1 ELSE 0 END) AS refuted
+       FROM attempts`
+    )
+    .get() as { checked: number | null; refuted: number | null };
+  const checked = row.checked ?? 0;
+  const refuted = row.refuted ?? 0;
+  return { checked, refuted, disagreementRate: checked > 0 ? refuted / checked : null };
+}
+
 export function isBookmarked(nodeId: string): boolean {
   return !!db().prepare("SELECT 1 FROM bookmarks WHERE node_id = ?").get(nodeId);
 }
