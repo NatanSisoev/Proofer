@@ -89,19 +89,30 @@ attacks than a kernel. Three independent sub-items, in order:
   with per-point notes. Demo-mode `stubGrade` updated to the same shape.
   Verified live against Gemini in the preview (Fourier Coefficient problem,
   1/5 points met → 13% mastery, correct gap pin).
-- **2b. Adversarial verification pass.** When the verdict is `correct` on a
-  `prove`/`counterexample` problem, fire one extra call prompted purely to
-  *refute* the student's argument (find a false step, missing case, or circular
-  reasoning; default to "holds" only if nothing concrete is found). If the
-  refuter finds a hole: downgrade to `partial`, surface both views, and log it.
-  Track the **disagreement rate** — that number is the honest measure of how
-  often single-pass grading was wrong, and it's the metric that justifies 2a–2c.
-- **2c. Trust labels.** Additive `attempts.trust` column
-  (`model-judged | cross-checked | refuted`) via the `MIGRATIONS` array in
-  `lib/db.ts`; badge on the verdict in `GradeFeedback` and in history views.
-  (The label taxonomy leaves room for a future `numerically-verified` tier —
-  a `compute`-kind spot-check with mathjs — but that's optional follow-on, not
-  part of this item.)
+- **2b. Adversarial verification pass.** ✅ done — When the verdict is
+  `correct` on a `prove`/`counterexample` problem (`ADVERSARIAL_KINDS` in
+  `app/api/practice/grade/route.ts`) and a key is configured, fire one extra
+  `refuteAnswer` call (`lib/llm.ts`) prompted purely to *refute* the student's
+  argument (false step, missing case, circular reasoning, invalid
+  counterexample; defaults to "holds" if nothing concrete is found — and in
+  demo mode, since there's no model to run it). If the refuter finds a hole:
+  downgrade verdict to `partial`, cap `mastery_evidence` at 0.5, and surface
+  both views — the rubric checklist (still all-green, since it *did* satisfy
+  every rubric point) plus a new red "Second look" block with the refuter's
+  specific objection. An additive `attempts.trust` column
+  (`model-judged | cross-checked | refuted`, via `MIGRATIONS`) tracks the
+  outcome; `gradingTrustStats()` in `lib/queries.ts` computes the
+  **disagreement rate** (refuted / cross-checked), surfaced as a "Grading
+  trust" panel on `/progress` once ≥3 samples exist. Verified live: a correct
+  aperiodicity proof got `trust: "cross-checked"`, refutation empty, UI showed
+  no extra block — confirms the guard conditions work in both directions.
+- **2c. Trust labels.** The `attempts.trust` column landed early as part of
+  2b (it's what the disagreement rate is computed from) — this item is now
+  just the UI half: a badge on the verdict in `GradeFeedback` and in history
+  views (`/progress`, `/node/[slug]`) showing model-judged vs cross-checked
+  vs refuted per attempt. (The label taxonomy leaves room for a future
+  `numerically-verified` tier — a `compute`-kind spot-check with mathjs —
+  but that's optional follow-on, not part of this item.)
 - **Effort**: 2a Medium, 2b Low–Medium, 2c Low. **Impact**: directly attacks the
   "tutor wrong about math is fatal" risk VISION names, with measurable results.
 
