@@ -176,14 +176,33 @@ The falsifiable test is *"beats Anki + ChatGPT for one real course"* — and the
 real courses are MatCAD/Mates, not the polished Mathematics vault. Make Proofer
 the daily driver for an actual UAB course.
 
-- **4a. Multi-source import.** Today `import-vault.mjs` is winner-takes-all
-  (`DELETE FROM edges; DELETE FROM nodes;`, one vault path). Add
-  `nodes.source TEXT` (additive migration; default `"main"`), a
-  `--source=<name>` flag that deletes/rebuilds only that source's nodes and
-  edges, and make `resolveTarget` consult the **existing `nodes` table** as well
-  as the in-run map — so a course note's `[[Compactness]]` resolves to the main
-  vault's node instead of spawning a ghost. Surface source as a filter chip in
-  `/explore` and a scope in `SessionSetup`.
+- **4a. Multi-source import.** ✅ done (mechanism) — `import-vault.mjs` was
+  winner-takes-all (`DELETE FROM edges; DELETE FROM nodes;`, one vault path).
+  Added `nodes.source TEXT NOT NULL DEFAULT 'main'` (in `db/schema.sql` for
+  fresh DBs, plus a `MIGRATIONS` entry in `lib/db.ts` *and* a defensive
+  self-heal ALTER in the script itself, since it doesn't depend on
+  `lib/db.ts` — it needs to work standalone). `--source=<name>` (default
+  `"main"`) scopes the delete/rebuild to `WHERE src IN (that source's
+  nodes)` / `WHERE source = ?` — edges are always keyed by the note that
+  declared the link, so this is exactly "this source's own data," leaving
+  other sources (and mastery/attempts/etc., untouched by import anyway)
+  alone. `resolveTarget` now consults an `externalResolve` map (loaded from
+  the DB *before* parsing) of every other-source node — real or ghost —
+  before creating a new ghost, so a course note's `[[Compactness]]` resolves
+  to the main vault's existing node, and two sources referencing the same
+  not-yet-written concept share one ghost instead of colliding on the `id`
+  PRIMARY KEY. **Verified live** against the real `graph.db` (backed up
+  first): a synthetic `testcourse` source correctly added 1 real node + 1
+  ghost, resolved its `[[Compact Space]]` reference to the existing main
+  node with zero duplication, left all 860 pre-existing main-vault
+  nodes/3069 edges untouched, and re-running the same import was idempotent
+  (no duplicate rows). Test data cleaned up afterward. README documents the
+  `--source` flag.
+  **Deferred to a follow-up tick**: the `/explore` filter chip and
+  `SessionSetup` scope UI — genuinely testing those needs real second-source
+  content, which doesn't exist yet (4b's content pipeline is a manual
+  workflow the user runs later; there's no second vault in Proofer's note
+  format to point the UI at today).
 - **4b. Content pipeline (workflow, not app code).** Lecture PDFs → atomic notes
   via the existing `summarize-pdf`/`math-note` skills into a course folder →
   `pnpm run import -- --source=<course> <path>`. Document it in the README so
