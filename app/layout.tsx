@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import Link from "next/link";
 import { Inter, Lora } from "next/font/google";
 import "./globals.css";
@@ -13,6 +13,16 @@ import { Settings } from "./components/Icons";
 export const metadata: Metadata = {
   title: "Proofer — an AI tutor for mathematics",
   description: "An AI tutor that models your understanding of mathematics.",
+  appleWebApp: { title: "Proofer", statusBarStyle: "black-translucent" },
+};
+
+// Cycle 2 #7 (PWA pass) — themeColor tints the mobile browser chrome / PWA
+// title bar; it's a fixed brand color regardless of light/dark mode, matching
+// the manifest's theme_color.
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: "#D97757",
 };
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
