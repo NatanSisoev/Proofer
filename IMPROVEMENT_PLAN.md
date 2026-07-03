@@ -72,7 +72,7 @@ product's premise.
   `VACUUM INTO` snapshot as a download. `data/` was already gitignored
   wholesale, so no `.gitignore` change was needed.
 
-### 2. Trustworthy grading without Lean
+### 2. Trustworthy grading without Lean — ✅ fully shipped (2a, 2b, 2c)
 
 VISION's honest gap #1 ("grading still trusts an LLM about math") survives the
 Lean cut — but the failure mode (the grader blesses a wrong proof) has cheaper
@@ -106,11 +106,14 @@ attacks than a kernel. Three independent sub-items, in order:
   trust" panel on `/progress` once ≥3 samples exist. Verified live: a correct
   aperiodicity proof got `trust: "cross-checked"`, refutation empty, UI showed
   no extra block — confirms the guard conditions work in both directions.
-- **2c. Trust labels.** The `attempts.trust` column landed early as part of
-  2b (it's what the disagreement rate is computed from) — this item is now
-  just the UI half: a badge on the verdict in `GradeFeedback` and in history
-  views (`/progress`, `/node/[slug]`) showing model-judged vs cross-checked
-  vs refuted per attempt. (The label taxonomy leaves room for a future
+- **2c. Trust labels.** ✅ done — The `attempts.trust` column landed early as
+  part of 2b (it's what the disagreement rate is computed from); this item
+  was the UI half. New shared `TrustBadge` component (silent for the
+  `model-judged` baseline, a green "cross-checked" or red "refuted" pill
+  otherwise) wired into `GradeFeedback` (next to the verdict pill) and every
+  history surface: `/history`, `/progress` (recent attempts), `/node/[slug]`
+  (past practice). `nodeAttemptDetails`/`attemptHistory`/`AttemptRow` queries
+  extended to select `trust`. (The label taxonomy leaves room for a future
   `numerically-verified` tier — a `compute`-kind spot-check with mathjs —
   but that's optional follow-on, not part of this item.)
 - **Effort**: 2a Medium, 2b Low–Medium, 2c Low. **Impact**: directly attacks the
