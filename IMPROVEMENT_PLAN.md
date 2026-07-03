@@ -230,19 +230,41 @@ the daily driver for an actual UAB course.
   own 3-month test with real coursework — and every later feature gets real
   usage data.
 
-### 5. Multi-turn Socratic remediation
+### 5. Multi-turn Socratic remediation — ✅ done
 
-The post-verdict follow-up is one-shot (`submitFollowUp` re-grades against the
-same problem). A real tutor iterates.
+The post-verdict follow-up was one-shot (`submitFollowUp` re-graded the whole
+answer from scratch against the same problem — a full BKT update from a single
+quick patch). A real tutor iterates instead.
 
 - **Fix**: a bounded dialogue on the graded attempt: new
   `/api/practice/dialogue` route holding a transcript (additive
-  `attempts.dialogue TEXT` JSON column), grader-as-tutor prompt that sees the
-  problem, the answer, the identified gap, and prior turns; asks one probing
-  question per turn, max ~4 turns; the final turn returns an updated
-  `mastery_evidence` applied as a *small* BKT nudge (cap the swing — dialogue
-  refines, it doesn't re-grade). UI: a thread under `GradeFeedback`, replacing
-  the single follow-up box.
+  `attempts.dialogue TEXT` JSON column), grader-as-tutor prompt
+  (`continueDialogue()` in `lib/llm.ts`) that sees the problem, the identified
+  gap, and prior turns; asks one probing question per turn, hard-capped at 4
+  student turns (`DIALOGUE_MAX_STUDENT_TURNS`, enforced both in the prompt —
+  "this is the final turn" — and server-side as a defensive block). The final
+  turn returns `mastery_evidence`, applied via new
+  `lib/mastery.ts#applyDialogueNudge` — capped at ±8pp and dampened to 30% of
+  the gap toward that evidence, no half-life/attempts-count change, since a
+  clarification refines the read on understanding rather than re-grading it.
+  UI: `GradeFeedback` now owns this state itself (a self-contained
+  `DialogueThread`, keyed by `grade.attemptId` so switching problems resets
+  it) — chat bubbles, replacing the old single-box follow-up in both
+  `StudyQueue` (live sessions) and `AttemptReviewPanel` (historical review).
+  `recordAttempt()` now returns the new row's id so the grade response can
+  carry `attemptId` for the thread to scope itself to.
+  **Preserved, not regressed**: `AttemptReviewPanel`'s "Try again" full
+  rewrite (shipped last session, user-requested) is structurally separate
+  from `GradeFeedback`'s follow-up box, so replacing the follow-up with a
+  bounded dialogue doesn't remove the "redo a whole answer for a full
+  mastery update" capability — it lives one level up and renders before any
+  grade exists.
+  **Verified live** end-to-end on a real problem (Asymptotic Behavior of
+  Linear Recurrences): submitted a wrong answer, held a real 4-turn Socratic
+  exchange building on each reply, hit the turn cap, got a wrap-up message,
+  and confirmed mastery moved 2.3%→10.3% (an 8pp nudge, correctly capped) —
+  both in the UI and by querying `graph.db` directly. Confirmed the historical
+  review page (`/attempt/[id]`) still renders correctly with its redo box intact.
 - **Effort**: Medium. **Impact**: the most tutor-like surface in the app; pure
   prompt + state work on existing plumbing.
 
