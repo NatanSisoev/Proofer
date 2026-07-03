@@ -130,6 +130,19 @@ export function setKnown(id: string, known: boolean) {
   else db().prepare("DELETE FROM mastery WHERE node_id = ?").run(id);
 }
 
+// A dialogue resolution can move mastery by at most this much, either
+// direction — deliberately much gentler than a fresh attempt's full BKT
+// update (Cycle 2 #5: the dialogue refines the read on understanding, it
+// doesn't re-grade). No half-life/last-seen/attempts-count change either —
+// this isn't a new review, just a clarification of the existing one.
+const DIALOGUE_NUDGE_CAP = 0.08;
+
+export function applyDialogueNudge(nodeId: string, evidence: number) {
+  const cur = getMasteryP(nodeId) || P_INIT;
+  const delta = Math.max(-DIALOGUE_NUDGE_CAP, Math.min(DIALOGUE_NUDGE_CAP, (evidence - cur) * 0.3));
+  writeP(nodeId, cur + delta, false);
+}
+
 /**
  * Pick the next concept to practice: prefer a frontier concept (all prereqs
  * known) with the LOWEST current mastery and the highest unlock potential.
@@ -263,6 +276,8 @@ export function selectNext(): NodeRow | undefined {
   return nextToPractice();
 }
 
+/** Returns the new attempts.id — callers that offer a follow-up dialogue
+ *  (Cycle 2 #5) need it to scope /api/practice/dialogue to this exact attempt. */
 export function recordAttempt(row: {
   node_id: string;
   kind: string;
@@ -276,8 +291,8 @@ export function recordAttempt(row: {
   predicted_correct?: number | null;
   trust?: "model-judged" | "cross-checked" | "refuted" | null;
   problem_id?: number | null;
-}) {
-  db()
+}): number {
+  const info = db()
     .prepare(
       `INSERT INTO attempts(node_id,kind,problem,answer,verdict,evidence,gap,blamed_prereq,created_at,mode,predicted_correct,trust,problem_id)
        VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)`
@@ -290,6 +305,7 @@ export function recordAttempt(row: {
       row.trust ?? null,
       row.problem_id ?? null
     );
+  return Number(info.lastInsertRowid);
 }
 
 export function recentAttempts(nodeId: string, limit = 5) {

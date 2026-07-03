@@ -25,7 +25,6 @@ export type CardState = {
   grade: Grade | null;
   revealed: string | null;
   hint: string | null;
-  followUp: string;
 };
 
 export type SavedSession = {

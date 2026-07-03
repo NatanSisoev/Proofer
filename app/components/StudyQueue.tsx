@@ -39,8 +39,6 @@ export default function StudyQueue({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [revealed, setRevealed] = useState<string | null>(null);
-  const [followUp, setFollowUp] = useState("");
-  const [followUpBusy, setFollowUpBusy] = useState(false);
   // Results keyed by queue index so back-nav updates the right card
   const [resultsByIndex, setResultsByIndex] = useState<Record<number, SessionResult>>(
     savedState?.resultsByIndex ?? {}
@@ -80,8 +78,6 @@ export default function StudyQueue({
     setAnswer("");
     setProblem(null);
     setRevealed(null);
-    setFollowUp("");
-    setFollowUpBusy(false);
     setShowReminder(false);
     setHint(null);
     setHintBusy(false);
@@ -116,12 +112,10 @@ export default function StudyQueue({
       setGrade(saved.grade);
       setRevealed(saved.revealed);
       setHint(saved.hint);
-      setFollowUp(saved.followUp);
       setBusy(false);
       setError(null);
       setShowReminder(false);
       setHintBusy(false);
-      setFollowUpBusy(false);
       setCopied(false);
       setConfidence(null);
       return;
@@ -188,12 +182,12 @@ export default function StudyQueue({
         resultsByIndex,
         cardStates: {
           ...cardStatesRef.current,
-          [index]: { problem, answer, grade, revealed, hint, followUp },
+          [index]: { problem, answer, grade, revealed, hint },
         },
       };
       localStorage.setItem(SESSION_KEY, JSON.stringify(s));
     } catch {}
-  }, [activeQueue, index, preferKind, resultsByIndex, done, problem, answer, grade, revealed, hint, followUp]);
+  }, [activeQueue, index, preferKind, resultsByIndex, done, problem, answer, grade, revealed, hint]);
 
   // Keyboard navigation handler. The listener itself is attached once (empty
   // deps) — re-attaching on every render (e.g. every answer keystroke) was
@@ -206,7 +200,6 @@ export default function StudyQueue({
     if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
       e.preventDefault();
       if (!grade && !busy && answer.trim()) submit();
-      else if (grade && followUp.trim() && !followUpBusy) submitFollowUp();
       else if (grade) advance();
     } else if (!inText && !e.ctrlKey && !e.metaKey && !e.altKey) {
       if (e.key === "ArrowLeft") goBack();
@@ -227,7 +220,7 @@ export default function StudyQueue({
 
   // Snapshot current card before navigating away
   function saveCardState() {
-    cardStatesRef.current[index] = { problem, answer, grade, revealed, hint, followUp };
+    cardStatesRef.current[index] = { problem, answer, grade, revealed, hint };
   }
 
   async function getHint() {
@@ -272,36 +265,6 @@ export default function StudyQueue({
       }
     } finally {
       setBusy(false);
-    }
-  }
-
-  async function submitFollowUp() {
-    if (!problem || !followUp.trim()) return;
-    setFollowUpBusy(true);
-    setError(null);
-    try {
-      const res = await fetch("/api/practice/grade", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ problemId: problem.problemId, answer: followUp }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "grading failed");
-      setGrade(data);
-      setFollowUp("");
-      // Update this card's result specifically (not last item in array)
-      setResultsByIndex((prev) => ({
-        ...prev,
-        [index]: {
-          ...(prev[index] ?? { node: currentNode, masteryBefore: data.masteryBefore, elapsedSec: 0 }),
-          verdict: data.verdict,
-          masteryAfter: data.masteryAfter,
-        },
-      }));
-    } catch (e: any) {
-      setError(e.message || "Grading failed");
-    } finally {
-      setFollowUpBusy(false);
     }
   }
 
@@ -731,17 +694,7 @@ export default function StudyQueue({
 
           {grade && (
             <div className="panel feedback">
-              <GradeFeedback
-                grade={grade}
-                followUp={followUp}
-                onFollowUpChange={setFollowUp}
-                followUpBusy={followUpBusy}
-                onSubmitFollowUp={submitFollowUp}
-                followUpPlaceholder="Show the missing step, fix the misconception…"
-                followUpLeadText="Address the gap — no need to start over:"
-                followUpMinHeight={90}
-                unlockTarget="_blank"
-              />
+              <GradeFeedback grade={grade} unlockTarget="_blank" />
 
               <div className="practice-actions" style={{ marginTop: 12 }}>
                 <button className="btn-primary icon-label" onClick={advance} disabled={busy}>

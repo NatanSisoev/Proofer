@@ -100,6 +100,10 @@ const MIGRATIONS = [
   // DEFAULT backfills every pre-existing row to 'main' in the same statement,
   // so today's single-vault install doesn't need a data migration.
   "ALTER TABLE nodes ADD COLUMN source TEXT NOT NULL DEFAULT 'main'",
+  // Multi-turn Socratic remediation (Cycle 2 #5) — the bounded post-verdict
+  // dialogue transcript for this attempt, JSON array of {role, text}. NULL/
+  // absent means no dialogue has happened yet.
+  "ALTER TABLE attempts ADD COLUMN dialogue TEXT",
 ];
 
 function migrate(d: DatabaseSync) {

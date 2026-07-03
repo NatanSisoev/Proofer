@@ -1156,7 +1156,13 @@ details[open].practice-history > .attempt-list { animation: accordion-fade 0.25s
 
 /* problem card: grade feedback */
 .review-hint { margin-left: auto; white-space: nowrap; }
-.follow-up-section { margin-top: 4px; border-top: 1px solid var(--border); padding-top: 14px; }
+
+/* Socratic dialogue thread (Cycle 2 #5) */
+.dialogue-thread { margin-top: 4px; border-top: 1px solid var(--border); padding-top: 14px; }
+.dialogue-messages { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+.dialogue-msg { padding: 9px 12px; border-radius: 10px; font-size: 14px; line-height: 1.5; max-width: 90%; }
+.dialogue-msg-tutor { background: var(--bg-soft); border: 1px solid var(--border); align-self: flex-start; }
+.dialogue-msg-student { background: var(--accent-soft); align-self: flex-end; }
 
 /* study queue */
 .session-subtitle { margin: 0 0 20px; font-size: 13px; }

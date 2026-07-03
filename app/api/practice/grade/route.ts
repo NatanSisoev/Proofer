@@ -73,7 +73,7 @@ export async function POST(req: NextRequest) {
   const blamed = grade.blamed_prerequisite && prereqs.includes(grade.blamed_prerequisite) ? grade.blamed_prerequisite : null;
 
   applyAttempt(node.id, grade.mastery_evidence, blamed, prereqs);
-  recordAttempt({
+  const attemptId = recordAttempt({
     node_id: node.id,
     kind: prob.kind,
     problem: prob.problem,
@@ -108,5 +108,6 @@ export async function POST(req: NextRequest) {
     halfLife: Math.round(masteryRow?.half_life ?? 7),
     unlocked,
     justMastered,
+    attemptId,
   });
 }

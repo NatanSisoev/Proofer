@@ -341,6 +341,106 @@ export async function refuteAnswer(args: {
   return { holds: true, refutation: "" };
 }
 
+// ===========================================================================
+// Multi-turn Socratic remediation (Cycle 2 #5) — a bounded dialogue on a
+// graded attempt, replacing the old one-shot "submit a patched answer, get a
+// full re-grade" follow-up. The tutor asks one probing question per turn and
+// only assesses mastery_evidence on the FINAL turn, applied as a small BKT
+// nudge (see lib/mastery.ts#applyDialogueNudge) — refining the read on
+// understanding, not re-grading.
+// ===========================================================================
+export type DialogueTurn = { role: "student" | "tutor"; text: string };
+
+export type DialogueResult = {
+  message: string;
+  done: boolean;
+  masteryEvidence?: number; // present (and meaningful) only when done
+};
+
+export const DIALOGUE_MAX_STUDENT_TURNS = 4;
+
+const DIALOGUE_SYSTEM = `You are a Socratic math tutor continuing a conversation with a student right after grading their answer to a problem and identifying a specific gap in their understanding.
+Your job now is to guide them to close that exact gap through questions — NEVER state the missing step or the answer directly.
+Rules:
+- Ask exactly ONE probing question per turn that pushes the student toward the specific gap, building on what they just said. Keep it short.
+- If the student's latest reply shows they've now closed the gap, OR you are told this is the final turn, END the dialogue (done=true): give one sentence of encouragement confirming what clicked (or, if they still haven't gotten it by the final turn, one plain sentence telling them exactly what to review — the conversation is ending either way). Always include your best-guess calibrated mastery_evidence (0..1) for the WHOLE exchange when done=true.
+- Otherwise set done=false and ask your next question; mastery_evidence is ignored when done=false but still required by the schema — repeat your best current guess.
+Address the student as "you". Be warm but precise — no padding, no repeating what they already said back at them.`;
+
+const DIALOGUE_SCHEMA_G = {
+  type: "OBJECT",
+  properties: {
+    message: { type: "STRING" },
+    done: { type: "BOOLEAN" },
+    mastery_evidence: { type: "NUMBER" },
+  },
+  required: ["message", "done", "mastery_evidence"],
+  propertyOrdering: ["message", "done", "mastery_evidence"],
+};
+
+function dialogueUserText(a: {
+  node: NodeRow;
+  problem: string;
+  idealSolution: string;
+  gap: string;
+  transcript: DialogueTurn[];
+}): string {
+  const studentTurns = a.transcript.filter((t) => t.role === "student").length;
+  return [
+    `TARGET CONCEPT: ${a.node.title}` + (a.node.type ? ` (${a.node.type})` : ""),
+    `\nPROBLEM:\n${a.problem}`,
+    `\nIDEAL SOLUTION (reference, do not reveal):\n${a.idealSolution}`,
+    `\nTHE GAP YOU IDENTIFIED IN THEIR ORIGINAL ANSWER:\n${a.gap}`,
+    `\nCONVERSATION SO FAR:`,
+    a.transcript.map((t) => `${t.role === "student" ? "STUDENT" : "TUTOR"}: ${t.text}`).join("\n"),
+    studentTurns >= DIALOGUE_MAX_STUDENT_TURNS
+      ? `\nThis is the FINAL turn allowed — you MUST end the dialogue now (done=true) with a wrap-up.`
+      : "",
+    `\nContinue the conversation. Respond as JSON.`,
+  ]
+    .filter(Boolean)
+    .join("\n");
+}
+
+function normalizeDialogueResult(raw: { message: string; done: boolean; mastery_evidence: number }): DialogueResult {
+  return {
+    message: raw.message,
+    done: !!raw.done,
+    masteryEvidence: raw.done ? Math.max(0, Math.min(1, raw.mastery_evidence)) : undefined,
+  };
+}
+
+/** Advance a bounded Socratic dialogue by one turn. `transcript` should
+ *  already include the student's latest message. */
+export async function continueDialogue(args: {
+  node: NodeRow;
+  problem: string;
+  idealSolution: string;
+  gap: string;
+  transcript: DialogueTurn[];
+}): Promise<DialogueResult> {
+  const cfg = getLLMConfig();
+  if (cfg.provider === "gemini") {
+    const raw = await geminiCall(DIALOGUE_SYSTEM, dialogueUserText(args), DIALOGUE_SCHEMA_G, 0.5, cfg);
+    return normalizeDialogueResult(raw);
+  }
+  if (cfg.provider === "anthropic" && cfg.anthropic) {
+    const msg = await cfg.anthropic.messages.create({
+      model: ANTHROPIC_GRADE_MODEL,
+      max_tokens: 500,
+      system: [{ type: "text", text: DIALOGUE_SYSTEM + "\n\nIMPORTANT: Respond ONLY with a single valid JSON object — no markdown fences, no preamble.", cache_control: { type: "ephemeral" } }],
+      messages: [{ role: "user", content: dialogueUserText(args) }],
+    });
+    return normalizeDialogueResult(firstJson<{ message: string; done: boolean; mastery_evidence: number }>(msg));
+  }
+  // Demo mode: no model to run a real dialogue — end it immediately.
+  return {
+    message: "Set an API key (free at aistudio.google.com) to unlock a real Socratic dialogue here.",
+    done: true,
+    masteryEvidence: undefined,
+  };
+}
+
 export async function* explainConcept(
   node: import("./db").NodeRow,
   prereqs: string[]

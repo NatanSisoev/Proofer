@@ -1,8 +1,12 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 import Markdown from "./Markdown";
 import MathText from "./MathText";
 import AnswerBox from "./AnswerBox";
 import VoiceInput from "./VoiceInput";
+import ErrorBanner from "./ErrorBanner";
 import { VERDICT } from "@/lib/verdict";
 import { Check, Copy, ChevronUp, ChevronDown, X, ArrowRight } from "./Icons";
 import TrustBadge from "./TrustBadge";
@@ -35,6 +39,7 @@ export type Grade = {
   unlocked?: ProblemNode[];
   trust?: "model-judged" | "cross-checked" | "refuted";
   refutation?: string; // set when an adversarial second pass found a hole in an initially "correct" verdict
+  attemptId?: number; // this grade's attempts.id — scopes the follow-up dialogue (Cycle 2 #5)
 };
 
 // Pre-answer confidence options. The values are the probability the student is
@@ -180,26 +185,111 @@ export function ProblemPanel({
   );
 }
 
-/** The graded-answer feedback: verdict, mastery move, what-you-got, the gap, hint, follow-up, and unlock celebration. */
+type DialogueMsg = { role: "student" | "tutor"; text: string };
+
+/**
+ * Bounded Socratic follow-up (Cycle 2 #5) — replaces the old one-shot "submit
+ * a patched answer, get a full re-grade" box. Self-contained (keyed by
+ * attemptId from the parent so switching problems resets it): the tutor asks
+ * one probing question per turn, max ~4, and only nudges mastery a little on
+ * the final turn (lib/mastery.ts#applyDialogueNudge) — this refines the read
+ * on understanding, it doesn't re-grade like a fresh attempt would.
+ */
+function DialogueThread({ attemptId }: { attemptId: number }) {
+  const [transcript, setTranscript] = useState<DialogueMsg[]>([]);
+  const [input, setInput] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [done, setDone] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [masteryAfter, setMasteryAfter] = useState<number | null>(null);
+
+  async function send() {
+    const text = input.trim();
+    if (!text || busy || done) return;
+    setBusy(true);
+    setError(null);
+    setInput("");
+    setTranscript((prev) => [...prev, { role: "student", text }]);
+    try {
+      const res = await fetch("/api/practice/dialogue", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ attemptId, message: text }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Dialogue failed");
+      setTranscript((prev) => [...prev, { role: "tutor", text: data.message }]);
+      if (data.done) {
+        setDone(true);
+        if (typeof data.masteryAfter === "number") setMasteryAfter(data.masteryAfter);
+      }
+    } catch (e: any) {
+      setError(e.message || "Something went wrong");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="fb-block dialogue-thread">
+      <h4 className="purple">Keep talking it through</h4>
+      {transcript.length === 0 && (
+        <p className="muted small" style={{ margin: "0 0 8px" }}>
+          Respond to the hint above — the tutor will ask a follow-up question to help close the gap.
+        </p>
+      )}
+      {transcript.length > 0 && (
+        <div className="dialogue-messages">
+          {transcript.map((m, i) => (
+            <div key={i} className={`dialogue-msg dialogue-msg-${m.role}`}>
+              <Markdown>{m.text}</Markdown>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {!done && (
+        <>
+          <AnswerBox
+            value={input}
+            onChange={setInput}
+            disabled={busy}
+            placeholder="Respond to the tutor's question…"
+            style={{ minHeight: 70 }}
+            onKeyDown={(e) => {
+              if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+                e.preventDefault();
+                e.nativeEvent.stopPropagation();
+                send();
+              }
+            }}
+          />
+          <div className="practice-actions" style={{ marginTop: 8 }}>
+            <button className="btn-primary" onClick={send} disabled={busy || !input.trim()}>
+              {busy ? "Thinking…" : "Reply"}
+            </button>
+            <VoiceInput onTranscript={(t) => setInput((prev) => (prev ? prev + " " + t : t))} disabled={busy} />
+          </div>
+        </>
+      )}
+
+      {error && <ErrorBanner>{error}</ErrorBanner>}
+
+      {done && masteryAfter !== null && (
+        <p className="muted small" style={{ marginTop: 8 }}>
+          Mastery updated to {Math.round(masteryAfter * 100)}%.
+        </p>
+      )}
+    </div>
+  );
+}
+
+/** The graded-answer feedback: verdict, mastery move, rubric checklist, the gap, hint, follow-up dialogue, and unlock celebration. */
 export function GradeFeedback({
   grade,
-  followUp,
-  onFollowUpChange,
-  followUpBusy,
-  onSubmitFollowUp,
-  followUpPlaceholder,
-  followUpLeadText,
-  followUpMinHeight = 100,
   unlockTarget,
 }: {
   grade: Grade;
-  followUp: string;
-  onFollowUpChange: (v: string) => void;
-  followUpBusy: boolean;
-  onSubmitFollowUp: () => void;
-  followUpPlaceholder: string;
-  followUpLeadText: string;
-  followUpMinHeight?: number;
   unlockTarget?: "_blank";
 }) {
   return (
@@ -272,32 +362,8 @@ export function GradeFeedback({
         <div className="markdown"><Markdown>{grade.socratic_hint}</Markdown></div>
       </div>
 
-      {grade.verdict !== "correct" && (
-        <div className="follow-up-section">
-          <p className="muted small" style={{ margin: "0 0 8px" }}>
-            {followUpLeadText}
-          </p>
-          <AnswerBox
-            value={followUp}
-            onChange={onFollowUpChange}
-            disabled={followUpBusy}
-            placeholder={followUpPlaceholder}
-            style={{ minHeight: followUpMinHeight }}
-            onKeyDown={(e) => {
-              if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
-                e.preventDefault();
-                e.nativeEvent.stopPropagation();
-                if (followUp.trim()) onSubmitFollowUp();
-              }
-            }}
-          />
-          <div className="practice-actions" style={{ marginTop: 8 }}>
-            <button className="btn-primary" onClick={onSubmitFollowUp} disabled={followUpBusy || !followUp.trim()}>
-              {followUpBusy ? "Checking…" : "Submit follow-up"}
-            </button>
-            <VoiceInput onTranscript={(t) => onFollowUpChange(followUp ? followUp + " " + t : t)} disabled={followUpBusy} />
-          </div>
-        </div>
+      {grade.verdict !== "correct" && grade.attemptId && (
+        <DialogueThread key={grade.attemptId} attemptId={grade.attemptId} />
       )}
 
       {grade.justMastered && grade.unlocked && grade.unlocked.length > 0 && (
