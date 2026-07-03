@@ -477,7 +477,8 @@ input.search-box:focus { outline: none; border-color: var(--accent); box-shadow:
 .btn-sm { font-size: 13px; }
 .btn-warn { color: var(--amber); }
 .feedback { display: flex; flex-direction: column; gap: 18px; }
-.verdict { display: inline-block; align-self: flex-start; padding: 7px 18px; border-radius: var(--radius-sm); font-weight: 600; font-size: 14px; letter-spacing: 0.01em; }
+.verdict-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; align-self: flex-start; }
+.verdict { display: inline-block; padding: 7px 18px; border-radius: var(--radius-sm); font-weight: 600; font-size: 14px; letter-spacing: 0.01em; }
 .verdict-correct { animation: correctFade 0.25s ease-out; }
 @keyframes correctFade {
   0% { opacity: 0.6; transform: translateY(2px); }
@@ -1009,6 +1010,7 @@ details[open].practice-history > .attempt-list { animation: accordion-fade 0.25s
 .pill-accent { color: var(--accent); border-color: var(--accent-soft); }
 .pill-amber { color: var(--amber); }
 .pill-red { color: var(--red); }
+.pill-green { color: var(--green); }
 
 /* shared flex utility */
 .flex-col { display: flex; flex-direction: column; }

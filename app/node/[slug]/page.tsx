@@ -17,6 +17,7 @@ import CompareWith from "@/app/components/CompareWith";
 import ReadingProgress from "@/app/components/ReadingProgress";
 import GoalButton from "@/app/components/GoalButton";
 import NodePanels, { NodePanel } from "@/app/components/NodePanels";
+import TrustBadge from "@/app/components/TrustBadge";
 import { getNode, edgesOf, isKnown, readiness, prerequisites, attemptCount, isBookmarked, nodeAttempts, nodeAttemptDetails, nextReviewDays, similarConcepts, nodeBlamedPrereqs, misconceptionsForNode, egoGraph, prerequisiteGraph } from "@/lib/queries";
 import { truncateMath } from "@/lib/text";
 import { getMasteryP } from "@/lib/mastery";
@@ -334,6 +335,7 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
                             <div className="node-actions-row">
                               <span className="verdict-label" style={{ color: verdictColor }}>{verdictLabel}</span>
                               {a.kind && <span className="pill label-xs">{a.kind}</span>}
+                              <TrustBadge trust={a.trust} />
                             </div>
                             <span className="muted small">{new Date(a.created_at).toLocaleDateString()}</span>
                           </div>

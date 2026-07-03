@@ -6,6 +6,7 @@ import MathText from "@/app/components/MathText";
 import { truncateMath } from "@/lib/text";
 import { ArrowLeft, ArrowRight } from "@/app/components/Icons";
 import ProgressTabs from "@/app/components/ProgressTabs";
+import TrustBadge from "@/app/components/TrustBadge";
 
 export const dynamic = "force-dynamic";
 
@@ -146,6 +147,7 @@ export default async function HistoryPage({
                   {a.kind && (
                     <span className="pill label-xs">{a.kind}</span>
                   )}
+                  <TrustBadge trust={a.trust} />
                   {a.title ? (
                     <Link href={`/node/${encodeURIComponent(a.node_id)}`} className="concept-link">
                       <MathText>{a.title}</MathText>

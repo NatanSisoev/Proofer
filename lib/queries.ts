@@ -275,10 +275,10 @@ export function nodeAttempts(nodeId: string, limit = 10): { verdict: string; cre
 export function nodeAttemptDetails(
   nodeId: string,
   limit = 8
-): { id: number; problem: string; kind: string | null; verdict: string; gap: string | null; created_at: string }[] {
+): { id: number; problem: string; kind: string | null; verdict: string; gap: string | null; created_at: string; trust: string | null }[] {
   return db()
     .prepare(
-      `SELECT id, problem, kind, verdict, gap, created_at
+      `SELECT id, problem, kind, verdict, gap, created_at, trust
          FROM attempts
         WHERE node_id = ? AND problem IS NOT NULL AND problem != ''
         ORDER BY id DESC
@@ -643,6 +643,7 @@ export type AttemptRow = {
   id: number; node_id: string; kind: string; answer: string;
   verdict: string; evidence: number; gap: string; blamed_prereq: string;
   created_at: string; mode: string; title?: string;
+  trust: string | null;
 };
 
 /** Distinct concepts recently practiced (deduped, most recent first). */
@@ -667,6 +668,7 @@ export type HistoryAttempt = {
   id: number; node_id: string; kind: string | null; verdict: string;
   problem: string | null; gap: string | null; created_at: string;
   title: string | null; area: string | null; type: string | null;
+  trust: string | null;
 };
 
 export type HistoryFilters = {
@@ -705,7 +707,7 @@ export function attemptHistory(
 
   const rows = db()
     .prepare(
-      `SELECT a.id, a.node_id, a.kind, a.verdict, a.problem, a.gap, a.created_at,
+      `SELECT a.id, a.node_id, a.kind, a.verdict, a.problem, a.gap, a.created_at, a.trust,
               n.title, n.area, n.type
          FROM attempts a
          LEFT JOIN nodes n ON n.id = a.node_id

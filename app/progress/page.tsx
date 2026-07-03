@@ -8,6 +8,7 @@ import { VerdictIcon, ArrowRight, Download, Sparkles } from "@/app/components/Ic
 import EmptyState from "@/app/components/EmptyState";
 import MathText from "@/app/components/MathText";
 import MasteryRing from "@/app/components/MasteryRing";
+import TrustBadge from "@/app/components/TrustBadge";
 
 export const dynamic = "force-dynamic";
 
@@ -207,6 +208,7 @@ export default function ProgressPage() {
                     >
                       <MathText>{(a as any).title || a.node_id}</MathText>
                     </Link>
+                    <TrustBadge trust={a.trust} />
                     {a.gap && a.gap !== "none" && a.gap !== "(gave up — showed answer)" && (
                       <p className="muted small attempt-gap">
                         <MathText>{a.gap}</MathText>

@@ -5,6 +5,7 @@ import AnswerBox from "./AnswerBox";
 import VoiceInput from "./VoiceInput";
 import { VERDICT } from "@/lib/verdict";
 import { Check, Copy, ChevronUp, ChevronDown, X, ArrowRight } from "./Icons";
+import TrustBadge from "./TrustBadge";
 
 export type ProblemNode = { id: string; title: string; type: string | null; area: string | null };
 
@@ -203,8 +204,11 @@ export function GradeFeedback({
 }) {
   return (
     <>
-      <div className={`verdict${grade.verdict === "correct" ? " verdict-correct" : ""}`} style={{ background: VERDICT[grade.verdict]?.bg }}>
-        {VERDICT[grade.verdict]?.label || grade.verdict}
+      <div className="verdict-row">
+        <div className={`verdict${grade.verdict === "correct" ? " verdict-correct" : ""}`} style={{ background: VERDICT[grade.verdict]?.bg }}>
+          {VERDICT[grade.verdict]?.label || grade.verdict}
+        </div>
+        <TrustBadge trust={grade.trust} />
       </div>
 
       <div className="mastery-move">
