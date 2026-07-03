@@ -205,6 +205,22 @@ There's now enough review history to start checking it instead of trusting it.
 - **Effort**: Low–Medium. **Impact**: keeps "due today" honest; groundwork for
   FSRS-style parameters later.
 
+### Ad hoc — user-requested, done out of plan order
+
+- **Review + redo a past attempt.** ✅ done (2026-07-03) — every history
+  surface (`/history`, `/progress` recent attempts, `/node/[slug]` past
+  practice) now links to `/attempt/[id]`: the original problem statement,
+  the answer given at the time, and the gap/blamed-prerequisite, plus an
+  editable "Try again" box pre-filled with the original answer. Submitting
+  re-grades against the *same* `problems` row (new `attempts.problem_id`
+  column, additive migration) — a fresh attempt, a fresh mastery update, and
+  the same `GradeFeedback` UI as a live session, including its built-in
+  follow-up box for continued Socratic back-and-forth. Attempts recorded
+  before this column existed show a graceful "predates this feature" notice
+  with a link to practice the concept fresh instead. New:
+  `app/attempt/[id]/page.tsx`, `app/components/AttemptReviewPanel.tsx`,
+  `lib/queries.ts#getAttempt`.
+
 ### 7. Smaller candidates (fill-in items, any order)
 
 - **PWA pass**: manifest + icons + sane mobile practice check, so sessions work
