@@ -248,12 +248,21 @@ Specific candidates found this pass, beyond the memory's running list
    treatment — forcing it into the tab-pill look would be a mismatch, not a
    fix. No colors/layout changed, so nothing here should look different at a
    glance — only the *feel* of the hover/active transitions.
-2. **Node page two-column `grid` on mobile** — the side column (`node-side-col`,
-   panels) stacks below the full note; on long notes the practice CTA is a
-   screen-height away. Consider a sticky compact action bar on small viewports.
-3. **Home page length** — spotlight + due + goal + blind spots + frontier +
-   bookmarks + areas + recent is a lot of stacked panels; consider collapsing
-   the lower third behind "More" or tightening panel paddings at `<900px`.
+2. ✅ **Node page two-column `grid` on mobile** — checked directly (mobile
+   viewport, both a short note and the vault's longest at 15.8K chars,
+   "Neural Network"): the primary "Practice this" CTA sits right after the
+   title/mastery ring, *before* the note body, so its position is independent
+   of note length — it's ~350px down regardless, well within the first
+   viewport. The `.grid` (note + panels) that stacks below it is what's
+   "a screen-height away" on long notes, not the CTA — that's just the note
+   content itself, which is supposed to be long. No sticky action bar needed;
+   the stated problem doesn't match the current (already-restructured)
+   page layout.
+3. ✅ **Home page length** — took the lower-risk of the two suggested fixes:
+   tightened `.panel` padding (22px → 16px) below 900px, the same breakpoint
+   `.grid` already stacks at. Left the "collapse behind More" idea alone —
+   that's an information-architecture call (what to hide) for the owner to
+   make deliberately, not one to guess at while mid-iteration on the design.
 4. ✅ **`prefers-reduced-motion` / `:focus-visible` audit** — hover-lift
    micro-interactions landed (`e437709`); make sure keyboard focus and reduced
    motion get the same care (one CSS block each). Added a `prefers-reduced-motion`
