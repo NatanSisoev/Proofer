@@ -412,9 +412,23 @@ write-back routes on the server, rate-limit practice/node APIs, fresh
 
 Owner is still iterating toward a design he likes. One polish tick per loop
 iteration stays the rule; remaining known candidates: SessionSetup custom chip
-styles, breadcrumb separator refinement, `/settings` visual pass (it's the last
-page untouched by the redesign waves), empty-state audit on the new `/path` and
-misconceptions surfaces.
+styles, breadcrumb separator refinement, empty-state audit on the new `/path`
+and misconceptions surfaces.
+
+- **`/settings` visual pass.** ✅ done (2026-07-03) — turned out the page
+  already used the redesigned `panel`/`page-top`/`action-row`/`btn-primary`
+  vocabulary throughout (it wasn't actually untouched, just not re-verified
+  since the redesign waves). The one real inconsistency, found by reviewing
+  the full page in both themes: `input[type="date"]` (the exam-pacing target
+  picker) was missing from the shared themed-input selector in
+  `globals.css`, so it rendered as a raw white browser widget — background,
+  text, and the native calendar icon/popup all ignored the dark theme.
+  Added `input[type="date"]` to the themed-input rule and
+  `[data-theme="dark"] input[type="date"] { color-scheme: dark }` so the
+  native picker follows suit. **Verified live**: inspected computed styles
+  in both themes — dark now shows `background: rgb(38,36,32)`,
+  `color-scheme: dark`; light unaffected (`color-scheme: normal`,
+  light colors) — confirmed via screenshot in both.
 
 ---
 
