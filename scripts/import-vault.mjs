@@ -1,10 +1,16 @@
 // Proofer vault importer.
 // Reads an Obsidian math vault and produces a TYPED knowledge graph in SQLite.
 //
-//   node --experimental-sqlite scripts/import-vault.mjs [vaultNotesDir]
+//   node --experimental-sqlite scripts/import-vault.mjs [vaultNotesDir] [--source=<name>]
 //
 // The wedge: 1,660 hand-written atomic notes already encode a graph implicitly
 // (frontmatter type/field + [[wikilinks]]). We make that graph explicit and typed.
+//
+// Multi-source (Cycle 2 #4a): --source=<name> (default "main") scopes the
+// rebuild to just that source's own nodes/edges, so importing a course vault
+// doesn't wipe the main Mathematics vault or vice versa. A course note's
+// [[Compactness]] still resolves to the main vault's existing node instead of
+// spawning a duplicate ghost — see resolveTarget's externalResolve lookup.
 
 import { DatabaseSync } from "node:sqlite";
 import { readFileSync, readdirSync, statSync, mkdirSync, existsSync } from "node:fs";
@@ -14,8 +20,17 @@ import matter from "gray-matter";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, "..");
-const VAULT_NOTES =
-  process.argv[2] || "C:\\Users\\natan\\Mathematics\\Notes";
+
+const rawArgs = process.argv.slice(2);
+const flags = {};
+const positional = [];
+for (const a of rawArgs) {
+  const m = a.match(/^--([^=]+)=(.*)$/);
+  if (m) flags[m[1]] = m[2];
+  else positional.push(a);
+}
+const VAULT_NOTES = positional[0] || "C:\\Users\\natan\\Mathematics\\Notes";
+const SOURCE = flags.source || "main";
 const DB_DIR = join(ROOT, "data");
 const DB_PATH = join(DB_DIR, "graph.db");
 
@@ -36,7 +51,10 @@ function walk(dir, out = []) {
   return out;
 }
 
+const norm = (s) => s.toLowerCase().trim().replace(/\s+/g, " ");
+
 console.log(`Reading vault: ${VAULT_NOTES}`);
+console.log(`Source: ${SOURCE}`);
 if (!existsSync(VAULT_NOTES)) {
   console.error(`Vault notes dir not found: ${VAULT_NOTES}`);
   process.exit(1);
@@ -44,15 +62,41 @@ if (!existsSync(VAULT_NOTES)) {
 const files = walk(VAULT_NOTES);
 console.log(`Found ${files.length} markdown files.`);
 
+// Open the DB early (before parsing) so cross-source link resolution can
+// consult nodes already imported from OTHER sources — a course note's
+// [[Compactness]] should resolve to the main vault's existing node, not
+// spawn a duplicate ghost. Nothing is written yet; schema is idempotent
+// (CREATE TABLE IF NOT EXISTS).
+if (!existsSync(DB_DIR)) mkdirSync(DB_DIR, { recursive: true });
+const db = new DatabaseSync(DB_PATH);
+db.exec("PRAGMA journal_mode = WAL;");
+db.exec(readFileSync(join(ROOT, "db", "schema.sql"), "utf8"));
+// CREATE TABLE IF NOT EXISTS above won't retrofit `source` onto a `nodes`
+// table created before this column existed — this script has no dependency
+// on lib/db.ts's MIGRATIONS array (the Next app's), so it self-heals here
+// too. Safe to run unconditionally: SQLite errors on a duplicate column,
+// which is exactly the case this ignores.
+try { db.exec("ALTER TABLE nodes ADD COLUMN source TEXT NOT NULL DEFAULT 'main'"); } catch {}
+
+// title (normalized) -> id, for every node NOT owned by this source — real
+// or ghost. Reusing an existing other-source ghost (rather than creating a
+// new one) avoids a PRIMARY KEY collision when two sources independently
+// reference the same not-yet-written concept.
+const externalResolve = new Map(
+  db
+    .prepare("SELECT id FROM nodes WHERE source != ?")
+    .all(SOURCE)
+    .map((r) => [norm(r.id), r.id])
+);
+
 // ---------------------------------------------------------------------------
 // 2. Parse notes into node records + build resolution maps
 // ---------------------------------------------------------------------------
-const norm = (s) => s.toLowerCase().trim().replace(/\s+/g, " ");
 const firstScalar = (v) => (Array.isArray(v) ? v[0] : v);
 
 /** @type {Map<string, any>} */
-const nodes = new Map(); // id -> node record
-const resolve = new Map(); // normalized title/alias -> id
+const nodes = new Map(); // id -> node record (this source's own real + ghost nodes)
+const resolve = new Map(); // normalized title/alias -> id, scoped to this source's own nodes
 
 const parsed = [];
 for (const path of files) {
@@ -75,7 +119,7 @@ for (const path of files) {
   const overviewMatch = body.match(/^>\s?(.+?)\s*$\s*\^Overview/ms);
   const overview = overviewMatch ? overviewMatch[1].replace(/\n>\s?/g, " ").trim() : null;
 
-  const node = { id, title, type, area, overview, content: body.trim(), path, exists_: 1 };
+  const node = { id, title, type, area, overview, content: body.trim(), path, exists_: 1, source: SOURCE };
   nodes.set(id, node);
   resolve.set(norm(title), id);
   for (const a of fm.aliases || []) if (a) resolve.set(norm(String(a)), id);
@@ -175,13 +219,22 @@ function addEdge(src, dst, type, confidence, context, section, source) {
 }
 
 let ghostCount = 0;
+let crossSourceCount = 0;
 function resolveTarget(rawTarget) {
   // [[Title|alias]] -> Title ; [[Title#^anchor]] / [[Title#heading]] -> Title
   let target = rawTarget.split("|")[0].split("#")[0].trim();
   if (!target) return null; // self-anchor like [[#^Foo]]
   const id = resolve.get(norm(target));
   if (id) return id;
-  // Unresolved => a GAP in the graph. Record a ghost node.
+  // Not one of this source's own notes — check whether another source
+  // already has it (real note or ghost) before assuming it's a new gap.
+  const external = externalResolve.get(norm(target));
+  if (external) {
+    crossSourceCount++;
+    return external;
+  }
+  // Unresolved anywhere => a GAP in the graph. Record a ghost node, owned by
+  // this source (it's this source's notes that revealed the gap).
   if (!nodes.has(target)) {
     nodes.set(target, {
       id: target,
@@ -192,6 +245,7 @@ function resolveTarget(rawTarget) {
       content: null,
       path: null,
       exists_: 0,
+      source: SOURCE,
     });
     resolve.set(norm(target), target);
     ghostCount++;
@@ -217,21 +271,23 @@ for (const { id, body } of parsed) {
 }
 
 console.log(
-  `Built ${edges.size} edges (${ghostCount} ghost nodes for unresolved links).`
+  `Built ${edges.size} edges (${ghostCount} new ghost nodes, ${crossSourceCount} links resolved to other sources).`
 );
 
 // ---------------------------------------------------------------------------
 // 4. Load into SQLite
 // ---------------------------------------------------------------------------
-if (!existsSync(DB_DIR)) mkdirSync(DB_DIR, { recursive: true });
-const db = new DatabaseSync(DB_PATH);
-db.exec("PRAGMA journal_mode = WAL;");
-db.exec(readFileSync(join(ROOT, "db", "schema.sql"), "utf8"));
-db.exec("DELETE FROM edges; DELETE FROM nodes;"); // fresh import (keeps mastery/attempts/bookmarks/node_notes/settings)
+// Scoped to this source only — edges are always inserted keyed by the note
+// that declared the wikilink (src), so "this source's edges" is exactly the
+// set whose src belongs to this source, regardless of where dst points.
+// Other sources' nodes/edges (and mastery/attempts/bookmarks/node_notes/
+// settings, which aren't touched by import at all) are left untouched.
+db.prepare("DELETE FROM edges WHERE src IN (SELECT id FROM nodes WHERE source = ?)").run(SOURCE);
+db.prepare("DELETE FROM nodes WHERE source = ?").run(SOURCE);
 
 const insNode = db.prepare(
-  `INSERT INTO nodes (id,title,type,area,overview,content,path,exists_)
-   VALUES (?,?,?,?,?,?,?,?)`
+  `INSERT INTO nodes (id,title,type,area,overview,content,path,exists_,source)
+   VALUES (?,?,?,?,?,?,?,?,?)`
 );
 const insEdge = db.prepare(
   `INSERT OR IGNORE INTO edges (src,dst,type,context,section,confidence,source)
@@ -240,7 +296,7 @@ const insEdge = db.prepare(
 
 db.exec("BEGIN");
 for (const n of nodes.values()) {
-  insNode.run(n.id, n.title, n.type, n.area, n.overview, n.content, n.path, n.exists_);
+  insNode.run(n.id, n.title, n.type, n.area, n.overview, n.content, n.path, n.exists_, n.source);
 }
 for (const e of edges.values()) {
   insEdge.run(e.src, e.dst, e.type, e.context, e.section, e.confidence, e.source);
@@ -251,10 +307,12 @@ db.exec("COMMIT");
 // 5. Report
 // ---------------------------------------------------------------------------
 const count = (sql) => db.prepare(sql).get().c;
+const countBySource = (sql) => db.prepare(sql).get(SOURCE).c;
 console.log("\n=== Import summary ===");
-console.log(`nodes (real):  ${count("SELECT COUNT(*) c FROM nodes WHERE exists_=1")}`);
-console.log(`nodes (ghost): ${count("SELECT COUNT(*) c FROM nodes WHERE exists_=0")}`);
-console.log(`edges total:   ${count("SELECT COUNT(*) c FROM edges")}`);
+console.log(`source '${SOURCE}': ${countBySource("SELECT COUNT(*) c FROM nodes WHERE source=? AND exists_=1")} real, ${countBySource("SELECT COUNT(*) c FROM nodes WHERE source=? AND exists_=0")} ghost`);
+console.log(`nodes (real, all sources):  ${count("SELECT COUNT(*) c FROM nodes WHERE exists_=1")}`);
+console.log(`nodes (ghost, all sources): ${count("SELECT COUNT(*) c FROM nodes WHERE exists_=0")}`);
+console.log(`edges total (all sources):  ${count("SELECT COUNT(*) c FROM edges")}`);
 for (const row of db
   .prepare("SELECT type, COUNT(*) c FROM edges GROUP BY type ORDER BY c DESC")
   .all()) {

@@ -96,6 +96,10 @@ const MIGRATIONS = [
   // NULL on attempts recorded before this column existed — those can't be
   // reopened for a redo, only viewed.
   "ALTER TABLE attempts ADD COLUMN problem_id INTEGER",
+  // Multi-source import (Cycle 2 #4a) — which vault a node came from. The
+  // DEFAULT backfills every pre-existing row to 'main' in the same statement,
+  // so today's single-vault install doesn't need a data migration.
+  "ALTER TABLE nodes ADD COLUMN source TEXT NOT NULL DEFAULT 'main'",
 ];
 
 function migrate(d: DatabaseSync) {
@@ -135,6 +139,7 @@ export type NodeRow = {
   content: string | null;
   path: string | null;
   exists_: number;
+  source: string;
 };
 
 export type EdgeRow = {

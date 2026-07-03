@@ -9,7 +9,12 @@ CREATE TABLE IF NOT EXISTS nodes (
   overview  TEXT,               -- one-line ^Overview blurb
   content   TEXT,               -- full markdown body (for the node page)
   path      TEXT,               -- source file path
-  exists_   INTEGER NOT NULL DEFAULT 1  -- 0 = "ghost": referenced but no note yet (a gap)
+  exists_   INTEGER NOT NULL DEFAULT 1,  -- 0 = "ghost": referenced but no note yet (a gap)
+  -- Which imported vault this node came from ("main" = the polished Mathematics
+  -- vault; a course import uses --source=<name>, e.g. "matcad"). Lets the
+  -- importer rebuild one source's nodes/edges without touching the others —
+  -- see scripts/import-vault.mjs.
+  source    TEXT NOT NULL DEFAULT 'main'
 );
 
 -- Typed, directed edges. Convention: src --type--> dst.

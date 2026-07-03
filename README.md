@@ -59,6 +59,16 @@ pnpm run dev             # http://localhost:3000  ·  practice at /learn
 The importer is idempotent: it rebuilds `nodes` and `edges` on each run but preserves
 your mastery, attempts, and other user-state tables.
 
+**Multiple vaults.** `--source=<name>` (default `main`) scopes the rebuild to just that
+source's own nodes/edges, so a second vault doesn't wipe the first:
+
+```bash
+pnpm run import -- --source=matcad "C:\path\to\MatCAD\Notes"
+```
+
+A course note's `[[Compactness]]` still resolves to the main vault's existing node
+instead of spawning a duplicate ghost — cross-source links just work.
+
 ## Current graph
 
 767 concepts · 3,064 relationships · 1,046 typed prerequisites · 92 gaps.
