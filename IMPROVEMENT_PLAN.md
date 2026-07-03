@@ -351,8 +351,23 @@ There's now enough review history to start checking it instead of trusting it.
   instead of all 5 `due` entries first; confirmed the same in the actual
   `/session` Queue preview UI for both `limit=5` (no room to interleave,
   correctly falls back to all-due) and `limit=10`.
-- **Streak insurance**: one earned "freeze" token per week of hits — habit
-  design; keeps the streak honest but not brittle.
+- **Streak insurance.** ✅ done — New `lib/streak.ts#computeStreak()`, lazy +
+  idempotent like `lib/db.ts`'s `maybeBackup` (recomputes on every
+  `todayStats()` call, only writes when something actually changes). Same
+  consecutive-practice-day streak as before, but now transparently bridges a
+  gap with a banked "freeze" token when one's available (persisted as one
+  JSON settings key, `streak_freeze`: `{earned, usedDates, lastMilestone}`),
+  and awards one new freeze per 7 days of (bridged) streak. Surfaced as a
+  snowflake badge + count on the home page's daily-goal bar and the nav
+  pill (`DailyGoalIndicator`), plus a one-time "a streak freeze covered N
+  missed days" note the moment a gap gets bridged. New `Snowflake` icon in
+  `Icons.tsx`. **Verified**: a standalone script exercising `computeStreak`
+  directly confirmed a 7-day streak earns exactly 1 freeze, a subsequent gap
+  is bridged using it (idempotently — re-running with the same input doesn't
+  double-consume), and — even better — temporarily granting 2 freezes
+  against the *real* attempt history in the preview organically bridged 2
+  actual gaps, extending "2 days streak" to "4 days streak" with the correct
+  UI message. All test-injected settings state cleaned up afterward.
 
 ---
 
