@@ -1,5 +1,5 @@
 import { DatabaseSync, StatementSync } from "node:sqlite";
-import { readFileSync } from "node:fs";
+import { readFileSync, existsSync, mkdirSync, readdirSync, unlinkSync } from "node:fs";
 import { join } from "node:path";
 
 // Singleton DB connection, reused across requests in the Next server process.
@@ -8,9 +8,52 @@ declare global {
   var __prooferDb: DatabaseSync | undefined;
   // eslint-disable-next-line no-var
   var __prooferPatched: boolean | undefined;
+  // eslint-disable-next-line no-var
+  var __prooferBackupDay: string | undefined;
 }
 
 const DB_PATH = join(process.cwd(), "data", "graph.db");
+export const BACKUP_DIR = join(process.cwd(), "data", "backups");
+const BACKUPS_TO_KEEP = 14;
+
+// The student is in Europe/Madrid, not UTC — matches lib/queries.ts's
+// localDateStr so "today's backup" lines up with the same day boundary used
+// everywhere else (streaks, due-dates), not a UTC one that could roll over
+// mid-evening.
+function localDateStr(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+function pruneOldBackups() {
+  const files = readdirSync(BACKUP_DIR)
+    .filter((f) => /^graph-\d{4}-\d{2}-\d{2}\.db$/.test(f))
+    .sort();
+  const excess = files.length - BACKUPS_TO_KEEP;
+  for (let i = 0; i < excess; i++) unlinkSync(join(BACKUP_DIR, files[i]));
+}
+
+// VACUUM INTO produces a consistent single-file snapshot even while the
+// source DB is in WAL mode — safe to call on a live connection. Guarded by
+// __prooferBackupDay so the (cheap) string-compare runs on every db() call
+// but the (not-so-cheap) file I/O only happens once per local calendar day.
+function maybeBackup(d: DatabaseSync) {
+  const today = localDateStr(new Date());
+  if (global.__prooferBackupDay === today) return;
+  global.__prooferBackupDay = today;
+  try {
+    mkdirSync(BACKUP_DIR, { recursive: true });
+    const target = join(BACKUP_DIR, `graph-${today}.db`);
+    if (!existsSync(target)) {
+      d.exec(`VACUUM INTO '${target.replace(/'/g, "''")}'`);
+    }
+    pruneOldBackups();
+  } catch (err) {
+    console.error("[backup] daily snapshot failed:", err);
+  }
+}
 
 // node:sqlite's StatementSync.all()/get() return rows as `[Object: null
 // prototype]`, which React rejects when passed from a Server Component to a
@@ -65,6 +108,7 @@ export function db(): DatabaseSync {
     migrate(d);
     global.__prooferDb = d;
   }
+  maybeBackup(global.__prooferDb);
   return global.__prooferDb;
 }
 

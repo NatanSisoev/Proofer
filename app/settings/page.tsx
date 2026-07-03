@@ -235,6 +235,15 @@ export default function SettingsPage() {
               </div>
               <Link href="/quality" className="btn-ghost btn-sm">Note quality</Link>
             </div>
+            <div className="settings-row" style={{ marginTop: 14 }}>
+              <div>
+                <strong>Backup</strong>
+                <p className="muted small" style={{ margin: "2px 0 0" }}>Download a full snapshot — graph, mastery, and attempt history. A daily copy is also kept automatically on disk (newest 14).</p>
+              </div>
+              <a href="/api/backup" download className="btn-ghost btn-sm icon-label">
+                <Download size={12} /> Download backup
+              </a>
+            </div>
           </div>
 
           {/* Info: LLM provider */}
