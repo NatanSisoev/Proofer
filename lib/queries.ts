@@ -287,6 +287,41 @@ export function nodeAttemptDetails(
     .all(nodeId, limit) as any[];
 }
 
+export type AttemptDetail = {
+  id: number;
+  node_id: string;
+  node_title: string | null;
+  node_type: string | null;
+  node_area: string | null;
+  kind: string | null;
+  problem: string;
+  answer: string;
+  verdict: string;
+  evidence: number;
+  gap: string | null;
+  blamed_prereq: string | null;
+  created_at: string;
+  mode: string;
+  trust: string | null;
+  problem_id: number | null; // null on attempts recorded before this column existed — can't be reopened for a redo
+};
+
+/** A single attempt with its concept joined in, for the /attempt/[id] review page.
+ *  Does NOT expose the ideal_solution/rubric (stays server-side, fetched fresh
+ *  at grade time by problem_id — same rule as the live practice flow). */
+export function getAttempt(id: number): AttemptDetail | undefined {
+  return db()
+    .prepare(
+      `SELECT a.id, a.node_id, n.title AS node_title, n.type AS node_type, n.area AS node_area,
+              a.kind, a.problem, a.answer, a.verdict, a.evidence, a.gap, a.blamed_prereq,
+              a.created_at, a.mode, a.trust, a.problem_id
+         FROM attempts a
+         LEFT JOIN nodes n ON n.id = a.node_id
+        WHERE a.id = ?`
+    )
+    .get(id) as AttemptDetail | undefined;
+}
+
 export type WeakPrerequisite = {
   prereq: string;            // the blamed prerequisite (a node id)
   blame_count: number;       // total attempts that blamed it

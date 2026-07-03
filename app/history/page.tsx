@@ -163,6 +163,9 @@ export default async function HistoryPage({
                 </div>
                 <div className="attempt-row-right">
                   <span className="muted small" style={{ fontSize: 11 }}>{timeAgo(a.created_at)}</span>
+                  <Link href={`/attempt/${a.id}`} className="pill label-xs icon-label">
+                    review
+                  </Link>
                   <Link
                     href={`/learn?node=${encodeURIComponent(a.node_id)}`}
                     className="pill pill-accent label-xs icon-label"

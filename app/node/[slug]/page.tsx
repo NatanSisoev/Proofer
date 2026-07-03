@@ -347,6 +347,9 @@ export default async function NodePage({ params }: { params: Promise<{ slug: str
                               Gap: <MathText>{truncateMath(a.gap, 120)}</MathText>
                             </p>
                           )}
+                          <Link href={`/attempt/${a.id}`} className="muted small icon-label" style={{ marginTop: 4 }}>
+                            review <ArrowRight size={10} />
+                          </Link>
                         </div>
                       );
                     })}

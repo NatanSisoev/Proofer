@@ -275,18 +275,20 @@ export function recordAttempt(row: {
   mode: string;
   predicted_correct?: number | null;
   trust?: "model-judged" | "cross-checked" | "refuted" | null;
+  problem_id?: number | null;
 }) {
   db()
     .prepare(
-      `INSERT INTO attempts(node_id,kind,problem,answer,verdict,evidence,gap,blamed_prereq,created_at,mode,predicted_correct,trust)
-       VALUES(?,?,?,?,?,?,?,?,?,?,?,?)`
+      `INSERT INTO attempts(node_id,kind,problem,answer,verdict,evidence,gap,blamed_prereq,created_at,mode,predicted_correct,trust,problem_id)
+       VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)`
     )
     .run(
       row.node_id, row.kind, row.problem, row.answer,
       row.verdict, row.evidence, row.gap, row.blamed_prereq,
       new Date().toISOString(), row.mode,
       row.predicted_correct ?? null,
-      row.trust ?? null
+      row.trust ?? null,
+      row.problem_id ?? null
     );
 }
 

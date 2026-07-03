@@ -90,6 +90,12 @@ const MIGRATIONS = [
   // no hole) | 'refuted' (adversarial pass found a hole, verdict was downgraded).
   // NULL on attempts recorded before this column existed.
   "ALTER TABLE attempts ADD COLUMN trust TEXT",
+  // Links an attempt back to the exact problems row it was graded against, so
+  // a historical attempt can be reopened and re-answered (same rubric/ideal
+  // solution) instead of only generating a brand-new problem for the concept.
+  // NULL on attempts recorded before this column existed — those can't be
+  // reopened for a redo, only viewed.
+  "ALTER TABLE attempts ADD COLUMN problem_id INTEGER",
 ];
 
 function migrate(d: DatabaseSync) {

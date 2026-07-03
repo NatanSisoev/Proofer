@@ -85,6 +85,7 @@ export async function POST(req: NextRequest) {
     mode: hasKey() ? "ai" : "demo",
     predicted_correct: predictedCorrect,
     trust,
+    problem_id: prob.id,
   });
 
   const masteryAfter = getMasteryP(node.id);

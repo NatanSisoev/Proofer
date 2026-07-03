@@ -222,6 +222,9 @@ export default function ProgressPage() {
                   </div>
                   <div className="attempt-meta-col">
                     <span className="small muted">{timeAgo(a.created_at)}</span>
+                    <Link href={`/attempt/${a.id}`} className="pill icon-label">
+                      review
+                    </Link>
                     <Link href={`/learn?node=${encodeURIComponent(a.node_id)}`} className="pill pill-accent icon-label">
                       retry <ArrowRight size={10} />
                     </Link>
