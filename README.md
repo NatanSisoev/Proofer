@@ -69,6 +69,23 @@ pnpm run import -- --source=matcad "C:\path\to\MatCAD\Notes"
 A course note's `[[Compactness]]` still resolves to the main vault's existing node
 instead of spawning a duplicate ghost — cross-source links just work.
 
+**Bringing in a real course (MatCAD/Mates raw materials, not pre-written atomic notes).**
+Proofer's importer only understands atomic notes (frontmatter `type`/`field` +
+`[[wikilinks]]`) — it does not parse lecture PDFs directly, and there's no in-app
+uploader (that's blocked on the multi-user/Postgres bet, deferred with launch). The
+workflow is a one-time-per-course conversion, done with the `summarize-pdf` and
+`math-note` Claude Code skills already used for the Mathematics vault:
+
+1. For each lecture PDF/presentation: `summarize-pdf` → a markdown note with the
+   structure the importer expects, saved into a dedicated course folder.
+2. For any concept it references that doesn't have a note yet: `math-note` to write
+   one in the same folder (or `[[wikilink]]` it and let the importer create a ghost —
+   `/quality` surfaces those as gaps to fill later).
+3. `pnpm run import -- --source=<course> <path-to-course-folder>`.
+
+Re-run step 3 after adding more notes — it's idempotent and only touches that course's
+own source.
+
 ## Current graph
 
 767 concepts · 3,064 relationships · 1,046 typed prerequisites · 92 gaps.
