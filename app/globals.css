@@ -274,6 +274,10 @@ header.top .tag { color: var(--muted); font-size: 13.5px; letter-spacing: 0.005e
   box-shadow: var(--panel-shadow);
   transition: border-color 0.2s var(--ease);
 }
+/* The home page stacks 6+ of these; tighten padding below the width where
+   the grid already goes single-column so a long page of panels feels less
+   padded-out on tablet/mobile. */
+@media (max-width: 900px) { .panel { padding: 16px; } }
 .panel h2 { font-size: 14px; font-weight: 700; color: var(--text); text-transform: none; letter-spacing: normal; margin: 0 0 14px; }
 .panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
 .panel-header h2 { margin: 0; }
