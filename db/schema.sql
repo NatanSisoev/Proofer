@@ -148,3 +148,16 @@ CREATE TABLE IF NOT EXISTS problems (
   mode           TEXT,   -- ai | demo
   created_at     TEXT
 );
+
+-- Cycle 2 #3: the local embedding layer — one vector per node, brute-force
+-- cosine over it in JS (sub-millisecond at ~800 nodes, no vector DB needed).
+-- Backfilled by scripts/embed.mjs (`pnpm run embed`), not the importer — like
+-- mastery/attempts, this table is keyed by node_id (TEXT) so it survives the
+-- importer's `DELETE FROM nodes` as long as note titles don't change.
+-- hash = sha256(model + note text) so an unchanged note skips re-embedding.
+CREATE TABLE IF NOT EXISTS embeddings (
+  node_id    TEXT PRIMARY KEY,
+  hash       TEXT NOT NULL,
+  vector     BLOB NOT NULL,  -- Float32Array bytes (see lib/vectors.ts)
+  updated_at TEXT NOT NULL
+);

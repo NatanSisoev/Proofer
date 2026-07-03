@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { execFile } from "child_process";
 import { promisify } from "util";
 import { join } from "path";
-import { clearLLMCache } from "@/lib/llm";
+import { clearLLMCache, hasEmbeddings } from "@/lib/llm";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 120;
@@ -44,6 +44,19 @@ export async function POST() {
     // Clear the LLM cache so any explain/compare responses that
     // referenced old note content are regenerated on the next request.
     clearLLMCache();
+
+    // Best-effort embedding backfill (Cycle 2 #3) — fire-and-forget so the
+    // sync response isn't held hostage by a slow embedding batch.
+    // scripts/embed.mjs is idempotent (hash-cached), so a partial or failed
+    // run just gets caught up on the next sync.
+    if (hasEmbeddings()) {
+      const embedScript = join(process.cwd(), "scripts", "embed.mjs");
+      execFileAsync("node", ["--experimental-sqlite", embedScript], {
+        cwd: process.cwd(),
+        timeout: 90_000,
+      }).catch((e: any) => console.error("[embed] background backfill failed:", e?.message || e));
+    }
+
     const summary = stdout.split("\n").filter(Boolean).slice(-6).join("\n");
     return NextResponse.json({ ok: true, summary });
   } catch (e: any) {

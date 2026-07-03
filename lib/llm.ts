@@ -448,6 +448,60 @@ export async function diagnoseWeakness(
 }
 
 // ===========================================================================
+// Embeddings (Cycle 2 #3) — Gemini only. Anthropic has no public embeddings
+// endpoint, so this is independent of getLLMConfig()'s provider preference:
+// it needs a Gemini key specifically, even if Anthropic is the active
+// problem/grading provider.
+// ===========================================================================
+const EMBED_MODEL = process.env.GEMINI_EMBED_MODEL || "gemini-embedding-001";
+// batchEmbedContents counts every sub-request against the free tier's ~100
+// req/min embedding quota in one shot — a single 100-item batch exhausts it
+// instantly. The singular embedContent endpoint doesn't have that cliff, so
+// every caller here uses it one text at a time (this app only ever embeds a
+// single query at search time anyway; scripts/embed.mjs paces its own bulk
+// backfill loop separately).
+const EMBED_DELAY_MS = 700; // ~85 req/min — a safety margin under the ~100/min cap
+
+function geminiEmbedKey(): string {
+  const s = readSettings();
+  return (s.gemini_api_key || process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || "").trim();
+}
+
+/** Whether the embedding layer is usable right now — check before calling
+ *  embedText() so callers can fall back gracefully instead of catching. */
+export function hasEmbeddings(): boolean {
+  return !!geminiEmbedKey();
+}
+
+async function embedOne(text: string, key: string): Promise<number[]> {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${EMBED_MODEL}:embedContent`;
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "x-goog-api-key": key },
+    body: JSON.stringify({ model: `models/${EMBED_MODEL}`, content: { parts: [{ text }] } }),
+  });
+  const data = await res.json().catch(() => ({}) as any);
+  if (!res.ok) throw new ProviderError(res.status, data?.error?.message || `Gemini embeddings HTTP ${res.status}`);
+  if (!data?.embedding?.values) throw new ProviderError(502, "Gemini embeddings returned no data");
+  return data.embedding.values as number[];
+}
+
+/** Embeds each text with Gemini's embedContent endpoint, one at a time (see
+ *  EMBED_DELAY_MS above for why). Throws if no Gemini key is configured. */
+export async function embedText(texts: string[]): Promise<number[][]> {
+  const key = geminiEmbedKey();
+  if (!key) throw new Error("Embeddings need a Gemini API key (set GEMINI_API_KEY or add one in Settings).");
+  if (texts.length === 0) return [];
+
+  const out: number[][] = [];
+  for (let i = 0; i < texts.length; i++) {
+    out.push(await embedOne(texts[i], key));
+    if (i < texts.length - 1) await new Promise((r) => setTimeout(r, EMBED_DELAY_MS));
+  }
+  return out;
+}
+
+// ===========================================================================
 // Gemini (free tier) — REST, structured JSON output
 // ===========================================================================
 class ProviderError extends Error {

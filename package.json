@@ -8,6 +8,7 @@
   },
   "scripts": {
     "import": "node --experimental-sqlite scripts/import-vault.mjs",
+    "embed": "node --experimental-sqlite --env-file-if-exists=.env.local scripts/embed.mjs",
     "dev": "cross-env NODE_OPTIONS=--experimental-sqlite next dev --turbo",
     "build": "cross-env NODE_OPTIONS=--experimental-sqlite next build",
     "start": "cross-env NODE_OPTIONS=--experimental-sqlite next start",

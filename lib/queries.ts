@@ -1,5 +1,7 @@
 import { db, MASTERED_SUBQUERY, MASTERY_THRESHOLD, type NodeRow, type EdgeRow } from "./db";
 import { getMasteryP, setKnown as masterySetKnown, P_INIT } from "./mastery";
+import { hasEmbeddings, embedText } from "./llm";
+import { decodeVector, cosineSimilarity } from "./vectors";
 
 // The student is in Europe/Madrid, not UTC. `Date#toISOString().slice(0,10)`
 // buckets by UTC day, which shifts the whole day boundary by 1-2 hours and
@@ -844,6 +846,61 @@ export function searchWithMastery(q: string, limit = 25): (NodeRow & { mastery_p
   }
 
   return primary;
+}
+
+type SearchHit = NodeRow & { mastery_p: number; direct_unmastered_prereqs: number };
+
+const SEMANTIC_MATCH_THRESHOLD = 0.55; // conservative — below this, cosine hits are noise, not paraphrase recall
+
+function loadAllEmbeddings(): Map<string, Float32Array> {
+  const rows = db().prepare("SELECT node_id, vector FROM embeddings").all() as { node_id: string; vector: Buffer }[];
+  return new Map(rows.map((r) => [r.node_id, decodeVector(r.vector)]));
+}
+
+/**
+ * Cycle 2 #3's first consumer: searchWithMastery stays exact/prefix/substring
+ * (fast, synchronous, unchanged). This wraps it and — ONLY when those hits
+ * are thin AND an embedding key is configured — adds a semantic recall pass
+ * (paraphrases, notation variants) ranked by cosine similarity. Never used on
+ * the SSR /explore page load, only the live typeahead (`/api/search`), since
+ * it's the one surface that can tolerate an embedding API round-trip.
+ */
+export async function searchHybrid(q: string, limit = 25): Promise<SearchHit[]> {
+  const primary = searchWithMastery(q, limit);
+  if (primary.length >= 5 || !hasEmbeddings()) return primary;
+
+  try {
+    const [queryVector] = await embedText([q]);
+    if (!queryVector) return primary;
+    const qv = Float32Array.from(queryVector);
+    const embeddings = loadAllEmbeddings();
+    const seen = new Set(primary.map((r) => r.id));
+
+    const scored = [...embeddings.entries()]
+      .filter(([id]) => !seen.has(id))
+      .map(([id, vec]) => ({ id, score: cosineSimilarity(qv, vec) }))
+      .filter((s) => s.score >= SEMANTIC_MATCH_THRESHOLD)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, limit - primary.length);
+    if (scored.length === 0) return primary;
+
+    const topIds = scored.map((s) => s.id);
+    const rows = db()
+      .prepare(
+        `SELECT n.*, COALESCE(m.p, 0) AS mastery_p, ${DIRECT_UNMASTERED_SQ}
+           FROM nodes n
+           LEFT JOIN mastery m ON m.node_id = n.id
+          WHERE n.exists_ = 1 AND n.id IN (${topIds.map(() => "?").join(",")})`
+      )
+      .all(...topIds) as SearchHit[];
+
+    // Re-order to match cosine ranking — SQL's IN(...) doesn't preserve it.
+    const byId = new Map(rows.map((r) => [r.id, r]));
+    const semantic = topIds.map((id) => byId.get(id)).filter((r): r is SearchHit => !!r);
+    return [...primary, ...semantic];
+  } catch {
+    return primary; // embeddings are a bonus recall layer — never break search
+  }
 }
 
 export function search(q: string, limit = 25): NodeRow[] {
