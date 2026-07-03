@@ -411,10 +411,21 @@ write-back routes on the server, rate-limit practice/node APIs, fresh
 ## Design & UX — standing directive (continuous)
 
 Owner is still iterating toward a design he likes. One polish tick per loop
-iteration stays the rule; remaining known candidates: SessionSetup custom chip
-styles, breadcrumb separator refinement, empty-state audit on the new `/path`
-and misconceptions surfaces.
+iteration stays the rule; remaining known candidates: breadcrumb separator
+refinement, empty-state audit on the new `/path` and misconceptions surfaces.
 
+- **SessionSetup custom chip styles.** ✅ done (2026-07-03) — the chip itself
+  (`.selected-chip`, accent-soft background/border) was already fine; the
+  bug was its remove (×) button. `.chip-remove:hover` used a hardcoded
+  `rgba(0, 0, 0, 0.08)` overlay — the only hardcoded-black hover treatment
+  in the whole stylesheet (every other hover state uses a `var(--*)` token)
+  — which barely darkens the chip's already-dark `--accent-soft` background
+  in dark mode, giving almost no visible hover feedback. Swapped for
+  `background: var(--accent); color: white`, the same treatment
+  `.unlocked-node-chip:hover` already uses elsewhere. **Verified live**: in
+  `/session`'s Custom mode, added a concept and confirmed the chip renders
+  correctly in both dark and light theme (screenshotted both); confirmed no
+  console errors and `tsc --noEmit` clean.
 - **`/settings` visual pass.** ✅ done (2026-07-03) — turned out the page
   already used the redesigned `panel`/`page-top`/`action-row`/`btn-primary`
   vocabulary throughout (it wasn't actually untouched, just not re-verified
