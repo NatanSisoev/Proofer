@@ -126,12 +126,28 @@ export type GeneratedProblem = {
   prerequisites_used: string[];
 };
 
+export type RubricPointResult = {
+  point: string;  // the rubric point text (ours, not model-generated — see gradeAnswer)
+  met: boolean;
+  note: string;   // one sentence justifying the judgement, referencing the answer
+};
+
 export type GradeResult = {
-  verdict: "correct" | "partial" | "incorrect";
-  mastery_evidence: number; // 0..1
-  understood: string[];
-  gap: string;
+  verdict: "correct" | "partial" | "incorrect"; // derived from rubric_points coverage, not model-supplied
+  mastery_evidence: number; // 0..1 — rubric points met / total
+  rubric_points: RubricPointResult[];
+  understood: string[]; // met points' notes, for a quick "what you got" scan
+  gap: string;   // the first unmet point's note (pinned, not a vague holistic summary)
   blamed_prerequisite: string; // one of the supplied prereq ids, or ""
+  socratic_hint: string;
+};
+
+// What each provider actually returns — per-point judgements only. `gradeAnswer`
+// zips this against our own rubric array (so the model never has to retype
+// rubric text verbatim) and derives verdict/mastery_evidence/gap/understood.
+type RawGradeResult = {
+  rubric_points: { met: boolean; note: string }[];
+  blamed_prerequisite: string;
   socratic_hint: string;
 };
 
@@ -147,15 +163,14 @@ Principles:
 - Use LaTeX with $...$ and $$...$$ for mathematics.
 - Provide a correct ideal solution and a short rubric of the key points any correct answer must contain.`;
 
-const GRADER_SYSTEM = `You are a rigorous but encouraging mathematics tutor grading a student's free-form answer.
+const GRADER_SYSTEM = `You are a rigorous but encouraging mathematics tutor grading a student's free-form answer against a rubric.
 Your job is DIAGNOSIS, not delivery. Address the student directly as "you" — never refer to them in the third person.
 You must:
-- Judge whether the answer demonstrates real understanding of the TARGET concept (verdict: correct | partial | incorrect).
-- Identify precisely what you understood and where your specific gap is — name the exact misconception, not a vague "review this".
-- Attribute the gap to ONE prerequisite concept from the provided list when the error traces to a missing prerequisite; otherwise use "none".
+- Judge EACH rubric point independently and honestly: did the student's answer satisfy it? A point can be met even if phrased differently, as long as the substance is genuinely there — but do not mark it met on a hand-wave or a lucky guess.
+- For every point, write a one-sentence note justifying your judgement, referencing what the student actually wrote (not a vague "review this").
+- Attribute the gap to ONE prerequisite concept from the provided list when an unmet point traces to a missing prerequisite; otherwise use "none".
 - Give a Socratic hint that guides without revealing the full solution. NEVER hand the student the answer — make them produce it.
-- mastery_evidence is your calibrated probability (0..1) that the student has mastered the target concept based on this answer alone.
-Be fair: partial credit for partial understanding. Be honest: do not praise a wrong proof.`;
+Do not output a holistic verdict or a mastery score — those are computed from your per-point judgements, not authored by you.`;
 
 export type ProblemKind = "compute" | "prove" | "counterexample" | "explain";
 
@@ -197,7 +212,7 @@ function gradeUserText(a: {
   node: NodeRow;
   problem: string;
   idealSolution: string;
-  rubric: string[];
+  rubric: string[]; // always non-empty — gradeAnswer normalizes before calling
   answer: string;
   prereqs: string[];
 }): string {
@@ -206,7 +221,7 @@ function gradeUserText(a: {
     a.node.overview ? `Overview: ${a.node.overview}` : "",
     `\nPROBLEM:\n${a.problem}`,
     `\nIDEAL SOLUTION (reference, do not reveal):\n${a.idealSolution}`,
-    a.rubric.length ? `\nRUBRIC:\n- ${a.rubric.join("\n- ")}` : "",
+    `\nRUBRIC — judge each point independently. Return "rubric_points" as an array with EXACTLY ${a.rubric.length} ${a.rubric.length === 1 ? "entry" : "entries"}, in this exact order (one {met, note} per point below):\n${a.rubric.map((r, i) => `${i + 1}. ${r}`).join("\n")}`,
     a.prereqs.length
       ? `\nPREREQUISITES (set blamed_prerequisite to one of these EXACT names, or "none"): ${a.prereqs.join(", ")}`
       : `\n(There are no prerequisites; set blamed_prerequisite to "none".)`,
@@ -236,13 +251,34 @@ export async function gradeAnswer(args: {
   prereqs: string[];
 }): Promise<GradeResult> {
   const cfg = getLLMConfig();
-  let r: GradeResult;
-  if (cfg.provider === "gemini") r = await geminiGrade(args, cfg);
-  else if (cfg.provider === "anthropic") r = await anthropicGrade(args, cfg.anthropic!);
-  else r = stubGrade(args.answer);
-  if (r.blamed_prerequisite === "none") r.blamed_prerequisite = "";
-  r.mastery_evidence = Math.max(0, Math.min(1, r.mastery_evidence));
-  return r;
+  // Problems always carry a rubric (AUTHOR_SYSTEM and stubProblem both set
+  // one) — this default only guards a legacy/malformed problem row.
+  const rubric = args.rubric.length ? args.rubric : ["Correctly addresses the target concept"];
+  const normalized = { ...args, rubric };
+
+  let raw: RawGradeResult;
+  if (cfg.provider === "gemini") raw = await geminiGrade(normalized, cfg);
+  else if (cfg.provider === "anthropic") raw = await anthropicGrade(normalized, cfg.anthropic!);
+  else raw = stubGrade(normalized.answer, rubric);
+
+  const rubric_points: RubricPointResult[] = rubric.map((point, i) => {
+    const r = raw.rubric_points?.[i];
+    return { point, met: !!r?.met, note: (r?.note || "").trim() };
+  });
+  const metCount = rubric_points.filter((p) => p.met).length;
+  const verdict: GradeResult["verdict"] =
+    metCount === rubric_points.length ? "correct" : metCount === 0 ? "incorrect" : "partial";
+  const firstUnmet = rubric_points.find((p) => !p.met);
+
+  return {
+    verdict,
+    mastery_evidence: metCount / rubric_points.length,
+    rubric_points,
+    understood: rubric_points.filter((p) => p.met).map((p) => p.note || p.point),
+    gap: firstUnmet ? firstUnmet.note || firstUnmet.point : "",
+    blamed_prerequisite: raw.blamed_prerequisite === "none" ? "" : raw.blamed_prerequisite,
+    socratic_hint: raw.socratic_hint,
+  };
 }
 
 export async function* explainConcept(
@@ -379,15 +415,23 @@ function gGradeSchema(prereqs: string[]) {
   return {
     type: "OBJECT",
     properties: {
-      verdict: { type: "STRING", enum: ["correct", "partial", "incorrect"] },
-      mastery_evidence: { type: "NUMBER" },
-      understood: { type: "ARRAY", items: { type: "STRING" } },
-      gap: { type: "STRING" },
+      rubric_points: {
+        type: "ARRAY",
+        items: {
+          type: "OBJECT",
+          properties: {
+            met: { type: "BOOLEAN" },
+            note: { type: "STRING" },
+          },
+          required: ["met", "note"],
+          propertyOrdering: ["met", "note"],
+        },
+      },
       blamed_prerequisite: { type: "STRING", enum: [...prereqs, "none"] },
       socratic_hint: { type: "STRING" },
     },
-    required: ["verdict", "mastery_evidence", "understood", "gap", "blamed_prerequisite", "socratic_hint"],
-    propertyOrdering: ["verdict", "mastery_evidence", "understood", "gap", "blamed_prerequisite", "socratic_hint"],
+    required: ["rubric_points", "blamed_prerequisite", "socratic_hint"],
+    propertyOrdering: ["rubric_points", "blamed_prerequisite", "socratic_hint"],
   };
 }
 
@@ -426,7 +470,7 @@ async function geminiGenerate(node: NodeRow, prereqs: string[], recentGaps: stri
   return geminiCall(AUTHOR_SYSTEM, problemUserText(node, prereqs, recentGaps, preferKind, masteryP), G_PROBLEM_SCHEMA, 0.8, cfg);
 }
 
-async function geminiGrade(a: Parameters<typeof gradeAnswer>[0], cfg: LLMConfig): Promise<GradeResult> {
+async function geminiGrade(a: Parameters<typeof gradeAnswer>[0], cfg: LLMConfig): Promise<RawGradeResult> {
   return geminiCall(GRADER_SYSTEM, gradeUserText(a), gGradeSchema(a.prereqs), 0.2, cfg);
 }
 
@@ -554,14 +598,14 @@ async function anthropicGenerate(node: NodeRow, prereqs: string[], recentGaps: s
   return firstJson<GeneratedProblem>(msg);
 }
 
-async function anthropicGrade(a: Parameters<typeof gradeAnswer>[0], anthropic: Anthropic): Promise<GradeResult> {
+async function anthropicGrade(a: Parameters<typeof gradeAnswer>[0], anthropic: Anthropic): Promise<RawGradeResult> {
   const msg = await anthropic.messages.create({
     model: ANTHROPIC_GRADE_MODEL,
     max_tokens: 2048,
     system: [{ type: "text", text: GRADER_SYSTEM + "\n\nIMPORTANT: Respond ONLY with a single valid JSON object — no markdown fences, no preamble.", cache_control: { type: "ephemeral" } }],
     messages: [{ role: "user", content: gradeUserText(a) }],
   });
-  return firstJson<GradeResult>(msg);
+  return firstJson<RawGradeResult>(msg);
 }
 
 // ===========================================================================
@@ -876,14 +920,17 @@ function stubProblem(node: NodeRow): GeneratedProblem {
   };
 }
 
-function stubGrade(answer: string): GradeResult {
+function stubGrade(answer: string, rubric: string[]): RawGradeResult {
   const words = answer.trim().split(/\s+/).filter(Boolean).length;
-  const evidence = Math.max(0.1, Math.min(0.85, words / 60));
+  const coverage = Math.max(0, Math.min(1, words / 60));
+  const metCount = Math.round(coverage * rubric.length);
   return {
-    verdict: words > 8 ? "partial" : "incorrect",
-    mastery_evidence: evidence,
-    understood: words > 8 ? ["You attempted an explanation."] : [],
-    gap: "Demo mode: real diagnosis needs an API key. This placeholder scores by answer length only.",
+    rubric_points: rubric.map((_, i) => ({
+      met: i < metCount,
+      note: i < metCount
+        ? "Demo mode: answer length suggests this point was addressed."
+        : "Demo mode: real diagnosis needs an API key. This placeholder scores by answer length only.",
+    })),
     blamed_prerequisite: "",
     socratic_hint: "Set GEMINI_API_KEY (free at aistudio.google.com) to get a real Socratic hint that pinpoints your specific gap.",
   };

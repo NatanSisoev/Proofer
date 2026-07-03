@@ -17,9 +17,12 @@ export type Problem = {
   node: ProblemNode;
 };
 
+export type RubricPointResult = { point: string; met: boolean; note: string };
+
 export type Grade = {
   verdict: "correct" | "partial" | "incorrect";
   mastery_evidence: number;
+  rubric_points: RubricPointResult[];
   understood: string[];
   gap: string;
   blamed_prerequisite: string;
@@ -215,26 +218,38 @@ export function GradeFeedback({
         )}
       </div>
 
-      {grade.understood?.length > 0 && (
+      {grade.rubric_points?.length > 0 && (
         <div className="fb-block">
-          <h4 className="green">What you got</h4>
-          <ul>{grade.understood.map((u, i) => <li key={i}><MathText>{u}</MathText></li>)}</ul>
+          <h4>Rubric</h4>
+          <ul className="rubric-checklist">
+            {grade.rubric_points.map((p, i) => (
+              <li key={i} className={p.met ? "rubric-point-met" : "rubric-point-unmet"}>
+                {p.met ? <Check size={13} /> : <X size={13} />}
+                <div>
+                  <MathText>{p.point}</MathText>
+                  {p.note && <div className="muted small rubric-note"><MathText>{p.note}</MathText></div>}
+                </div>
+              </li>
+            ))}
+          </ul>
         </div>
       )}
 
-      <div className="fb-block">
-        <h4 className="amber">The gap</h4>
-        <div className="markdown"><Markdown>{grade.gap}</Markdown></div>
-        {grade.blamed_prerequisite && (
-          <p className="small" style={{ marginTop: 8 }}>
-            This traces back to{" "}
-            <Link href={`/learn?node=${encodeURIComponent(grade.blamed_prerequisite)}`}>
-              <strong><MathText>{grade.blamed_prerequisite}</MathText></strong>
-            </Link>{" "}
-            — practice that first.
-          </p>
-        )}
-      </div>
+      {grade.gap && (
+        <div className="fb-block">
+          <h4 className="amber">The gap</h4>
+          <div className="markdown"><Markdown>{grade.gap}</Markdown></div>
+          {grade.blamed_prerequisite && (
+            <p className="small" style={{ marginTop: 8 }}>
+              This traces back to{" "}
+              <Link href={`/learn?node=${encodeURIComponent(grade.blamed_prerequisite)}`}>
+                <strong><MathText>{grade.blamed_prerequisite}</MathText></strong>
+              </Link>{" "}
+              — practice that first.
+            </p>
+          )}
+        </div>
+      )}
 
       <div className="fb-block">
         <h4 className="purple">Hint (not the answer)</h4>

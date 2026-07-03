@@ -506,6 +506,14 @@ input.search-box:focus { outline: none; border-color: var(--accent); box-shadow:
 .fb-block ul { margin: 6px 0; padding-left: 20px; }
 .fb-block li { padding: 3px 0; font-size: 14px; line-height: 1.6; }
 
+.rubric-checklist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.rubric-checklist li { display: flex; align-items: flex-start; gap: 9px; padding: 9px 11px; border-radius: 8px; font-size: 14px; line-height: 1.5; }
+.rubric-point-met { background: var(--green-soft); }
+.rubric-point-unmet { background: var(--red-soft); }
+.rubric-point-met svg { color: var(--green); flex-shrink: 0; margin-top: 3px; }
+.rubric-point-unmet svg { color: var(--red); flex-shrink: 0; margin-top: 3px; }
+.rubric-note { margin-top: 2px; }
+
 /* .cta is the anchor-tag twin of .btn-primary — same fill, radius, and hover.
    Kept as a separate selector only because many links use it; styles stay in lockstep. */
 .cta {
