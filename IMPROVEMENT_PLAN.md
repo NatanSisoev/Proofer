@@ -320,8 +320,20 @@ There's now enough review history to start checking it instead of trusting it.
 
 ### 7. Smaller candidates (fill-in items, any order)
 
-- **PWA pass**: manifest + icons + sane mobile practice check, so sessions work
-  from a phone (no offline ambition — the LLM needs network anyway).
+- **PWA pass.** ✅ done — `app/manifest.ts` (Next's special-file convention,
+  auto-linked, no manual `<link>` needed): standalone display, brand
+  theme/background color. Real PWA-grade PNG icons (192×192, 512×512) via
+  `next/og`'s `ImageResponse` re-implementing `icon.svg`'s triangle-graph
+  mark as JSX (`app/pwa-icon.tsx` shared helper) — no binary assets checked
+  in, no image-editing tooling needed. `app/apple-icon.tsx` for iOS (which
+  prefers a dedicated apple-touch-icon over the manifest). `viewport` export
+  in `layout.tsx` adds `themeColor` matching the brand. **Verified live**:
+  `/manifest.webmanifest`, `/icon-192.png`, `/icon-512.png` all serve
+  correctly (confirmed the PNG actually renders the icon, not a blank/broken
+  image); `<head>` carries the manifest/apple-touch-icon/theme-color links;
+  a mobile-viewport pass (375×812) through a live session — including the
+  Cycle 2 #5 dialogue thread — confirmed the practice flow is usable on a
+  phone. Full `pnpm run build` passes cleanly with the new special files.
 - **Time-boxed sessions**: "give me 20 minutes" in `SessionSetup` → queue length
   from the tracked avg seconds/problem.
 - **Interleaved smart queue**: mix due-reviews into `smart` mode (currently
