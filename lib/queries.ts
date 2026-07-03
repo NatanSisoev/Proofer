@@ -1,5 +1,5 @@
 import { db, MASTERED_SUBQUERY, MASTERY_THRESHOLD, type NodeRow, type EdgeRow } from "./db";
-import { getMasteryP, setKnown as masterySetKnown, P_INIT } from "./mastery";
+import { getMasteryP, setKnown as masterySetKnown, P_INIT, HL_INIT, halfLifeFactor } from "./mastery";
 import { hasEmbeddings, embedText } from "./llm";
 import { decodeVector, cosineSimilarity } from "./vectors";
 import { getExamDates } from "./settings";
@@ -1212,6 +1212,103 @@ export function masteryVelocity(): { last7: number; last30: number } {
         WHERE date(first_mastered, 'localtime') >= date('now', 'localtime', '-${days} days')`
     ).get() as any).n as number;
   return { last7: count(7), last30: count(30) };
+}
+
+export type RetentionBucket = {
+  bucket: string;        // "0–20%" — predicted-recall range this bucket covers
+  predictedAvg: number;  // average predicted recall of pairs in this bucket
+  actualRate: number;    // observed pass rate (verdict === "correct") of pairs in this bucket
+  n: number;
+};
+
+export type RetentionCalibration = {
+  n: number;                 // total qualifying (predicted, actual) pairs found
+  ready: boolean;            // n >= RETENTION_MIN_SAMPLE — enough to draw a curve, not noise
+  buckets: RetentionBucket[]; // only populated when ready
+  bias: number | null;       // mean(actual - predicted); >0 the model under-predicts recall
+                              // (half-life could run longer), <0 it over-predicts (should be shorter)
+};
+
+// Below this many transitions, a calibration curve is mostly noise — the
+// panel says "collecting data" instead of drawing one. ~40 total attempts
+// today yields ~23 transitions (most nodes only have one attempt so far,
+// contributing no transition), comfortably under this bar.
+export const RETENTION_MIN_SAMPLE = 30;
+
+/**
+ * Cycle 2 #6: is the hand-tuned half-life rule (×2 correct, ×0.5 incorrect,
+ * ×1.2 partial) actually predicting recall well? For every attempt that
+ * follows an earlier one on the SAME node, treat the earlier attempt as "the
+ * last review" and check whether `0.5^(days_elapsed / half_life)` — the
+ * predicted probability of still remembering it — matches whether this
+ * attempt was actually graded correct.
+ *
+ * There's no stored history of each node's half-life over time (only the
+ * current value), so this replays it from scratch: half-life is a pure
+ * function of the evidence sequence (HL_INIT, then ×halfLifeFactor(evidence)
+ * per attempt, clamped 1..365 — identical math to lib/mastery.ts#applyAttempt),
+ * so walking each node's attempts in order reconstructs the exact sequence
+ * that produced today's stored half-life. The one gap: a manual "mark known"
+ * (lib/mastery.ts#setKnown) also bumps half-life but isn't an attempts row,
+ * so it's invisible to this replay — an accepted, rare edge case for what's
+ * explicitly a diagnostic panel, not a source of truth.
+ */
+export function retentionCalibration(): RetentionCalibration {
+  const rows = db()
+    .prepare(
+      `SELECT node_id, verdict, evidence, created_at
+         FROM attempts
+        WHERE created_at IS NOT NULL AND evidence IS NOT NULL
+        ORDER BY node_id ASC, created_at ASC, id ASC`
+    )
+    .all() as { node_id: string; verdict: string; evidence: number; created_at: string }[];
+
+  const pairs: { predicted: number; actual: number }[] = [];
+  let currentNode: string | null = null;
+  let halfLife = HL_INIT;
+  let prevTime: number | null = null;
+
+  for (const r of rows) {
+    if (r.node_id !== currentNode) {
+      currentNode = r.node_id;
+      halfLife = HL_INIT;
+      prevTime = null;
+    }
+    const t = new Date(r.created_at).getTime();
+    if (prevTime !== null && Number.isFinite(t) && t >= prevTime) {
+      const daysElapsed = (t - prevTime) / 86_400_000;
+      const predicted = Math.pow(0.5, daysElapsed / halfLife);
+      const actual = r.verdict === "correct" ? 1 : 0;
+      pairs.push({ predicted, actual });
+    }
+    halfLife = Math.max(1, Math.min(365, halfLife * halfLifeFactor(r.evidence)));
+    prevTime = t;
+  }
+
+  if (pairs.length < RETENTION_MIN_SAMPLE) {
+    return { n: pairs.length, ready: false, buckets: [], bias: null };
+  }
+
+  const LABELS = ["0–20%", "20–40%", "40–60%", "60–80%", "80–100%"];
+  const sums = LABELS.map(() => ({ predictedSum: 0, actualSum: 0, n: 0 }));
+  let biasSum = 0;
+
+  for (const p of pairs) {
+    const idx = Math.min(LABELS.length - 1, Math.floor(p.predicted * LABELS.length));
+    sums[idx].predictedSum += p.predicted;
+    sums[idx].actualSum += p.actual;
+    sums[idx].n += 1;
+    biasSum += p.actual - p.predicted;
+  }
+
+  const buckets: RetentionBucket[] = LABELS.map((label, i) => ({
+    bucket: label,
+    predictedAvg: sums[i].n > 0 ? sums[i].predictedSum / sums[i].n : 0,
+    actualRate: sums[i].n > 0 ? sums[i].actualSum / sums[i].n : 0,
+    n: sums[i].n,
+  })).filter((b) => b.n > 0);
+
+  return { n: pairs.length, ready: true, buckets, bias: biasSum / pairs.length };
 }
 
 export type ExamPacing = {

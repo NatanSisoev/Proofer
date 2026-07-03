@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { masteryHistogram, recentAttemptsGlobal, weakSpots, stats, todayStats, reviewForecast, masteryVelocity, activityCalendar, areaMastery, masteryMilestones, recurringWeakPrerequisites, calibration, gradingTrustStats } from "@/lib/queries";
+import { masteryHistogram, recentAttemptsGlobal, weakSpots, stats, todayStats, reviewForecast, masteryVelocity, activityCalendar, areaMastery, masteryMilestones, recurringWeakPrerequisites, calibration, gradingTrustStats, retentionCalibration, RETENTION_MIN_SAMPLE } from "@/lib/queries";
 import ActivityCalendar from "@/app/components/ActivityCalendar";
 import ProgressTabs from "@/app/components/ProgressTabs";
 import { getDailyGoal } from "@/lib/settings";
@@ -38,6 +38,7 @@ export default function ProgressPage() {
   const weakPrereqs = recurringWeakPrerequisites(6);
   const calib = calibration();
   const trust = gradingTrustStats();
+  const retention = retentionCalibration();
 
   const masteredPct = s.real > 0 ? Math.round((s.known / s.real) * 100) : 0;
   const maxBucket = Math.max(...hist.map((h) => h.count), 1);
@@ -315,6 +316,53 @@ export default function ProgressPage() {
               </div>
             </div>
           )}
+
+          {/* Retention model — is the spaced-repetition half-life rule actually
+              predicting recall? Guarded behind a minimum sample so a handful
+              of reviews don't draw a noisy curve. */}
+          <div className="panel">
+            <div className="panel-header">
+              <h2>Retention model</h2>
+              {retention.ready && <span className="muted small">{retention.n} reviews</span>}
+            </div>
+            <p className="muted small panel-desc">
+              Checks the spaced-repetition rule against what actually happened: for every
+              review, "predicted" is 0.5^(days since last practice ÷ half-life); "actual" is
+              whether you got it right.
+            </p>
+            {!retention.ready ? (
+              <p className="muted small">
+                Collecting data — {retention.n}/{RETENTION_MIN_SAMPLE} reviews needed.
+              </p>
+            ) : (
+              <>
+                <div className="flex-col" style={{ gap: 8 }}>
+                  {retention.buckets.map((b) => (
+                    <div key={b.bucket} className="area-row">
+                      <span className="area-name">{b.bucket} predicted</span>
+                      <div className="bar area-row-bar">
+                        <span style={{ width: `${Math.round(b.actualRate * 100)}%`, background: "var(--accent-strong)" }} />
+                      </div>
+                      <span className="muted small area-pct">{Math.round(b.actualRate * 100)}% actual</span>
+                      <span className="muted small area-count">{b.n}</span>
+                    </div>
+                  ))}
+                </div>
+                {retention.bias !== null && (
+                  <p
+                    className="small"
+                    style={{ marginTop: 10, color: Math.abs(retention.bias) > 0.15 ? "var(--amber)" : "var(--green)" }}
+                  >
+                    {retention.bias > 0.15
+                      ? "You retain more than the model predicts — half-life could safely run longer."
+                      : retention.bias < -0.15
+                        ? "You retain less than the model predicts — reviews should come sooner."
+                        : "The half-life rule is tracking your actual retention well."}
+                  </p>
+                )}
+              </>
+            )}
+          </div>
 
           {/* Per-area mastery breakdown */}
           {areas.length > 0 && (

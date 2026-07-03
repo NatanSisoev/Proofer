@@ -9,7 +9,10 @@ const P_GUESS = 0.2;        // P(answer right | not mastered)
 
 // Spaced repetition: half-life starts at 7 days, doubles on a correct review,
 // halves on an incorrect one. A concept is "due" when days_elapsed > half_life.
-const HL_INIT = 7.0;
+// HL_INIT is exported so lib/queries.ts#retentionCalibration can replay the
+// same starting point when reconstructing each node's historical half-life
+// sequence from its attempts (Cycle 2 #6) — single source of truth.
+export const HL_INIT = 7.0;
 const HL_CORRECT_FACTOR = 2.0;
 const HL_PARTIAL_FACTOR = 1.2;
 const HL_INCORRECT_FACTOR = 0.5;
