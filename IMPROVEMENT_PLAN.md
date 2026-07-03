@@ -1,310 +1,235 @@
-# Proofer — Improvement Plan (2026-07-02)
+# Proofer — Improvement Plan
 
-A fresh, prioritized roadmap from a full code audit (every page, `lib/*`, the LLM
-layer, schema, and all planning docs). The previous plan (2026-06-25) is **fully
-shipped** — its P0–P4 items all landed (see git history for the old file). This
-plan is the successor backlog.
+The live backlog. Worked in cycles: each cycle is a prioritized list; items ship
+as individual typed commits on `main` (tsc green, verified in the preview) and get
+marked ✅ here. When a cycle is exhausted, a fresh audit/planning pass writes the
+next one.
 
-**Companion docs:** [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) (the four
-next-level bets — status recap below), [LAUNCH_PLAN.md](LAUNCH_PLAN.md) (hosting/
-multi-user), [LEARNING_PATHWAYS.md](LEARNING_PATHWAYS.md) (guided-lane concept),
-[DESIGN_MIGRATION_PLAN.md](DESIGN_MIGRATION_PLAN.md) (Claude-aesthetic migration,
-essentially complete).
-
-## Where the app stands
-
-- **Everything in the 2026-06-25 plan shipped**: ISR + `loading.tsx` everywhere it
-  matters, async vault sync with lock, LLM cache + thinking disabled, the
-  `/learn`→`StudyQueue` merge (shared `ProblemCard`), exam mode, unlock preview,
-  streak/velocity fixes, edge-classification approval queue.
-- **From IMPLEMENTATION_PLAN's bets**: 4b Calibration ✅ (confidence gate + Brier +
-  blind spots), 4a info-gain selection ✅ (`selectNext` policy + difficulty
-  targeting). Lean verification (1), Postgres/pgvector/multi-user (0), course
-  ingestion (3), misconception clustering (2) — **not started**.
-- **Cut features**: study plan (`dcf4286`), flashcards (`0879252`), Lean
-  verification (bet 1 — decided 2026-07-03, no standalone verifier service) —
-  all deliberate; don't resurrect.
-- **Half-finished**: the browse/map→explore merge. `/explore` shipped with three
-  view modes (`973f9f2`) but the old routes and most links to them survive — see
-  P0 #1, the single biggest cleanup in this plan.
+**Companion docs:** [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) (the original
+next-level bets — status table below), [LAUNCH_PLAN.md](LAUNCH_PLAN.md) (hosting/
+multi-user, deferred), [LEARNING_PATHWAYS.md](LEARNING_PATHWAYS.md) (guided lane —
+phase 1 shipped, M4/M5 remain), [VISION.md](VISION.md) (thesis).
 
 ---
 
-## P0 — Finish the explore merge (one coherent navigation model)
+## Cycle 1 (2026-07-02 → 2026-07-03) — ✅ fully shipped
 
-### 1. ✅ `/browse` and `/graph` duplicate `/explore` wholesale
-`app/explore/page.tsx` `SectionsView` (L61–160) is a near-verbatim copy of
-`app/browse/page.tsx`, and its `MapView` (L162–179) copies `app/graph/page.tsx`.
-Both old routes still render, and most of the app still links to them:
+From a full code audit; every item landed (`e3dc3ff..310226a`). Compressed record
+— details in git history and the per-item commits:
 
-- `app/page.tsx:345` ("Browse all") and `:352` (area rows → `/browse?area=`)
-- `app/node/[slug]/page.tsx:118` (breadcrumb), `:120` (area link), `:381`
-  ("Browse all {area}")
-- `app/components/StudyQueue.tsx:419` (summary area links)
-- `app/components/KeyboardShortcuts.tsx:49–50` (`b` → `/browse`, `g` → `/graph`)
+- **P0** — browse/graph consolidated into `/explore` (redirect stubs, all links +
+  `b`/`g` shortcuts migrated, ListView N+1 fixed).
+- **P1** — five audit bugs: NUL byte in `queries.ts`, UTC→localtime day
+  boundaries, hardcoded `0.8` → `MASTERY_THRESHOLD`, LIKE-wildcard escaping,
+  stale "map of mathematics" metadata. Plus one found live: **`P_TRANSIT` was a
+  flat bonus** — a nonsense answer raised mastery 0→14 %; now scaled by evidence
+  (`625d02c`).
+- **P2** — LLM free-text calls unified behind `geminiText`/`anthropicText`
+  (header auth, no key-in-URL), explain/re-explain/compare **stream**,
+  `conceptOfDay` no longer loads every note body, StudyQueue keyboard listener
+  fixed, dead `user_knows` dropped, `pnpm run check-db` + Node `engines` pin,
+  **`node:test` seatbelt** for BKT/cycles/truncateMath (`pnpm run test`).
+- **P3** — per-session calibration readout on the summary screen; **misconception
+  clustering MVP** (LLM-grouped `attempts.gap` per concept, `/quality` approval
+  tab, node-page surfacing, `misconceptions` table); **Learning Pathways phase 1**
+  (`/path/[target]`, read-dots from note sections + quiz-dots via the existing
+  loop, mastery gate, no persistence — recomputed from live mastery); exam-mode
+  confidence gate removed; "why this pick" tooltips on info-gain queue items.
+- **P6** — tab/filter easing unified, reduced-motion + `:focus-visible` support,
+  mobile panel padding; node-page mobile CTA verified fine as-is.
 
-Any styling or behavior change now has to be made twice, and users land on two
-different URLs for the same thing depending on entry point.
-
-- **Fix**: migrate every link/shortcut to `/explore?view=…&area=…`; replace
-  `app/browse/page.tsx` and `app/graph/page.tsx` with `redirect()` stubs that
-  preserve `area` (keep old URLs working — they're in browser histories); delete
-  the `ALIASES` entries in `NavLinks.tsx` once nothing links to the old paths.
-- **Also**: `ListView` (`app/explore/page.tsx:198–203`) does an N+1 loop —
-  `nodesInArea()` per area — then re-filters and re-sorts in JS what SQL already
-  did. Add one `allNodesWithMastery(type?, sort?)` query instead.
-- **Effort**: Low–Medium. **Impact**: High — kills ~340 duplicated lines and the
-  "two names for the same page" confusion.
-
----
-
-## P1 — Correctness bugs (all small, all real)
-
-1. ✅ **NUL byte in `lib/queries.ts:903`.** The cycle-dedup key is
-   `rotated.join("<literal \0>")` — a raw NUL character in the source. It's valid
-   TS (tsc passes) but makes the repo's most important file **binary to
-   ripgrep/grep**: `Grep` on `lib/queries.ts` returns "binary file matches" and
-   content searches silently skip it. Replace the literal with the escape
-   `"\u0000"` (identical semantics — NUL can't occur in node ids, which is why it
-   was chosen as separator).
-2. ✅ **Day boundaries are UTC; the user is in Europe/Madrid.** `todayStats()`
-   (`lib/queries.ts:934`), `activityCalendar()` (`:971`), `masteryVelocity()`
-   (`:994`), `reviewForecast()` (`:217`), and `masteryMilestones()` (`:1215`) all
-   bucket by `date(created_at)` / `date('now')` / `toISOString().slice(0,10)` —
-   UTC days. Practicing at 00:30 local counts toward *yesterday*: the streak can
-   falsely break (or falsely survive), the daily goal resets at 1–2 AM instead of
-   midnight, and the heatmap shifts. Fix consistently: use SQLite's
-   `'localtime'` modifier (`date(created_at,'localtime')`, `date('now','localtime')`)
-   and local-date formatting on the JS side (both sides must agree).
-3. ✅ **`MASTERY_THRESHOLD` isn't the single source of truth it claims to be.**
-   Hardcoded `0.8` appears in `browseAreas` (`lib/queries.ts:445`),
-   `masteryVelocity` (`:1002`), `masteryMilestones` (`:1223`), `areaMastery`
-   (`:1251`), and the node-page "mastered" badge
-   (`app/node/[slug]/page.tsx:154`). If the threshold is ever tuned, these
-   silently disagree with the frontier/readiness model. One sweep to interpolate
-   the constant.
-4. ✅ **Search mangles literal `%`/`_`.** `searchWithMastery`
-   (`lib/queries.ts:670`) strips `%` and `_` from the query instead of escaping
-   them (`LIKE ? ESCAPE '\'`). Searching `a_n` or anything with an underscore
-   (common in math slugs) silently matches the wrong thing.
-5. ✅ **Stale site metadata.** `app/layout.tsx:13–16` still says *"Proofer — a map
-   of mathematics · A typed knowledge graph of mathematical concepts"* — the
-   pre-pivot positioning. The home page's own tagline is "AI tutor that models
-   your understanding of mathematics". Update `<title>`/description (and check
-   `app/opengraph-image.tsx` for matching copy) to the tutor framing.
-6. ✅ **A garbage answer could still raise mastery.** Found live (not in the
-   original audit) while testing P2 #7's new seatbelt: `bktUpdate()` in
-   `lib/mastery.ts` applied the `P_TRANSIT` (0.12) "practice teaches" bonus
-   unconditionally. A never-practiced concept graded with evidence=0 (an
-   off-topic/nonsense answer) still jumped from 0% to ~14% mastery on the flat
-   bonus alone — exactly backwards for a tutor whose premise is refusing to
-   let you fool yourself. Fixed by scaling the bonus by evidence (a correct
-   answer, evidence=1, is unaffected).
+**Decisions made this cycle (don't relitigate):**
+- **Lean verification (bet 1): CUT** (2026-07-03). Autoformalizing free-form
+  student proofs is too brittle — no standalone verifier service. Grading trust
+  is now pursued without a kernel: see Cycle 2 #2.
+- **Launch (P5): DEFERRED** — no audience yet. The Option-A checklist lives in
+  [LAUNCH_PLAN.md](LAUNCH_PLAN.md); don't start it preemptively.
+- Earlier cuts stand: study plan (`dcf4286`), flashcards (`0879252`).
 
 ---
 
-## P2 — Code health (pays for itself on the next feature)
+## Cycle 2 (2026-07-03) — ACTIVE
 
-1. ✅ **Unify the LLM call paths.** `lib/llm.ts` has a good shared `geminiCall()`
-   (header auth, structured JSON, thinking disabled) — but four functions still
-   hand-roll their own `fetch`: `explainConcept` (L269), `diagnoseWeakness`
-   (L372), `compareConcepts` (L572), `reExplainConcept` (L635). Each duplicates
-   error handling and passes the **API key in the URL query string** (`?key=`),
-   which leaks into any server/proxy log line, unlike `geminiCall`'s
-   `x-goog-api-key` header. Add one `geminiText(system, prompt, opts)` helper +
-   one `anthropicText(...)` helper; each feature becomes a prompt + cache-key
-   pair. Also delete the **dead Anthropic JSON schemas** (`A_PROBLEM_SCHEMA`,
-   `aGradeSchema`, L483–510) — defined, never referenced.
-2. ✅ **Stream the long-form calls.** The one surviving piece of the old "P0 #4":
-   explain / re-explain / compare block the UI until the whole response lands
-   (~5–15 s perceived freeze). Switch those routes to
-   `streamGenerateContent` / Anthropic streaming and render incrementally in
-   `ReExplain` / `CompareWith` / the explain flow. Do it *after* (1) so there's
-   exactly one streaming implementation.
-3. ✅ **`conceptOfDay()` loads every candidate's full note body on every home
-   render.** `lib/queries.ts:1114–1157` does `SELECT n.*` (including `content`)
-   for **all** frontier candidates, then keeps one row — on the full 767-node
-   vault that's potentially hundreds of full markdown bodies per `/` visit
-   (which is `force-dynamic`). Select only the columns the spotlight card needs,
-   or `LIMIT 1 OFFSET (dayIdx % count)`.
-4. ✅ **`StudyQueue` keyboard effect re-subscribes every render.** The
-   `useEffect` at `app/components/StudyQueue.tsx:198–219` has **no dependency
-   array**, so every keystroke-triggered render tears down and re-adds the
-   window listener. Harmless today, but it's the kind of thing that bites when
-   the handler gains state. Give it deps (or a ref-based handler).
-5. ✅ **Drop the dead `user_knows` table.** `db/schema.sql:42` admits it's
-   "kept for back-compat; mastery is now the source of truth" — nothing reads
-   it. Remove from schema + importer preserve-list + `check-db.mjs`.
-6. ✅ **Make `check-db` runnable as documented.** `node scripts/check-db.mjs`
-   fails on modern Node without `--experimental-sqlite` (CLAUDE.md documents the
-   bare form). Add `"check-db": "cross-env NODE_OPTIONS=--experimental-sqlite node scripts/check-db.mjs"`
-   to `package.json` and update CLAUDE.md. Consider an `"engines"` field pinning
-   the supported Node range while at it.
-7. ✅ **A minimal test layer for the math that must not drift.** There is no test
-   suite at all; `tsc --noEmit` can't catch a wrong BKT posterior. The highest-value
-   targets are pure functions: `applyAttempt`'s posterior math and half-life
-   factors (`lib/mastery.ts`), `masteryEntropy`/`infoGainScore`,
-   `dependencyCycles` canonicalization, `truncateMath`. The built-in `node:test`
-   runner + `tsx` loader covers these with zero framework lock-in
-   (`pnpm run test` → `node --test`). Keep it to ~a dozen assertions; this is a
-   seatbelt, not a testing culture shift.
+Six directions, in execution order. Constraints honored: no Lean, no launch/
+multi-user infra — everything below runs on the current local SQLite stack.
 
----
+### 1. Back up the moat (do first — trivial, protects everything)
 
-## P3 — Product features (thesis-aligned, no new infra)
+All attempts, mastery, calibration history, and misconceptions live in one
+gitignored SQLite file (`data/graph.db`) on one laptop. Losing it is losing the
+product's premise.
 
-Ranked by value-per-effort given VISION.md's pillars:
+- **Fix**: lazy daily backup inside `db()` (`lib/db.ts`) — on first open of a
+  new (local) day, snapshot via `VACUUM INTO 'data/backups/graph-YYYY-MM-DD.db'`
+  (WAL-safe, produces a consistent single file), keep the newest 14, gitignore
+  `data/backups/`. Add a "Download backup" button in `/settings` that streams
+  a fresh `VACUUM INTO` snapshot.
+- **Effort**: Low (an hour). **Impact**: existential insurance for the dataset
+  VISION.md calls the 3-year moat.
 
-1. ✅ **Show calibration on the session summary.** Confidence is collected on every
-   attempt (when enabled), but the done screen (`StudyQueue` L352–507) never
-   reflects it back — the loop "you said 80 %, you scored 50 %" closes only on
-   `/progress`, later, if ever. Thread `predicted` into `resultsByIndex`, and on
-   the summary show per-session Brier + a one-liner ("overconfident by ~20 pp on
-   3 concepts"). Small change, and it's the *"refuses to let you fool yourself"*
-   moment made visible at the exact time it lands hardest.
-2. ✅ **Misconception clustering MVP — single-user, no pgvector.** VISION bet #2
-   scoped down to what today's stack supports: a batch job (reuse the
-   `/quality` approval-queue pattern) that feeds each concept's accumulated
-   `attempts.gap` texts to the LLM and asks for named misconception clusters
-   ("confuses pointwise with uniform convergence"), stored in a small
-   `misconceptions` table and surfaced on the node page next to "Grader blamed".
-   With 36 attempts it's thin today — but it turns the log into the *product*
-   the vision describes, and the schema/UX survive the later multi-user +
-   embeddings upgrade intact.
-3. ✅ **Learning Pathways, phase 1.** Shipped the M1+M2+M3 slice from
-   [LEARNING_PATHWAYS.md](LEARNING_PATHWAYS.md): `lib/sections.ts` (runtime
-   H2 splitter mirroring the importer's), `lib/pathway.ts`'s pure `pathway(targetId)`
-   — reuses `learningPath()`'s topological unmastered-prereq order, expands each
-   concept into read-dots (Intuition/Motivation/Overview → Statement, sourced
-   from the note's own content, never LLM-authored) + quiz-dots (kind ramp by
-   concept type), target unit last, `currentIndex` marking the one active gate.
-   `/path/[target]` renders the lane (done/current/locked rows); the current
-   unit's read-dots step through with "Got it / Not sure", then hand off to the
-   existing `/learn?node=` generate→grade→BKT loop for the quiz dots — no new
-   quiz UI, no new LLM prompts. No persistence table: the lane is recomputed
-   live from current mastery every visit, so practicing elsewhere (or via the
-   pathway's own practice link) is what advances it. Entry points: node page's
-   Learning Path panel ("Start guided path"), home page's Learning Goal panel,
-   and `/path` redirecting to the current goal. 9 new unit tests
-   (`sections.test.ts`, `pathway.test.ts`); verified end-to-end in the preview
-   (read-dots advance, quiz hand-off reaches a real generated problem, `/path`
-   redirect, single-unit target-only pathway, 404 for an unknown target).
-   Remaining LEARNING_PATHWAYS.md phases (M4 adaptive remediation detours, M5
-   polish/streaks/review-interleaving) are follow-on work, not part of this slice.
-4. ✅ **Exam mode × calibration friction.** With calibration on, Submit is disabled
-   until a confidence is picked (`StudyQueue.tsx:654`) — under an exam
-   countdown that's hostile. Auto-suppress the confidence gate in exam mode (or
-   make it optional there). One conditional.
-5. ✅ **"Why this problem" transparency.** Queue items already carry a `reason`
-   tag (due / weak / blind spot). Extend the info-gain path to say *why* ("closest
-   to your mastery edge", "you rate this 30 pp above your results") in the
-   `reason-tag` tooltip — selection policy becomes legible, which builds trust in
-   smart mode.
+### 2. Trustworthy grading without Lean
 
----
+VISION's honest gap #1 ("grading still trusts an LLM about math") survives the
+Lean cut — but the failure mode (the grader blesses a wrong proof) has cheaper
+attacks than a kernel. Three independent sub-items, in order:
 
-## P4 — The big bets (unchanged, status updated)
+- **2a. Rubric-point grading.** Problems already carry a `rubric` (JSON array on
+  `problems`). Change the grade schema (`gGradeSchema` / the Anthropic prompt in
+  `lib/llm.ts`) so the grader returns a per-point `{point, met, note}` array
+  instead of only a holistic verdict; derive `mastery_evidence` from weighted
+  rubric coverage and pin `gap` to the first failed point. Render the checklist
+  in `GradeFeedback` (`ProblemCard.tsx`). Sharper evidence, sharper diagnosis,
+  same number of LLM calls.
+- **2b. Adversarial verification pass.** When the verdict is `correct` on a
+  `prove`/`counterexample` problem, fire one extra call prompted purely to
+  *refute* the student's argument (find a false step, missing case, or circular
+  reasoning; default to "holds" only if nothing concrete is found). If the
+  refuter finds a hole: downgrade to `partial`, surface both views, and log it.
+  Track the **disagreement rate** — that number is the honest measure of how
+  often single-pass grading was wrong, and it's the metric that justifies 2a–2c.
+- **2c. Trust labels.** Additive `attempts.trust` column
+  (`model-judged | cross-checked | refuted`) via the `MIGRATIONS` array in
+  `lib/db.ts`; badge on the verdict in `GradeFeedback` and in history views.
+  (The label taxonomy leaves room for a future `numerically-verified` tier —
+  a `compute`-kind spot-check with mathjs — but that's optional follow-on, not
+  part of this item.)
+- **Effort**: 2a Medium, 2b Low–Medium, 2c Low. **Impact**: directly attacks the
+  "tutor wrong about math is fatal" risk VISION names, with measurable results.
 
-Tracked in detail in [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md); current
-status:
+### 3. Local embedding layer — the pgvector dividend without Postgres
 
-| Bet | Status | Next concrete step |
-|---|---|---|
-| 4b Calibration | ✅ shipped | P3 #1 above (summary readout) |
-| 4a Info-gain selection | ✅ shipped | P3 #5 above (legibility) |
-| 1 Lean verification | ❌ **cut** (decided 2026-07-03) | No standalone verifier service — don't resurrect. Grading stays LLM-only. |
-| 0 Postgres + pgvector + auth | not started | Decide **after** the launch question (P5) — Option A launch doesn't need it; Option B does |
-| 2 Misconception graph (full) | MVP on-ramp shipped (P3 #2) | Full version needs embeddings + multi-user (bet 0) to cluster *across* students, not just within one concept |
-| 3 Course ingestion | not started | blocked on bet 0 (embeddings + accounts) |
+Embed every node once; store the vector in SQLite; brute-force cosine over ~767
+nodes is sub-millisecond in JS. No new infra, and the code ports to pgvector
+mechanically if bet 0 ever happens.
 
----
+- **Schema**: additive `nodes.embedding BLOB` + `nodes.embedding_hash TEXT`
+  (hash of `title+overview+statement` so unchanged notes skip re-embedding on
+  re-import; embeddings survive `DELETE FROM nodes` via re-embed-if-hash-known…
+  simplest: keep an `embeddings(node_id, hash, vector)` table that the importer
+  preserves, like mastery).
+- **Provider**: `lib/llm.ts` gains `embedText(texts[])` — Gemini embeddings
+  endpoint on the free tier (default `gemini-embedding-001`, env-overridable);
+  no key → feature off everywhere (same `hasKey()` gating pattern).
+- **Backfill**: `scripts/embed.mjs` (+ `pnpm run embed`), batched, cached by
+  hash; also invoked at the end of vault sync when a key exists.
+- **Consumers, in order of payoff**:
+  1. `searchWithMastery` becomes **hybrid**: vector recall + exact/prefix boost
+     (keeps the readiness badges untouched).
+  2. `linkSuggestions` v2: nearest-neighbor pairs with no existing edge replace
+     the O(n²) substring scan — better recall (paraphrases, notation variants),
+     same `/quality` approval UX.
+  3. `similarConcepts` goes cross-area (currently same-area only).
+  4. Misconception clustering upgrade: embed `attempts.gap` texts and cluster
+     by cosine before LLM labeling (better groups than text-only prompting).
+- **Effort**: Medium. **Impact**: four features from one column, plus the
+  ingestion on-ramp.
 
-## P5 — Launch readiness (decision gate — 🚧 blocked, revisit later)
+### 4. Point it at the real degree (multi-source import + exam pacing)
 
-Asked 2026-07-03: no one to show it to yet, so this stays deferred. Revisit
-when that changes — don't start the Option-A work preemptively.
+The falsifiable test is *"beats Anki + ChatGPT for one real course"* — and the
+real courses are MatCAD/Mates, not the polished Mathematics vault. Make Proofer
+the daily driver for an actual UAB course.
 
-[LAUNCH_PLAN.md](LAUNCH_PLAN.md) is thorough; nothing from it has been executed.
-The concrete Option-A slice (shared demo, "look but don't trust it"):
+- **4a. Multi-source import.** Today `import-vault.mjs` is winner-takes-all
+  (`DELETE FROM edges; DELETE FROM nodes;`, one vault path). Add
+  `nodes.source TEXT` (additive migration; default `"main"`), a
+  `--source=<name>` flag that deletes/rebuilds only that source's nodes and
+  edges, and make `resolveTarget` consult the **existing `nodes` table** as well
+  as the in-run map — so a course note's `[[Compactness]]` resolves to the main
+  vault's node instead of spawning a ghost. Surface source as a filter chip in
+  `/explore` and a scope in `SessionSetup`.
+- **4b. Content pipeline (workflow, not app code).** Lecture PDFs → atomic notes
+  via the existing `summarize-pdf`/`math-note` skills into a course folder →
+  `pnpm run import -- --source=<course> <path>`. Document it in the README so
+  the loop doesn't try to build an in-app uploader (that's bet 3, deferred).
+- **4c. Exam pacing.** Per-source/area exam date (settings key), and a home
+  panel: days left, unmastered count in scope, required pace vs. actual 7-day
+  velocity ("23 to go · 2.1/day needed · you're at 1.4 — behind"). Links to
+  `/session?mode=area&…`. Reuses `masteryVelocity`/`areaMastery` math.
+- **Effort**: 4a Medium, 4c Low–Medium. **Impact**: the app starts answering its
+  own 3-month test with real coursework — and every later feature gets real
+  usage data.
 
-1. `LAUNCH_MODE=shared` env flag: hides the API-key fields in `/settings`
-   (env-only keys), disables `SyncButton` and vault write-back routes
-   (`/api/node/[id]/improve`, `/api/node/[id]/create` — they `writeFileSync`
-   into the local vault and mean nothing on a server).
-2. Rate-limit `/api/practice/*` + `/api/node/*` (simple in-memory token bucket —
-   one instance is the plan anyway) + provider spend alert.
-3. Fresh `data/graph.db` for the public instance (mastery/attempts are personal
-   history; the importer only rebuilds nodes/edges).
-4. Fly.io/Railway with a persistent volume; smoke-test generate→grade→quality.
+### 5. Multi-turn Socratic remediation
 
-Worth doing when there's someone to show it to; P0–P2 first regardless.
+The post-verdict follow-up is one-shot (`submitFollowUp` re-grades against the
+same problem). A real tutor iterates.
 
----
+- **Fix**: a bounded dialogue on the graded attempt: new
+  `/api/practice/dialogue` route holding a transcript (additive
+  `attempts.dialogue TEXT` JSON column), grader-as-tutor prompt that sees the
+  problem, the answer, the identified gap, and prior turns; asks one probing
+  question per turn, max ~4 turns; the final turn returns an updated
+  `mastery_evidence` applied as a *small* BKT nudge (cap the swing — dialogue
+  refines, it doesn't re-grade). UI: a thread under `GradeFeedback`, replacing
+  the single follow-up box.
+- **Effort**: Medium. **Impact**: the most tutor-like surface in the app; pure
+  prompt + state work on existing plumbing.
 
-## P6 — Design & UX polish (standing directive, continuous)
+### 6. Validate the retention model against real data
 
-The design overhaul directive stands (owner still iterating toward liking it).
-Specific candidates found this pass, beyond the memory's running list
-(SessionSetup chips, breadcrumb separator, tab-CSS consistency):
+The half-life rule (×2 on success, ×0.5 on failure, ×1.2 partial) was hand-tuned.
+There's now enough review history to start checking it instead of trusting it.
 
-1. ✅ **Three different "tab" implementations** — `/quality` filter tabs,
-   `/progress` `ProgressTabs`, node-page `NodePanels` accordion headers. One
-   `.tabs` class family would unify hover/active/focus treatment. Turned out
-   `/quality`'s top-level tabs and `ProgressTabs` already share `.tab-bar`/
-   `.tab-link`; the real gap was `.tab-link` and `QualityFilters`' `.filter-btn`
-   using the browser's default transition easing instead of the site's custom
-   `var(--ease)` curve that every other interactive element (`.btn-primary`,
-   `.btn-ghost`, `.cta`, `.node-accordion-header`) already uses — a subtle but
-   real "this one feels different" inconsistency. Added `var(--ease)` to both
-   (plus the `background`/`border-color` transitions that were missing
-   entirely, e.g. `.tab-link.active`'s background snapped instead of easing
-   in). `NodePanels`' accordion is a genuinely different interaction model
-   (expand/collapse, not switch-view) and correctly keeps its own visual
-   treatment — forcing it into the tab-pill look would be a mismatch, not a
-   fix. No colors/layout changed, so nothing here should look different at a
-   glance — only the *feel* of the hover/active transitions.
-2. ✅ **Node page two-column `grid` on mobile** — checked directly (mobile
-   viewport, both a short note and the vault's longest at 15.8K chars,
-   "Neural Network"): the primary "Practice this" CTA sits right after the
-   title/mastery ring, *before* the note body, so its position is independent
-   of note length — it's ~350px down regardless, well within the first
-   viewport. The `.grid` (note + panels) that stacks below it is what's
-   "a screen-height away" on long notes, not the CTA — that's just the note
-   content itself, which is supposed to be long. No sticky action bar needed;
-   the stated problem doesn't match the current (already-restructured)
-   page layout.
-3. ✅ **Home page length** — took the lower-risk of the two suggested fixes:
-   tightened `.panel` padding (22px → 16px) below 900px, the same breakpoint
-   `.grid` already stacks at. Left the "collapse behind More" idea alone —
-   that's an information-architecture call (what to hide) for the owner to
-   make deliberately, not one to guess at while mid-iteration on the design.
-4. ✅ **`prefers-reduced-motion` / `:focus-visible` audit** — hover-lift
-   micro-interactions landed (`e437709`); make sure keyboard focus and reduced
-   motion get the same care (one CSS block each). Added a `prefers-reduced-motion`
-   block (near-zero transition/animation duration, hover-lift transforms
-   cancelled) and fixed a real `:focus-visible` gap: `select:focus` unconditionally
-   set `outline: none` with only a subtle border-color change as the replacement —
-   every dropdown site-wide had no visible keyboard-focus indicator. Now
-   `outline: none` only applies to non-keyboard focus (`:not(:focus-visible)`),
-   same pattern applied to `.global-search-input`.
-5. ✅ **Keyboard shortcuts drift** — `b`/`g` still point at dead routes: already
-   fixed as part of P0 #1 (`KeyboardShortcuts.tsx` routes both to `/explore?view=…`).
-   The "add `e` → `/explore`" sub-suggestion is now stale/superseded — `e` already
-   routes to `/session` ("Study session"), a more valuable binding than a second
-   route to Explore when `b`/`g` already cover its two view modes. No code change
-   needed beyond the P0 #1 fix already shipped.
+- **Fix**: for every attempt on a previously-practiced concept, compute predicted
+  recall at attempt time (`0.5^(days_elapsed / half_life)`) and compare with the
+  outcome. New `/progress` panel: predicted-vs-actual pass rate in recall
+  buckets (calibration curve for the *scheduler*, mirroring the student Brier
+  panel). If systematically off, tune the multipliers (they're constants in
+  `lib/mastery.ts`, now covered by tests). Guard the panel behind a minimum
+  sample size — with today's ~40 attempts it should say "collecting data", not
+  draw noise.
+- **Effort**: Low–Medium. **Impact**: keeps "due today" honest; groundwork for
+  FSRS-style parameters later.
+
+### 7. Smaller candidates (fill-in items, any order)
+
+- **PWA pass**: manifest + icons + sane mobile practice check, so sessions work
+  from a phone (no offline ambition — the LLM needs network anyway).
+- **Time-boxed sessions**: "give me 20 minutes" in `SessionSetup` → queue length
+  from the tracked avg seconds/problem.
+- **Interleaved smart queue**: mix due-reviews into `smart` mode (currently
+  separate modes) — spacing science says interleave, and it uses signals that
+  already exist.
+- **Streak insurance**: one earned "freeze" token per week of hits — habit
+  design; keeps the streak honest but not brittle.
 
 ---
 
-## Suggested execution order — ✅ fully executed (2026-07-02 → 2026-07-03)
+## The big bets — status after the cuts
 
-All of P0–P3 and P6 shipped. P4 (Lean verification) was **cut** rather than
-built — decided 2026-07-03, no standalone verifier service, don't resurrect.
-P5 (launch) stays **blocked**, deliberately deferred — no one to show it to
-yet; revisit when that changes rather than starting Option-A preemptively.
+| Bet ([IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md)) | Status |
+|---|---|
+| 4b Calibration | ✅ shipped (+ session readout, blind spots) |
+| 4a Info-gain selection | ✅ shipped (+ legibility tooltips) |
+| 1 Lean verification | ❌ **cut** — replaced by Cycle 2 #2 (trust without a kernel) |
+| 0 Postgres + pgvector + auth | deferred with launch; Cycle 2 #3 delivers the embeddings dividend locally |
+| 2 Misconception graph (full) | MVP shipped; Cycle 2 #3.4 upgrades clustering; cross-user version still needs bet 0 |
+| 3 Course ingestion | Cycle 2 #4 is the single-user wedge (own courses via vault import); in-app upload stays blocked on bet 0 |
 
-Each item shipped as its own commit on `main`, typecheck green, per CLAUDE.md.
+## Launch — deferred gate (unchanged)
 
-**Next planning pass**: once P5 unblocks (someone to show it to) or new gaps
-surface from continued use, run a fresh audit rather than resuming this list —
-it's now fully worked through.
+No audience yet (2026-07-03). When that changes, execute the Option-A slice in
+[LAUNCH_PLAN.md](LAUNCH_PLAN.md) (env-only keys + hide key UI, disable vault
+write-back routes on the server, rate-limit practice/node APIs, fresh
+`graph.db`, VM host with a persistent volume). Until then: don't build for it.
+
+## Design & UX — standing directive (continuous)
+
+Owner is still iterating toward a design he likes. One polish tick per loop
+iteration stays the rule; remaining known candidates: SessionSetup custom chip
+styles, breadcrumb separator refinement, `/settings` visual pass (it's the last
+page untouched by the redesign waves), empty-state audit on the new `/path` and
+misconceptions surfaces.
+
+---
+
+## Execution notes for the loop
+
+- Work Cycle 2 top-down (1 → 6), #7 and design ticks as fill-in.
+- One coherent, verified slice per iteration; big items (2, 3, 4) split into
+  their lettered sub-items — each sub-item is a legitimate tick.
+- Mark items ✅ here (with the commit hash) as they land; when Cycle 2 is
+  exhausted, ask for a fresh planning pass instead of inventing items.
+- Anything requiring a product decision (launch, cutting a feature, new paid
+  dependencies): ask, mark blocked, move on.
