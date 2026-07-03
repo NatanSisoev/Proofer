@@ -53,7 +53,7 @@ From a full code audit; every item landed (`e3dc3ff..310226a`). Compressed recor
 Six directions, in execution order. Constraints honored: no Lean, no launch/
 multi-user infra — everything below runs on the current local SQLite stack.
 
-### 1. Back up the moat (do first — trivial, protects everything)
+### 1. Back up the moat (do first — trivial, protects everything) — ✅ done
 
 All attempts, mastery, calibration history, and misconceptions live in one
 gitignored SQLite file (`data/graph.db`) on one laptop. Losing it is losing the
@@ -66,6 +66,11 @@ product's premise.
   a fresh `VACUUM INTO` snapshot.
 - **Effort**: Low (an hour). **Impact**: existential insurance for the dataset
   VISION.md calls the 3-year moat.
+- Shipped: `maybeBackup()` in `lib/db.ts` runs on every `db()` call but only
+  does file I/O once per local day (string-compare guard), prunes to newest
+  14 via sorted filename glob. `app/api/backup/route.ts` streams an on-demand
+  `VACUUM INTO` snapshot as a download. `data/` was already gitignored
+  wholesale, so no `.gitignore` change was needed.
 
 ### 2. Trustworthy grading without Lean
 
