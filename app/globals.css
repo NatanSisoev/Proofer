@@ -1197,8 +1197,9 @@ details[open].practice-history > .attempt-list { animation: accordion-fade 0.25s
   display: inline-flex; align-items: center; justify-content: center;
   width: 16px; height: 16px; padding: 0; border: none; border-radius: 50%;
   background: transparent; color: inherit; cursor: pointer; opacity: 0.7;
+  transition: opacity 0.15s, background 0.15s, color 0.15s;
 }
-.chip-remove:hover { opacity: 1; background: rgba(0, 0, 0, 0.08); }
+.chip-remove:hover { opacity: 1; background: var(--accent); color: white; }
 .btn-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 .stepper {
   display: inline-flex; align-items: center; gap: 2px;
