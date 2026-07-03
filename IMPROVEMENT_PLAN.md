@@ -21,8 +21,9 @@ essentially complete).
   blind spots), 4a info-gain selection ✅ (`selectNext` policy + difficulty
   targeting). Lean verification (1), Postgres/pgvector/multi-user (0), course
   ingestion (3), misconception clustering (2) — **not started**.
-- **Cut features**: study plan (`dcf4286`), flashcards (`0879252`) — both
-  deliberate; don't resurrect.
+- **Cut features**: study plan (`dcf4286`), flashcards (`0879252`), Lean
+  verification (bet 1 — decided 2026-07-03, no standalone verifier service) —
+  all deliberate; don't resurrect.
 - **Half-finished**: the browse/map→explore merge. `/explore` shipped with three
   view modes (`973f9f2`) but the old routes and most links to them survive — see
   P0 #1, the single biggest cleanup in this plan.
@@ -211,14 +212,17 @@ status:
 |---|---|---|
 | 4b Calibration | ✅ shipped | P3 #1 above (summary readout) |
 | 4a Info-gain selection | ✅ shipped | P3 #5 above (legibility) |
-| 1 Lean verification | not started — **the flagship** | M1: standalone verifier container + `/verify` + `LEAN_VERIFIER_URL` health badge in `/settings`; no grading change yet |
+| 1 Lean verification | ❌ **cut** (decided 2026-07-03) | No standalone verifier service — don't resurrect. Grading stays LLM-only. |
 | 0 Postgres + pgvector + auth | not started | Decide **after** the launch question (P5) — Option A launch doesn't need it; Option B does |
 | 2 Misconception graph (full) | MVP on-ramp shipped (P3 #2) | Full version needs embeddings + multi-user (bet 0) to cluster *across* students, not just within one concept |
 | 3 Course ingestion | not started | blocked on bet 0 (embeddings + accounts) |
 
 ---
 
-## P5 — Launch readiness (decision gate)
+## P5 — Launch readiness (decision gate — 🚧 blocked, revisit later)
+
+Asked 2026-07-03: no one to show it to yet, so this stays deferred. Revisit
+when that changes — don't start the Option-A work preemptively.
 
 [LAUNCH_PLAN.md](LAUNCH_PLAN.md) is thorough; nothing from it has been executed.
 The concrete Option-A slice (shared demo, "look but don't trust it"):
@@ -292,19 +296,15 @@ Specific candidates found this pass, beyond the memory's running list
 
 ---
 
-## Suggested execution order
+## Suggested execution order — ✅ fully executed (2026-07-02 → 2026-07-03)
 
-1. **Day 1–2:** P0 #1 (explore consolidation + link/shortcut migration) and all
-   of P1 — every item is under an hour, several are one-liners.
-2. **Week 1:** P2 #1–2 (LLM unification, then streaming) — the biggest remaining
-   *felt* latency win; P2 #3–6 as filler commits; P3 #1 and #4 (both small).
-3. **Week 2:** P2 #7 (test seatbelt) before touching mastery math again; then
-   P3 #2 (misconception MVP).
-4. **Week 3+:** P3 #3 (Pathways phase 1) — the flagship product surface; Lean M1
-   (P4) in parallel as the flagship *correctness* bet.
-5. **Continuous:** one P6 design tick per loop iteration, as established.
-6. **Gate:** revisit P5 (launch) once P0–P2 are clean; the answer decides whether
-   bet 0 (Postgres/auth) enters the critical path.
+All of P0–P3 and P6 shipped. P4 (Lean verification) was **cut** rather than
+built — decided 2026-07-03, no standalone verifier service, don't resurrect.
+P5 (launch) stays **blocked**, deliberately deferred — no one to show it to
+yet; revisit when that changes rather than starting Option-A preemptively.
 
-Each item ships as its own `type: summary` commit on `main`, typecheck green,
-per CLAUDE.md.
+Each item shipped as its own commit on `main`, typecheck green, per CLAUDE.md.
+
+**Next planning pass**: once P5 unblocks (someone to show it to) or new gaps
+surface from continued use, run a fresh audit rather than resuming this list —
+it's now fully worked through.

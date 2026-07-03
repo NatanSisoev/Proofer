@@ -8,10 +8,14 @@ mastery (`lib/mastery.ts`), and the existing `/quality` approval-queue pattern.
 ## The bets (recap)
 
 0. **Infra unlock** — Postgres + `pgvector` + real multi-user accounts. The shared substrate.
-1. **Formal verification (Lean 4 / Mathlib)** — non-hallucinating grading.
-2. **The misconception graph** — cluster logged gaps, multi-user, predictive.
+1. ❌ **CUT (decided 2026-07-03)** — ~~Formal verification (Lean 4 / Mathlib)~~. No standalone
+   Lean verifier service; grading stays LLM-only. Workstream 1 below is kept as a record of
+   what was scoped and explicitly rejected — don't resurrect without a fresh decision.
+2. **The misconception graph** — cluster logged gaps, multi-user, predictive. MVP on-ramp
+   shipped (single-user, no embeddings) — see IMPROVEMENT_PLAN.md P3 #2.
 3. **Bring-your-own-course ingestion** — map a syllabus/notes/problem set onto the graph.
-4. **Information-theoretic practice + calibration** — optimal-difficulty selection + Brier scoring.
+4. **Information-theoretic practice + calibration** — ✅ shipped (both 4a and 4b) — optimal-difficulty
+   selection + Brier scoring.
 
 ## Dependency graph & why this order
 
@@ -112,7 +116,11 @@ exploration term and keep the unlock weight so it still advances the frontier.
 
 ---
 
-### Workstream 1 — Formal verification (Lean 4 / Mathlib)  ·  the flagship
+### Workstream 1 — Formal verification (Lean 4 / Mathlib)  ·  ❌ CUT, decided 2026-07-03
+
+**This workstream will not be built.** Kept below only as a record of what was scoped and
+explicitly rejected — no standalone Lean verifier service, grading stays LLM-only. Don't
+resurrect without a fresh decision.
 
 **Objective.** For concepts that formalize cleanly, ground grading in the Lean kernel so a verdict
 can be *checked truth*, not a model's opinion — and localize the exact failing step when it isn't.
@@ -311,9 +319,9 @@ labels/centroids/counts in the shared view, never raw answers across users.
 
 ## Suggested sequencing (one engineer, rough)
 
-1. **4b Calibration** — days. Immediate thesis win, no infra.
-2. **4a Info-gain selection** — ~1 week. Pure `lib/mastery.ts` + prompt change.
-3. **1 Lean verification** — the long pole; M1–M2 in parallel with the above, M3–M4 after.
+1. **4b Calibration** — ✅ shipped.
+2. **4a Info-gain selection** — ✅ shipped.
+3. ~~**1 Lean verification**~~ — ❌ cut (decided 2026-07-03), skip entirely.
 4. **0 Postgres + pgvector + auth** — the pivot; do the schema port and `pg` adapter first,
    auth second, embeddings/semantic-search third.
 5. **3 Course ingestion** and **2 Misconception graph** — on the new substrate; ingestion first
