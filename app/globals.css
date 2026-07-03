@@ -608,7 +608,7 @@ input.search-box:focus { outline: none; border-color: var(--accent); box-shadow:
 .filter-btn {
   background: var(--bg-soft); border: 1px solid var(--border); color: var(--muted);
   padding: 4px 12px; border-radius: 8px; font-size: 12.5px; cursor: pointer;
-  transition: background 0.15s, color 0.15s;
+  transition: background 0.15s var(--ease), color 0.15s var(--ease), border-color 0.15s var(--ease);
 }
 .filter-btn:hover { color: var(--text); }
 .filter-btn.active { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
@@ -781,7 +781,7 @@ details[open].practice-history > .attempt-list { animation: accordion-fade 0.25s
 .tab-link {
   padding: 6px 14px; font-size: 13px; font-weight: 500; text-decoration: none;
   border-radius: 8px; border: none; color: var(--muted);
-  margin: 0; transition: color 0.15s;
+  margin: 0; transition: color 0.15s var(--ease), background 0.15s var(--ease);
 }
 .tab-link:hover { color: var(--text); text-decoration: none; }
 .tab-link.active {
