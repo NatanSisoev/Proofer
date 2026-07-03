@@ -3,6 +3,7 @@ import { getMasteryP, setKnown as masterySetKnown, P_INIT, HL_INIT, halfLifeFact
 import { hasEmbeddings, embedText } from "./llm";
 import { decodeVector, cosineSimilarity } from "./vectors";
 import { getExamDates } from "./settings";
+import { computeStreak } from "./streak";
 
 // The student is in Europe/Madrid, not UTC. `Date#toISOString().slice(0,10)`
 // buckets by UTC day, which shifts the whole day boundary by 1-2 hours and
@@ -1138,7 +1139,13 @@ export function dependencyCycles(limit = 40): DependencyCycle[] {
 }
 
 /** Count of distinct concepts practiced today and the last N days. */
-export function todayStats(): { today_concepts: number; today_attempts: number; streak_days: number } {
+export function todayStats(): {
+  today_concepts: number;
+  today_attempts: number;
+  streak_days: number;
+  freezes_available: number;
+  freezes_used_just_now: string[];
+} {
   const d = db();
   const today = (d.prepare(
     `SELECT COUNT(DISTINCT node_id) AS concepts, COUNT(*) AS attempts
@@ -1146,31 +1153,23 @@ export function todayStats(): { today_concepts: number; today_attempts: number; 
   ).get() as any);
 
   // streak: longest run of consecutive days ending today (or yesterday, if the
-  // student hasn't practiced yet today — the streak is still alive until midnight).
+  // student hasn't practiced yet today — the streak is still alive until
+  // midnight), transparently bridging gaps with a banked "freeze" token when
+  // one is available (Cycle 2 #7 "streak insurance") — see lib/streak.ts.
   const days = d.prepare(
     `SELECT DISTINCT date(created_at, 'localtime') AS day
        FROM attempts
       ORDER BY day DESC
       LIMIT 365`
   ).all() as { day: string }[];
-
-  let streak = 0;
-  if (days.length > 0) {
-    const todayStr = localDateStr(new Date());
-    // If today has no practice yet, start the consecutive-day check from yesterday
-    // so an in-progress streak isn't falsely zeroed out before midnight.
-    const startOffset = days[0].day === todayStr ? 0 : 1;
-    for (let i = 0; i < days.length; i++) {
-      const expected = localDateStr(new Date(Date.now() - (i + startOffset) * 86400000));
-      if (days[i].day === expected) streak++;
-      else break;
-    }
-  }
+  const { streakDays, freezesAvailable, freezesUsedJustNow } = computeStreak(new Set(days.map((r) => r.day)));
 
   return {
     today_concepts: today.concepts ?? 0,
     today_attempts: today.attempts ?? 0,
-    streak_days: streak,
+    streak_days: streakDays,
+    freezes_available: freezesAvailable,
+    freezes_used_just_now: freezesUsedJustNow,
   };
 }
 

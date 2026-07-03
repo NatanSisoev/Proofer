@@ -37,6 +37,7 @@ import {
   Settings as LSettings,
   AlertCircle as LAlertCircle,
   Lock as LLock,
+  Snowflake as LSnowflake,
   type LucideIcon,
 } from "lucide-react";
 
@@ -106,6 +107,7 @@ export const HelpCircle = wrap(LHelpCircle);
 export const Settings = wrap(LSettings);
 export const AlertCircle = wrap(LAlertCircle);
 export const Lock = wrap(LLock);
+export const Snowflake = wrap(LSnowflake);
 
 export function Star({ size = 14, className, style, filled = false }: IconProps & { filled?: boolean }) {
   return <LStar size={size} className={className} style={style} fill={filled ? "currentColor" : "none"} />;

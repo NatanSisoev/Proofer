@@ -10,6 +10,7 @@ export async function GET() {
   return NextResponse.json({
     today_concepts: today.today_concepts,
     streak_days: today.streak_days,
+    freezes_available: today.freezes_available,
     daily_goal,
   });
 }

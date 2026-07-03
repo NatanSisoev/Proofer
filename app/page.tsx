@@ -10,7 +10,7 @@ import MasteryRing from "./components/MasteryRing";
 import UnlockPreview from "./components/UnlockPreview";
 import { frontier, stats, dueForReview, todayStats, recentlyPracticed, bookmarkedNodes, conceptOfDay, areaMastery, overconfidentConcepts, getNode, examPacing } from "@/lib/queries";
 import { getDailyGoal, getLearningGoal } from "@/lib/settings";
-import { ArrowRight, ArrowDown, Star } from "./components/Icons";
+import { ArrowRight, ArrowDown, Star, Snowflake } from "./components/Icons";
 
 export const dynamic = "force-dynamic";
 
@@ -82,6 +82,15 @@ export default function Home() {
                 {today.streak_days} day{today.streak_days !== 1 ? "s" : ""} streak
               </span>
             )}
+            {today.freezes_available > 0 && (
+              <span
+                className="streak-label icon-label"
+                style={{ color: "var(--accent)" }}
+                title={`${today.freezes_available} streak freeze${today.freezes_available !== 1 ? "s" : ""} banked — one earned per 7 days of streak, auto-applied if you miss a day`}
+              >
+                <Snowflake size={12} /> {today.freezes_available}
+              </span>
+            )}
             <Link href="/session" className="pill pill-accent icon-label">
               start session <ArrowRight size={11} />
             </Link>
@@ -93,6 +102,11 @@ export default function Home() {
             background: today.today_concepts >= DAILY_GOAL ? "var(--green)" : "var(--accent-strong)",
           }} />
         </div>
+        {today.freezes_used_just_now.length > 0 && (
+          <p className="muted small icon-label" style={{ marginTop: 8 }}>
+            <Snowflake size={12} /> A streak freeze covered {today.freezes_used_just_now.length === 1 ? "a missed day" : `${today.freezes_used_just_now.length} missed days`} — your streak lives on.
+          </p>
+        )}
       </div>
 
       {/* Exam pacing — only shown once a target is set (Settings) */}
