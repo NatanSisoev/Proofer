@@ -27,7 +27,9 @@ export default function ProgressPage() {
   const DAILY_GOAL = getDailyGoal();
   const s = stats();
   const hist = masteryHistogram();
-  const recent = recentAttemptsGlobal(40);
+  // Just a taste of the latest activity — /history is the full, filterable
+  // attempt log, linked from the panel header.
+  const recent = recentAttemptsGlobal(8);
   const weak = weakSpots(12);
   const today = todayStats();
   const forecast = reviewForecast();
@@ -191,6 +193,11 @@ export default function ProgressPage() {
           <div className="panel">
             <div className="panel-header">
               <h2>Recent attempts</h2>
+              {s.practiced > recent.length && (
+                <Link href="/history" className="pill icon-label">
+                  All {s.practiced} attempts <ArrowRight size={10} />
+                </Link>
+              )}
             </div>
             {recent.length === 0 && <EmptyState icon={<Sparkles size={18} />}>No attempts yet — start practicing!</EmptyState>}
             <div className="recent-list">
