@@ -142,6 +142,22 @@ their own error states; `ExamPacingSettings` gates state on `res.ok`).
   test` green. The other four components share the exact pattern verified
   by those two (one `useTransition`-optimistic, one debounced-save).
 
+### Ad hoc — user-requested (2026-07-04)
+
+- **Ghost prerequisites hidden from the learning path.** ✅ done (`f829129`) —
+  `learningPath()` filtered to `exists_ = 1`, so a prerequisite with no note
+  yet silently vanished from `/path/[target]` and the node page's
+  learning-path panel — `/path/Sigmoid` claimed "1 concept on the way" while
+  the ego graph plainly showed the unmastered `Function` prerequisite.
+  Ghosts now return flagged and render as explicit amber "no note yet" gap
+  rows (linking to the node page's GhostCreate flow), never gating and never
+  expanding into steps; excluded from "Practice all" queues. Verified live
+  on both a ghost lane (Sigmoid) and a 45-unit real-prereq lane (no
+  spurious ghost rows).
+- **`/progress` recent attempts too long.** ✅ done (`5e2eccd`) — the panel
+  rendered 40 attempts; now 8, with an "All N attempts" pill in the header
+  linking to `/history` (the existing filterable, paginated log).
+
 ### 2. Learning Pathways M4 — adaptive remediation detours
 
 `LEARNING_PATHWAYS.md`'s M4 milestone is unbuilt: today a failed quiz-dot in
