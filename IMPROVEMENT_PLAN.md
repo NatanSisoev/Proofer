@@ -112,31 +112,35 @@ consistency, query performance, UX/doc staleness) — findings verified by hand
 before landing here, not taken on faith. Constraints unchanged: no Lean, no
 launch/multi-user infra.
 
-### 1. Silent-mutation-failure audit — do first
+### 1. Silent-mutation-failure audit — ✅ done (2026-07-04, `75718a8`)
 
-Several client components fire a mutation, update the UI optimistically, and
-never check whether the request actually succeeded. Confirmed by direct read
-(not just the sweep) in three places:
-- `app/components/BookmarkButton.tsx` — toggles the star immediately; a failed
-  POST leaves the UI permanently showing "Saved" with nothing persisted
-  (silently corrects itself only on the next full page load).
-- `app/components/QuickKnown.tsx` — identical shape for "mark as known."
-- `app/components/PersonalNotes.tsx` — **worse**: `fetch()` doesn't throw on a
-  non-2xx response, so `setSavedAt(new Date())` on line 72 fires
-  unconditionally right after the `await` — a genuine **false-positive**
-  "saved" even when the server 500s. The student believes their note is safe
-  when it silently wasn't written.
+The quick pass over `app/components/*.tsx` widened the confirmed list from
+three to **six** (the sweep's three plus `KnownButton` — optimistic toggle,
+never reverts; `GoalButton` — caught network errors but flipped state on any
+resolved response including a 500; `SnoozeButton` — showed "snoozed 2d" on a
+500, no catch at all). Everything else with a POST already handled failure
+(`NodeActions`/`GhostCreate`/`SyncButton` check `res.ok`; the LLM panels have
+their own error states; `ExamPacingSettings` gates state on `res.ok`).
 
-**Fix**: a shared pattern — check `res.ok`, revert the optimistic state and
-surface a brief inline error (reuse `ErrorBanner`) on failure — applied to
-these three, plus a quick pass over the rest of `app/components/*.tsx` for
-the same "optimistic update, no `.ok` check, no catch" shape (candidates to
-check: `GoalButton`, snooze buttons, the bookmark toggle on list rows).
-
-**Effort**: Low–Medium (mechanical, same fix shape N times). **Impact**: this
-is silent data loss on the app's core trust-building surfaces (notes,
-bookmarks, progress markers) — small blast radius per incident, but exactly
-the kind of thing that erodes "does this actually track my learning."
+- **Shared fix, not ErrorBanner**: for these tiny inline controls a banner
+  outweighs the control, so instead: check `res.ok`, revert the optimistic
+  state, and flip the control into a transient red "Failed — click to retry"
+  treatment for ~3s (new `useTransientFlag` hook + `.btn-failed` class; the
+  control stays clickable, so the failed state *is* the retry affordance).
+- **`PersonalNotes` is the exception**: its failure message is persistent
+  (cleared only by a subsequent successful save), because a false "Saved"
+  there is silent data loss — the footer reads "Couldn't save — your text is
+  still here; editing or clicking away retries" until a save lands.
+- **Verified live** by monkey-patching `window.fetch` in the preview to force
+  500s on the target endpoints: BookmarkButton went Save → (forced 500) →
+  red "Failed" with retry tooltip + reverted state → auto-cleared back to
+  "Save" 3s later, and the DB confirmed no row was written; with the patch
+  removed the same click persisted ("Saved") and was then toggled back off.
+  PersonalNotes showed the persistent failure footer during the forced
+  outage (no false "Saved") and a real "Saved HH:MM" once restored. All
+  test bookmarks/notes cleaned up afterward; `tsc --noEmit` + `pnpm run
+  test` green. The other four components share the exact pattern verified
+  by those two (one `useTransition`-optimistic, one debounced-save).
 
 ### 2. Learning Pathways M4 — adaptive remediation detours
 
