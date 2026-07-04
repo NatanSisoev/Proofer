@@ -622,6 +622,10 @@ export function nodeTypes(): string[] {
 /**
  * Learning path to a target: unmastered prerequisites sorted foundations-first
  * (deepest dependency depth first = the things you need to learn before anything else).
+ * Includes ghost prerequisites (exists_ = 0) — a prerequisite with no note yet
+ * is still a gap on the way to the target; hiding it made the path claim you
+ * were closer than the graph says. Callers render ghosts as "no note yet"
+ * rows (not practicable) via the row's exists_ flag.
  */
 export function learningPath(targetId: string): (BrowseNode & { pdepth: number })[] {
   const rows = db()
@@ -649,7 +653,7 @@ export function learningPath(targetId: string): (BrowseNode & { pdepth: number }
       `SELECT n.*, COALESCE(m.p, 0) AS mastery_p
          FROM nodes n
          LEFT JOIN mastery m ON m.node_id = n.id
-        WHERE n.id IN (${ph}) AND n.exists_ = 1`
+        WHERE n.id IN (${ph})`
     )
     .all(...ids) as BrowseNode[];
 

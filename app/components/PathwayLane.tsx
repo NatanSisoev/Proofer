@@ -5,7 +5,7 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import type { Pathway, PathwayUnit, PathwayStep } from "@/lib/pathway";
 import MathText from "./MathText";
-import { ArrowRight, Check, Lock, Sparkles } from "./Icons";
+import { ArrowRight, Check, HelpCircle, Lock, Sparkles } from "./Icons";
 
 const Markdown = dynamic(() => import("./Markdown"));
 
@@ -16,15 +16,26 @@ export default function PathwayLane({ pathway }: { pathway: Pathway }) {
   const { units, currentIndex, targetTitle } = pathway;
 
   if (currentIndex === -1) {
+    const ghosts = units.filter((u) => u.ghost);
     return (
-      <div className="panel" style={{ marginTop: 20, textAlign: "center" }}>
-        <h2 className="icon-label" style={{ justifyContent: "center" }}>
-          <Check size={16} /> Path complete
-        </h2>
-        <p className="muted small">
-          Every concept on the way to <MathText>{targetTitle}</MathText> is above the mastery threshold.
-        </p>
-      </div>
+      <>
+        <div className="panel" style={{ marginTop: 20, textAlign: "center" }}>
+          <h2 className="icon-label" style={{ justifyContent: "center" }}>
+            <Check size={16} /> Path complete
+          </h2>
+          <p className="muted small">
+            Every concept on the way to <MathText>{targetTitle}</MathText> is above the mastery threshold.
+            {ghosts.length > 0 && <> {ghosts.length} prerequisite{ghosts.length !== 1 ? "s" : ""} still ha{ghosts.length !== 1 ? "ve" : "s"} no note to practice from.</>}
+          </p>
+        </div>
+        {ghosts.length > 0 && (
+          <div className="pathway-lane" style={{ marginTop: 12 }}>
+            {ghosts.map((unit) => (
+              <PathwayUnitRow key={unit.id} unit={unit} isTarget={false} state="locked" />
+            ))}
+          </div>
+        )}
+      </>
     );
   }
 
@@ -51,6 +62,20 @@ function PathwayUnitRow({
   isTarget: boolean;
   state: "done" | "current" | "locked";
 }) {
+  // A prerequisite with no note yet — an explicit gap, not a walkable unit.
+  // Never current/done/locked; links to the node page where it can be written.
+  if (unit.ghost) {
+    return (
+      <div className="pathway-unit pathway-unit-ghost">
+        <span className="pathway-unit-dot"><HelpCircle size={13} /></span>
+        <Link href={`/node/${encodeURIComponent(unit.id)}`} className="pathway-unit-title">
+          {unit.type && <span className={`type-badge t-${unit.type}`}>{unit.type}</span>}
+          <MathText>{unit.title}</MathText>
+        </Link>
+        <span className="pill pill-muted" style={{ marginLeft: "auto", flexShrink: 0 }}>no note yet</span>
+      </div>
+    );
+  }
   if (state !== "current") {
     return (
       <div className={`pathway-unit pathway-unit-${state}`}>

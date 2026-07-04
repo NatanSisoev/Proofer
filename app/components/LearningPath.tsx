@@ -9,7 +9,8 @@ export default function LearningPath({ nodeId }: { nodeId: string }) {
 
   const show = path.slice(0, 12);
   const extra = path.length - show.length;
-  const sessionIds = path.slice(0, 10).map((n) => encodeURIComponent(n.id)).join(",");
+  // Ghosts can't be practiced — keep them out of the "Practice all" queue.
+  const sessionIds = path.filter((n) => n.exists_).slice(0, 10).map((n) => encodeURIComponent(n.id)).join(",");
 
   return (
     <div className="panel" style={{ marginTop: 16 }}>
@@ -38,19 +39,25 @@ export default function LearningPath({ nodeId }: { nodeId: string }) {
             <Link href={`/node/${encodeURIComponent(n.id)}`} className="path-link">
               <MathText>{n.title}</MathText>
             </Link>
-            <div className="bar" style={{ width: 56 }}>
-              <span style={{ width: `${Math.round((n as any).mastery_p * 100)}%` }} />
-            </div>
-            <span className="small muted pct-label">
-              {Math.round((n as any).mastery_p * 100)}%
-            </span>
-            <Link
-              href={`/learn?node=${encodeURIComponent(n.id)}`}
-              className="pill pill-accent icon-label"
-              style={{ flexShrink: 0 }}
-            >
-              drill <ArrowRight size={10} />
-            </Link>
+            {n.exists_ ? (
+              <>
+                <div className="bar" style={{ width: 56 }}>
+                  <span style={{ width: `${Math.round((n as any).mastery_p * 100)}%` }} />
+                </div>
+                <span className="small muted pct-label">
+                  {Math.round((n as any).mastery_p * 100)}%
+                </span>
+                <Link
+                  href={`/learn?node=${encodeURIComponent(n.id)}`}
+                  className="pill pill-accent icon-label"
+                  style={{ flexShrink: 0 }}
+                >
+                  drill <ArrowRight size={10} />
+                </Link>
+              </>
+            ) : (
+              <span className="pill pill-muted" style={{ marginLeft: "auto", flexShrink: 0 }}>no note yet</span>
+            )}
           </div>
         ))}
       </div>

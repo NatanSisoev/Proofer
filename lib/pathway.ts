@@ -21,6 +21,11 @@ export type PathwayUnit = {
   type: string | null;
   masteryP: number;
   gated: boolean; // hasn't cleared MASTERY_THRESHOLD yet
+  // Prerequisite with no note yet (exists_ = 0). Shown as an explicit gap in
+  // the lane — there's nothing to read and nothing to grade against, so it
+  // never gates progression and has no steps; the row links to the node page
+  // where the ghost can be written (GhostCreate).
+  ghost: boolean;
   steps: PathwayStep[];
 };
 
@@ -65,7 +70,16 @@ export function unitSteps(node: { type: string | null; overview: string | null; 
 }
 
 function unitFromBrowseNode(n: BrowseNode): PathwayUnit {
-  return { id: n.id, title: n.title, type: n.type, masteryP: n.mastery_p, gated: n.mastery_p < MASTERY_THRESHOLD, steps: unitSteps(n) };
+  const ghost = !n.exists_;
+  return {
+    id: n.id,
+    title: n.title,
+    type: n.type,
+    masteryP: n.mastery_p,
+    ghost,
+    gated: !ghost && n.mastery_p < MASTERY_THRESHOLD,
+    steps: ghost ? [] : unitSteps(n),
+  };
 }
 
 /**
@@ -85,6 +99,7 @@ export function pathway(targetId: string): Pathway | null {
     title: target.title,
     type: target.type,
     masteryP: targetMasteryP,
+    ghost: false,
     gated: targetMasteryP < MASTERY_THRESHOLD,
     steps: unitSteps(target),
   };

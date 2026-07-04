@@ -969,6 +969,9 @@ details[open].practice-history > .attempt-list { animation: accordion-fade 0.25s
 .pathway-unit-done .pathway-unit-dot { background: var(--green-soft); color: var(--green); }
 .pathway-unit-locked .pathway-unit-dot { background: var(--bg-soft); color: var(--muted); }
 .pathway-unit-locked { opacity: 0.6; }
+/* Ghost prerequisite — a gap in the vault, not a walkable unit */
+.pathway-unit-ghost .pathway-unit-dot { background: var(--amber-soft); color: var(--amber); }
+.pathway-unit-ghost .pathway-unit-title { color: var(--muted); }
 .pathway-unit-title { display: flex; align-items: center; gap: 8px; min-width: 0; text-decoration: none; color: var(--text); }
 .pathway-unit-title:hover { text-decoration: underline; }
 .pathway-target-star { color: var(--accent); margin-left: auto; flex-shrink: 0; }
