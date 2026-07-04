@@ -1,21 +1,26 @@
 "use client";
 
 import { useState } from "react";
-import { Moon } from "./Icons";
+import { Moon, X } from "./Icons";
+import { useTransientFlag } from "./useTransientFlag";
 
 export default function SnoozeButton({ nodeId }: { nodeId: string }) {
   const [snoozed, setSnoozed] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [failed, raiseFailed] = useTransientFlag();
 
   async function snooze() {
     setLoading(true);
     try {
-      await fetch("/api/practice/snooze", {
+      const res = await fetch("/api/practice/snooze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ nodeId, days: 2 }),
       });
+      if (!res.ok) throw new Error();
       setSnoozed(true);
+    } catch {
+      raiseFailed();
     } finally {
       setLoading(false);
     }
@@ -29,10 +34,10 @@ export default function SnoozeButton({ nodeId }: { nodeId: string }) {
     <button
       onClick={snooze}
       disabled={loading}
-      title="Snooze 2 days"
-      className="btn-snooze icon-label"
+      title={failed ? "Snooze failed — click to retry" : "Snooze 2 days"}
+      className={`btn-snooze icon-label${failed ? " btn-failed" : ""}`}
     >
-      {loading ? "…" : <Moon size={12} />}
+      {loading ? "…" : failed ? <X size={12} /> : <Moon size={12} />}
     </button>
   );
 }

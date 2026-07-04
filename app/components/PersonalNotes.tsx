@@ -38,6 +38,7 @@ export default function PersonalNotes({ nodeId }: Props) {
   const [loaded, setLoaded]         = useState(false);
   const [saving, setSaving]         = useState(false);
   const [savedAt, setSavedAt]       = useState<Date | null>(null);
+  const [saveFailed, setSaveFailed] = useState(false);
   const [open, setOpen]             = useState(false);
   const [preview, setPreview]       = useState(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -64,12 +65,19 @@ export default function PersonalNotes({ nodeId }: Props) {
   async function save(text: string) {
     setSaving(true);
     try {
-      await fetch(`/api/node/${encodeURIComponent(nodeId)}/notes`, {
+      const res = await fetch(`/api/node/${encodeURIComponent(nodeId)}/notes`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ content: text }),
       });
+      if (!res.ok) throw new Error();
       setSavedAt(new Date());
+      setSaveFailed(false);
+    } catch {
+      // Persistent (not transient) — a false "Saved" here is silent data
+      // loss. The text is still in the textarea; auto-save retries on the
+      // next edit/blur, and success clears this.
+      setSaveFailed(true);
     } finally {
       setSaving(false);
     }
@@ -150,9 +158,15 @@ export default function PersonalNotes({ nodeId }: Props) {
           )}
 
           <div className="notes-footer">
-            <span className="muted small" style={{ fontSize: 11 }}>
-              {saving ? "Saving…" : savedAt ? `Saved ${savedAt.toLocaleTimeString()}` : "Type to add notes · auto-saves"}
-            </span>
+            {saveFailed && !saving ? (
+              <span className="small" style={{ fontSize: 11, color: "var(--red)" }}>
+                Couldn&rsquo;t save — your text is still here; editing or clicking away retries
+              </span>
+            ) : (
+              <span className="muted small" style={{ fontSize: 11 }}>
+                {saving ? "Saving…" : savedAt ? `Saved ${savedAt.toLocaleTimeString()}` : "Type to add notes · auto-saves"}
+              </span>
+            )}
           </div>
         </div>
       )}

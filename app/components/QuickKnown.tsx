@@ -3,21 +3,29 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Check } from "./Icons";
+import { useTransientFlag } from "./useTransientFlag";
 
 export default function QuickKnown({ nodeId }: { nodeId: string }) {
   const [done, setDone] = useState(false);
   const [pending, start] = useTransition();
+  const [failed, raiseFailed] = useTransientFlag();
   const router = useRouter();
 
   function mark() {
     setDone(true);
     start(async () => {
-      await fetch("/api/known", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: nodeId, known: true }),
-      });
-      router.refresh();
+      try {
+        const res = await fetch("/api/known", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: nodeId, known: true }),
+        });
+        if (!res.ok) throw new Error();
+        router.refresh();
+      } catch {
+        setDone(false);
+        raiseFailed();
+      }
     });
   }
 
@@ -29,10 +37,10 @@ export default function QuickKnown({ nodeId }: { nodeId: string }) {
     <button
       onClick={mark}
       disabled={pending}
-      title="Mark as known"
-      className="quick-known-btn"
+      title={failed ? "Couldn't save — click to retry" : "Mark as known"}
+      className={`quick-known-btn${failed ? " btn-failed" : ""}`}
     >
-      know
+      {failed ? "failed" : "know"}
     </button>
   );
 }

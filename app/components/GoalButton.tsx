@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Check } from "./Icons";
+import { useTransientFlag } from "./useTransientFlag";
 
 export default function GoalButton({
   nodeId,
@@ -12,18 +13,20 @@ export default function GoalButton({
 }) {
   const [active, setActive] = useState(isCurrentGoal);
   const [busy, setBusy] = useState(false);
+  const [failed, raiseFailed] = useTransientFlag();
 
   async function toggle() {
     setBusy(true);
     try {
-      await fetch("/api/settings/goal", {
+      const res = await fetch("/api/settings/goal", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ nodeId: active ? "" : nodeId }),
       });
+      if (!res.ok) throw new Error();
       setActive(!active);
     } catch {
-      // ignore
+      raiseFailed();
     } finally {
       setBusy(false);
     }
@@ -33,11 +36,11 @@ export default function GoalButton({
     <button
       onClick={toggle}
       disabled={busy}
-      title={active ? "Clear learning goal" : "Set as learning goal — shows the path to this concept on your home page"}
-      className={`btn-ghost btn-sm icon-label${active ? " goal-btn-active" : ""}`}
+      title={failed ? "Couldn't save — click to retry" : active ? "Clear learning goal" : "Set as learning goal — shows the path to this concept on your home page"}
+      className={`btn-ghost btn-sm icon-label${active ? " goal-btn-active" : ""}${failed ? " btn-failed" : ""}`}
       style={{ whiteSpace: "nowrap" }}
     >
-      {active ? <><Check size={13} /> Goal</> : "Set as goal"}
+      {failed ? "Failed" : active ? <><Check size={13} /> Goal</> : "Set as goal"}
     </button>
   );
 }

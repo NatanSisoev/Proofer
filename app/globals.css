@@ -1467,6 +1467,12 @@ details[open].practice-history > .attempt-list { animation: accordion-fade 0.25s
 .btn-bookmark { background: none; border: none; cursor: pointer; display: inline-flex; align-items: center; transition: color 0.2s, transform 0.1s; padding: 4px 6px; border-radius: 8px; }
 .btn-snooze { background: none; border: none; cursor: pointer; font-size: 12px; color: var(--muted); padding: 2px 6px; border-radius: 8px; line-height: 1; }
 
+/* Transient failure state for small mutation buttons (bookmark, known,
+   snooze, goal…): the optimistic update was reverted and clicking retries.
+   Applied for a few seconds via useTransientFlag, then the control returns
+   to normal. Declared after every button base class so it wins ties. */
+.btn-failed, .btn-failed:hover:not(:disabled) { color: var(--red); border-color: var(--red); }
+
 /* Session queue preview — reason tags */
 .reason-tag { font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: var(--radius-sm); white-space: nowrap; letter-spacing: 0.03em; }
 .reason-due-for-review { background: var(--amber-soft); color: var(--amber); border: 1px solid var(--amber); }
