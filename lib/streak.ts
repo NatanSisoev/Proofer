@@ -10,7 +10,14 @@ function localDateStr(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
-type StreakFreezeState = {
+// Calendar arithmetic, NOT `Date.now() - i * 86_400_000`. Subtracting a fixed
+// 24h across a DST transition lands on the same local date twice (or skips
+// one), which would silently duplicate or drop a day in the streak walk.
+function addDays(d: Date, n: number): Date {
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
+}
+
+export type StreakFreezeState = {
   earned: number;        // total freeze tokens ever earned
   usedDates: string[];   // dates (local YYYY-MM-DD) a freeze bridged a missed day
   lastMilestone: number; // highest streak length (in weeks) already credited a freeze
@@ -45,56 +52,87 @@ export type StreakResult = {
   freezesUsedJustNow: string[]; // dates newly bridged THIS call — surface once as "a freeze saved your streak"
 };
 
+export type ResolvedStreak = StreakFreezeState & {
+  streakDays: number;
+  newlyUsed: string[];
+  freezesAvailable: number;
+};
+
 /**
- * Cycle 2 #7 "streak insurance": computes the practice streak the same way
- * as before (consecutive local days with an attempt, ending today or
- * yesterday), but transparently bridges gaps with a banked "freeze" token
- * when one is available, and awards one new freeze per 7 days of (bridged)
- * streak. Lazy and idempotent — like lib/db.ts's maybeBackup, this recomputes
- * on every call but only writes when a freeze is actually newly consumed or
- * a new one is newly earned.
+ * The pure core of streak insurance — no DB, and `today` is injected so the
+ * day-boundary behaviour is testable.
+ *
+ * Counts consecutive local practice days ending today (or yesterday, so an
+ * in-progress streak isn't zeroed before midnight), bridging gaps with banked
+ * freeze tokens, and awarding one freeze per 7 days of streak.
+ *
+ * A freeze is only ever spent on a gap that real practice continues *past*.
+ * Without that rule a student who stopped practicing would have their banked
+ * tokens silently drained — `todayStats()` runs on every home page load, so
+ * merely opening the app while away used to burn insurance to manufacture a
+ * streak that was never earned.
  */
-export function computeStreak(practiceDays: Set<string>): StreakResult {
-  const state = getState();
+export function resolveStreak(
+  practiceDays: Set<string>,
+  state: StreakFreezeState,
+  today: Date
+): ResolvedStreak {
   const usedSet = new Set(state.usedDates);
-  const todayStr = localDateStr(new Date());
-  // If today has no practice yet, start the consecutive-day check from
-  // yesterday so an in-progress streak isn't falsely zeroed before midnight.
-  const startOffset = practiceDays.has(todayStr) ? 0 : 1;
-
-  let streak = 0;
+  const startOffset = practiceDays.has(localDateStr(today)) ? 0 : 1;
   let freezesLeft = state.earned - state.usedDates.length;
-  const newlyUsed: string[] = [];
 
+  // Walk back a calendar day at a time, recording a *tentative* chain.
+  type Day = { date: string; real: boolean; bridgedNow: boolean };
+  const chain: Day[] = [];
   for (let i = startOffset; ; i++) {
-    const dateStr = localDateStr(new Date(Date.now() - i * 86_400_000));
-    if (practiceDays.has(dateStr) || usedSet.has(dateStr)) {
-      streak++;
-      continue;
-    }
-    if (freezesLeft > 0) {
-      freezesLeft--;
-      newlyUsed.push(dateStr);
-      streak++;
-      continue;
-    }
+    const date = localDateStr(addDays(today, -i));
+    if (practiceDays.has(date)) { chain.push({ date, real: true, bridgedNow: false }); continue; }
+    if (usedSet.has(date)) { chain.push({ date, real: false, bridgedNow: false }); continue; }
+    if (freezesLeft > 0) { freezesLeft--; chain.push({ date, real: false, bridgedNow: true }); continue; }
     break;
   }
 
+  // Trim trailing bridged days: a freeze that isn't followed by real practice
+  // is padding, so it neither counts toward the streak nor gets spent.
+  let end = chain.length;
+  while (end > 0 && !chain[end - 1].real) end--;
+  const kept = chain.slice(0, end);
+
+  const newlyUsed = kept.filter((d) => d.bridgedNow).map((d) => d.date);
+  const streakDays = kept.length;
+
   let { earned, lastMilestone } = state;
-  const milestone = Math.floor(streak / 7);
+  const milestone = Math.floor(streakDays / 7);
   if (milestone > lastMilestone) {
     earned += milestone - lastMilestone;
     lastMilestone = milestone;
   }
 
-  if (newlyUsed.length > 0 || earned !== state.earned) {
-    saveState({ earned, usedDates: [...state.usedDates, ...newlyUsed], lastMilestone });
+  return {
+    streakDays,
+    newlyUsed,
+    earned,
+    lastMilestone,
+    usedDates: [...state.usedDates, ...newlyUsed],
+    freezesAvailable: earned - state.usedDates.length - newlyUsed.length,
+  };
+}
+
+/**
+ * Lazy and idempotent — like lib/db.ts's maybeBackup, this recomputes on every
+ * call but only writes when a freeze is actually newly consumed or earned.
+ */
+export function computeStreak(practiceDays: Set<string>): StreakResult {
+  const state = getState();
+  const r = resolveStreak(practiceDays, state, new Date());
+
+  if (r.newlyUsed.length > 0 || r.earned !== state.earned) {
+    saveState({ earned: r.earned, usedDates: r.usedDates, lastMilestone: r.lastMilestone });
   }
 
   return {
-    streakDays: streak,
-    freezesAvailable: earned - state.usedDates.length - newlyUsed.length,
-    freezesUsedJustNow: newlyUsed,
+    streakDays: r.streakDays,
+    freezesAvailable: r.freezesAvailable,
+    freezesUsedJustNow: r.newlyUsed,
   };
 }
