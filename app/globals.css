@@ -1108,7 +1108,6 @@ details[open].practice-history > .attempt-list { animation: accordion-fade 0.25s
 .area-header { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px; margin-bottom: 20px; }
 .mastery-summary { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .mastery-bar-row { display: flex; align-items: center; gap: 8px; min-width: 0; }
-.mastery-bar-flex { flex: 1; max-width: 120px; }
 .node-list { display: flex; flex-direction: column; gap: 2px; margin-top: 16px; }
 .browse-row-left { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1; }
 .browse-node-link { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -1240,7 +1239,6 @@ details[open].practice-history > .attempt-list { animation: accordion-fade 0.25s
 /* node/[slug] page */
 .node-overview { display: block; margin-top: -2px; max-width: 640px; line-height: 1.5; }
 .mastery-pct { font-weight: 700; font-size: 15px; letter-spacing: -0.02em; }
-.node-cta { display: flex; align-items: center; gap: 6px; }
 .content-meta { margin-top: 0; margin-bottom: 12px; }
 .browse-more { display: block; margin-top: 8px; font-size: 11px; }
 
@@ -1466,9 +1464,8 @@ details[open].practice-history > .attempt-list { animation: accordion-fade 0.25s
 .area-home-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .area-home-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
 
-/* BookmarkButton / SnoozeButton */
-.btn-bookmark { background: none; border: none; cursor: pointer; display: inline-flex; align-items: center; transition: color 0.2s, transform 0.1s; padding: 4px 6px; border-radius: 8px; }
-.btn-snooze { background: none; border: none; cursor: pointer; font-size: 12px; color: var(--muted); padding: 2px 6px; border-radius: 8px; line-height: 1; }
+/* SnoozeButton */
+.btn-snooze { background: none; border: none; cursor: pointer; font-size: 12px; color: var(--muted); padding: 2px 6px; border-radius: var(--radius-sm); line-height: 1; }
 
 /* Transient failure state for small mutation buttons (bookmark, known,
    snooze, goal…): the optimistic update was reverted and clicking retries.

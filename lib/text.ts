@@ -12,3 +12,28 @@ export function truncateMath(s: string, max: number): string {
   }
   return cut.replace(/\s+$/, "") + "…";
 }
+
+/**
+ * Clean an edge-context snippet for inline display.
+ *
+ * Contexts are raw sentences lifted straight out of Obsidian notes, so they
+ * still carry vault syntax that means nothing outside the editor: `[[wikilinks]]`,
+ * leading list markers, `**bold**`, and Templater proof scaffolding. `MathText`
+ * renders inline LaTeX but not Obsidian markup, so without this the node page
+ * shows literal "- [[Convergent Series]] — …".
+ */
+export function cleanContext(s: string): string {
+  return s
+    // Templater proof scaffolding: `\begin{proof}` / `\end{proof}`
+    .replace(/`\\(?:begin|end)\{proof\}`/g, "")
+    // [[Target|alias]] -> alias, [[Target#anchor]] -> Target
+    .replace(/\[\[([^\]]+)\]\]/g, (_m, inner: string) => {
+      const [target, alias] = inner.split("|");
+      return (alias || target.split("#")[0]).trim();
+    })
+    .replace(/\*\*/g, "")
+    // leading list marker / "Sibling:"-style bullet residue
+    .replace(/^\s*[-*+]\s+/, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}

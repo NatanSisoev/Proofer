@@ -4,6 +4,7 @@ import { useState, useCallback } from "react";
 import Link from "next/link";
 import type { RelatedEdge } from "@/lib/queries";
 import MathText from "./MathText";
+import { cleanContext } from "@/lib/text";
 import { Check, ArrowRight, ArrowLeftRight } from "./Icons";
 import ErrorBanner from "./ErrorBanner";
 
@@ -195,7 +196,7 @@ function EdgeRow({
 
       {/* Context snippet */}
       {edge.context && (
-        <p className="muted small italic-note"><MathText>{`“${edge.context}”`}</MathText></p>
+        <p className="muted small italic-note"><MathText>{`“${cleanContext(edge.context)}”`}</MathText></p>
       )}
 
       {/* AI suggestion */}

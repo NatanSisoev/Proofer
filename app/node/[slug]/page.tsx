@@ -19,7 +19,7 @@ import GoalButton from "@/app/components/GoalButton";
 import NodePanels, { NodePanel } from "@/app/components/NodePanels";
 import TrustBadge from "@/app/components/TrustBadge";
 import { getNode, edgesOf, isKnown, readiness, prerequisites, attemptCount, isBookmarked, nodeAttempts, nodeAttemptDetails, nextReviewDays, similarConcepts, nodeBlamedPrereqs, misconceptionsForNode, egoGraph, prerequisiteGraph } from "@/lib/queries";
-import { truncateMath } from "@/lib/text";
+import { truncateMath, cleanContext } from "@/lib/text";
 import { getMasteryP } from "@/lib/mastery";
 import { hasKey } from "@/lib/llm";
 import { getLearningGoal } from "@/lib/settings";
@@ -67,7 +67,7 @@ function RelList({ rows, dir }: { rows: EdgeRow[]; dir: "out" | "in" }) {
           <li key={i}>
             <span className={`edge-type ${e.type}`}>{label}</span>
             <Link href={`/node/${encodeURIComponent(other)}`}><MathText>{other}</MathText></Link>
-            {e.context && <MathText className="edge-ctx">{"— " + e.context.replace(/\*\*/g, "")}</MathText>}
+            {e.context && <MathText className="edge-ctx">{"— " + cleanContext(e.context)}</MathText>}
           </li>
         );
       })}
