@@ -31,6 +31,9 @@ export function cleanContext(s: string): string {
       const [target, alias] = inner.split("|");
       return (alias || target.split("#")[0]).trim();
     })
+    // a context clipped mid-link leaves an unterminated "[[" the pattern above
+    // can't match — drop any stray brackets so they never reach the page
+    .replace(/\[\[|\]\]/g, "")
     .replace(/\*\*/g, "")
     // leading list marker / "Sibling:"-style bullet residue
     .replace(/^\s*[-*+]\s+/, "")

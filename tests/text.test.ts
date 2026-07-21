@@ -44,6 +44,13 @@ test("cleanContext: strips a leading list marker and bold markers", () => {
   );
 });
 
+test("cleanContext: drops stray brackets from a context clipped mid-wikilink", () => {
+  assert.equal(
+    cleanContext("whose encoder is a [[Convolutional Neural Net"),
+    "whose encoder is a Convolutional Neural Net"
+  );
+});
+
 test("cleanContext: removes Templater proof scaffolding but keeps inline math", () => {
   assert.equal(
     cleanContext("by the [[Telescopic Series]] formula.`\\end{proof}`"),
