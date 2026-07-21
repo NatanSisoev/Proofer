@@ -1554,9 +1554,31 @@ export function bookmarkedNodes(): BrowseNode[] {
  */
 export function conceptOfDay(): (BrowseNode & { has_content: number; reason: "frontier" | "unmastered" }) | null {
   const dayIdx = Math.floor(Date.now() / 86400000); // days since epoch
+  const d = db();
+
+  /**
+   * Pull the candidate ids in ONE pass, pick the day's entry, then read that
+   * single row back by primary key. This previously ran each (expensive)
+   * predicate twice — once for COUNT(*), then again with ORDER BY … OFFSET —
+   * which made conceptOfDay the slowest query on the home page. The rotation
+   * is unchanged: same `ORDER BY n.id`, same `dayIdx % count` index.
+   */
+  const pick = (where: string): (BrowseNode & { has_content: number }) | null => {
+    const ids = d.prepare(`SELECT n.id FROM nodes n ${where} ORDER BY n.id`).all() as { id: string }[];
+    if (ids.length === 0) return null;
+    return d
+      .prepare(
+        `SELECT n.*, COALESCE(m.p, 0) AS mastery_p,
+                CASE WHEN LENGTH(COALESCE(n.content,'')) > 100 THEN 1 ELSE 0 END AS has_content
+           FROM nodes n
+           LEFT JOIN mastery m ON m.node_id = n.id
+          WHERE n.id = ?`
+      )
+      .get(ids[dayIdx % ids.length].id) as BrowseNode & { has_content: number };
+  };
 
   // Try frontier first (all prereqs known, has content)
-  const frontierWhere = `
+  const onFrontier = pick(`
     WHERE n.exists_ = 1
       AND LENGTH(COALESCE(n.content,'')) > 100
       AND n.id NOT IN (${MASTERED_SUBQUERY})
@@ -1566,48 +1588,14 @@ export function conceptOfDay(): (BrowseNode & { has_content: number; reason: "fr
            AND e.dst <> n.id
            AND e.dst NOT IN (${MASTERED_SUBQUERY})
            AND e.dst IN (SELECT id FROM nodes WHERE exists_ = 1)
-      )`;
-  const frontierCount = (
-    db().prepare(`SELECT COUNT(*) AS c FROM nodes n ${frontierWhere}`).get() as { c: number }
-  ).c;
-
-  if (frontierCount > 0) {
-    const row = db()
-      .prepare(
-        `SELECT n.*, COALESCE(m.p, 0) AS mastery_p,
-                CASE WHEN LENGTH(COALESCE(n.content,'')) > 100 THEN 1 ELSE 0 END AS has_content
-           FROM nodes n
-           LEFT JOIN mastery m ON m.node_id = n.id
-           ${frontierWhere}
-          ORDER BY n.id
-          LIMIT 1 OFFSET ?`
-      )
-      .get(dayIdx % frontierCount) as BrowseNode & { has_content: number };
-    return { ...row, reason: "frontier" };
-  }
+      )`);
+  if (onFrontier) return { ...onFrontier, reason: "frontier" };
 
   // Fallback: any concept with content, not yet mastered
-  const fallbackWhere = `
+  const fallback = pick(`
     WHERE n.exists_ = 1 AND LENGTH(COALESCE(n.content,'')) > 100
-      AND n.id NOT IN (${MASTERED_SUBQUERY})`;
-  const fallbackCount = (
-    db().prepare(`SELECT COUNT(*) AS c FROM nodes n ${fallbackWhere}`).get() as { c: number }
-  ).c;
-
-  if (fallbackCount > 0) {
-    const row = db()
-      .prepare(
-        `SELECT n.*, COALESCE(m.p, 0) AS mastery_p,
-                CASE WHEN LENGTH(COALESCE(n.content,'')) > 100 THEN 1 ELSE 0 END AS has_content
-           FROM nodes n
-           LEFT JOIN mastery m ON m.node_id = n.id
-           ${fallbackWhere}
-          ORDER BY n.id
-          LIMIT 1 OFFSET ?`
-      )
-      .get(dayIdx % fallbackCount) as BrowseNode & { has_content: number };
-    return { ...row, reason: "unmastered" };
-  }
+      AND n.id NOT IN (${MASTERED_SUBQUERY})`);
+  if (fallback) return { ...fallback, reason: "unmastered" };
 
   return null;
 }
