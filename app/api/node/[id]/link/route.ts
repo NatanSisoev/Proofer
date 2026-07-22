@@ -11,8 +11,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     .get(id, targetId, targetId, id);
   if (existing) return NextResponse.json({ ok: true, existed: true });
 
+  // `source` is NOT NULL with no default — omitting it threw a constraint
+  // error, so every "Add link" click on /quality?tab=links was a 500 and no
+  // edge was ever added. This edge comes from the heuristic unlinked-mention
+  // detector, matching the value every existing edge already carries.
   db().prepare(
-    "INSERT INTO edges (src, dst, type, confidence) VALUES (?, ?, ?, 0.7)"
+    "INSERT INTO edges (src, dst, type, confidence, source) VALUES (?, ?, ?, 0.7, 'heuristic')"
   ).run(id, targetId, type);
 
   return NextResponse.json({ ok: true });
