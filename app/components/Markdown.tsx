@@ -1,18 +1,27 @@
-import ReactMarkdown from "react-markdown";
+"use client";
+
+// Client-side because the ```tikz override below renders <TikzFigure>, which
+// needs an effect to fetch its compiled SVG. Elements created inside
+// react-markdown's `components` callbacks don't form a client boundary when
+// this module renders as RSC — TikzFigure ends up server-rendered and its
+// effect never runs. react-markdown is already in the client bundle via
+// ProblemCard, so opting the whole component in costs nothing extra.
+
+import ReactMarkdown, { type Components, type Options } from "react-markdown";
 import remarkMath from "remark-math";
 import remarkGfm from "remark-gfm";
 import rehypeKatex from "rehype-katex";
 import "katex/dist/katex.min.css";
+import TikzFigure from "./TikzFigure";
 
 // Turn Obsidian-flavoured note bodies into standard markdown that react-markdown
 // can render: rewrite [[wikilinks]] to concept links, flatten callouts, drop
-// Templater/tikz scaffolding that isn't meaningful in the graph view.
+// Templater scaffolding that isn't meaningful in the graph view. ```tikz fences
+// are left intact — the `pre` override below compiles them to figures.
 function preprocess(src: string): string {
   let s = src;
   // drop the leading H1 (the page shows the title already)
   s = s.replace(/^#\s+.*$/m, "");
-  // strip tikz code fences (raw LaTeX picture source)
-  s = s.replace(/```tikz[\s\S]*?```/g, "");
   // strip Templater proof scaffolding: `\begin{proof}`@[[#^X]] ... `\end{proof}`
   s = s.replace(/`\\begin\{proof\}`(@\[\[[^\]]*\]\])?/g, "_Proof._");
   s = s.replace(/`\\end\{proof\}`/g, "");
@@ -36,13 +45,30 @@ function preprocess(src: string): string {
   return s;
 }
 
+// Defined once at module scope, not inline in the JSX: a fresh `components`
+// object (or plugin array) on every render makes react-markdown rebuild its
+// tree, which remounts TikzFigure and restarts its fetch in a loop.
+const REMARK_PLUGINS: Options["remarkPlugins"] = [remarkMath, remarkGfm];
+const REHYPE_PLUGINS: Options["rehypePlugins"] = [[rehypeKatex, { strict: false, throwOnError: false }]];
+const COMPONENTS: Components = {
+  // A ```tikz fence is LaTeX picture source, not code to display — swap the
+  // whole <pre> for the compiled figure. Overriding `pre` rather than `code`
+  // keeps the figure out of the <pre> wrapper, which may only contain
+  // phrasing content.
+  pre({ children: kids, ...props }) {
+    const child = Array.isArray(kids) ? kids[0] : kids;
+    const codeProps = (child as { props?: { className?: string; children?: unknown } } | null)?.props;
+    if (typeof codeProps?.className === "string" && codeProps.className.includes("language-tikz")) {
+      return <TikzFigure source={String(codeProps.children ?? "")} />;
+    }
+    return <pre {...props}>{kids}</pre>;
+  },
+};
+
 export default function Markdown({ children }: { children: string }) {
   return (
     <div className="markdown">
-      <ReactMarkdown
-        remarkPlugins={[remarkMath, remarkGfm]}
-        rehypePlugins={[[rehypeKatex, { strict: false, throwOnError: false }]]}
-      >
+      <ReactMarkdown remarkPlugins={REMARK_PLUGINS} rehypePlugins={REHYPE_PLUGINS} components={COMPONENTS}>
         {preprocess(children)}
       </ReactMarkdown>
     </div>

@@ -400,8 +400,21 @@ input.search-box:focus { outline: none; border-color: var(--accent); box-shadow:
 .markdown code { background: var(--brand-soft); color: var(--code-fg); padding: 2px 7px; border-radius: var(--radius-sm); font-size: 0.88em; font-family: ui-monospace, monospace; border: none; }
 .markdown pre { background: var(--bg-soft); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; overflow-x: auto; margin: 14px 0; }
 .markdown pre code { background: none; color: var(--text); padding: 0; font-size: 13px; border: none; }
-/* Hide raw TikZ/LaTeX code blocks that start with \begin */
-.markdown pre:has(code[class*="tikz"]), .markdown pre:has(code[class*="latex"]) { display: none; }
+/* Hide raw LaTeX code blocks that start with \begin. ```tikz fences are NOT
+   hidden — they compile to figures (see TikzFigure / .tikz-figure below). */
+.markdown pre:has(code[class*="latex"]) { display: none; }
+
+/* Compiled TikZ figures. node-tikzjax emits a fixed-size SVG with black
+   strokes, so constrain it to the column and remap pure black to the theme
+   text colour in dark mode — any other colour the figure sets is left alone. */
+.tikz-figure { margin: 18px 0; overflow-x: auto; text-align: center; }
+.tikz-figure svg { max-width: 100%; height: auto; }
+[data-theme="dark"] .tikz-figure [stroke="#000"] { stroke: var(--text); }
+[data-theme="dark"] .tikz-figure [fill="#000"] { fill: var(--text); }
+.tikz-figure-loading { text-align: left; color: var(--muted); font-size: 13px; }
+.tikz-figure-error { text-align: left; background: var(--bg-soft); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; }
+.tikz-figure-error summary { cursor: pointer; }
+.tikz-figure-error pre { font-size: 12px; margin: 10px 0 0; }
 /* Tables */
 .markdown table { border-collapse: collapse; width: 100%; margin: 14px 0; font-size: 13.5px; }
 .markdown th { background: var(--bg-soft); padding: 8px 12px; text-align: left; border: 1px solid var(--border); font-weight: 600; color: var(--muted); font-size: 12.5px; text-transform: none; letter-spacing: normal; }

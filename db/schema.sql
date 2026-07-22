@@ -124,6 +124,20 @@ CREATE TABLE IF NOT EXISTS llm_cache (
   created_at INTEGER NOT NULL
 );
 
+-- Rendered TikZ figures. Vault notes embed ```tikz fences (raw LaTeX picture
+-- source); node-tikzjax compiles one to SVG in ~2-7s, far too slow to redo on
+-- every page view. Keyed by SHA-256 of the figure source, so it is
+-- content-addressed and never needs invalidating: editing a figure simply
+-- hashes to a new row. Survives vault sync (the importer only rebuilds
+-- nodes/edges). `svg` is empty string when compilation failed — cached too, so
+-- a broken figure isn't retried on every view; `error` holds the message.
+CREATE TABLE IF NOT EXISTS tikz_cache (
+  hash       TEXT PRIMARY KEY,
+  svg        TEXT NOT NULL,
+  error      TEXT,
+  created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
+);
+
 -- Named misconception clusters — an LLM-batch pass groups a concept's
 -- accumulated attempts.gap texts into named patterns ("confuses pointwise
 -- with uniform convergence"), reviewed via /quality then saved here. This is
