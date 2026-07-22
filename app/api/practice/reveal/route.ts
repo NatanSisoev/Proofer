@@ -15,13 +15,22 @@ export async function POST(req: NextRequest) {
   const masteryBefore = (db().prepare("SELECT p FROM mastery WHERE node_id = ?").get(row.node_id) as any)?.p ?? 0;
   applyAttempt(row.node_id, 0, null, prereqs);
   const masteryAfter = (db().prepare("SELECT p FROM mastery WHERE node_id = ?").get(row.node_id) as any)?.p ?? 0;
+  // The give-up marker goes in `gap`: every display site and the node page's
+  // "last gap identified" logic detect a reveal by `gap === "(gave up — showed
+  // answer)"`. It used to sit in `answer`, so those checks silently never
+  // matched — a give-up surfaced as a real diagnosed gap instead of "Viewed
+  // answer". The student's answer is genuinely empty here (they didn't attempt).
+  // `problem` is NOT NULL — omitting it made every reveal throw an INSERT
+  // constraint error (500), so the give-up was never logged even though the
+  // mastery ding above had already applied. Carry the problem text over from
+  // the problems row.
   db().prepare(
-    `INSERT INTO attempts (node_id, kind, answer, verdict, evidence, gap, blamed_prereq, mode)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+    `INSERT INTO attempts (node_id, kind, problem, answer, verdict, evidence, gap, blamed_prereq, mode)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
   ).run(
-    row.node_id, row.kind, "(gave up — showed answer)",
+    row.node_id, row.kind, row.problem, "",
     "incorrect", 0,
-    "Student requested to see the answer without attempting.",
+    "(gave up — showed answer)",
     "", row.mode ?? "ai"
   );
 

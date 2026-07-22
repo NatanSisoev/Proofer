@@ -421,6 +421,13 @@ export type MisconceptionCandidate = {
 /** Concepts with enough failed/partial attempts to look for a recurring
  *  misconception. Thin today (36 attempts vault-wide) — most concepts won't
  *  qualify, which is expected; this is the on-ramp, not a mature dataset. */
+// Sentinel gap values that aren't real conceptual gaps: the grader's "no gap"
+// marker and the one a give-up ("I don't know" → reveal) records. Clustering
+// these as misconceptions would feed the LLM garbage, so they're excluded from
+// the misconception surfaces (the same strings the display sites already skip).
+const NON_GAP_SENTINELS_SQL =
+  `('none', '(gave up — showed answer)', 'Student requested to see the answer without attempting.')`;
+
 export function misconceptionCandidates(minGaps = 2, limit = 50): MisconceptionCandidate[] {
   return db()
     .prepare(
@@ -431,6 +438,7 @@ export function misconceptionCandidates(minGaps = 2, limit = 50): MisconceptionC
          JOIN nodes n ON n.id = a.node_id
         WHERE a.verdict IN ('partial', 'incorrect')
           AND a.gap IS NOT NULL AND a.gap != ''
+          AND a.gap NOT IN ${NON_GAP_SENTINELS_SQL}
           AND n.exists_ = 1
         GROUP BY a.node_id
        HAVING gap_count >= ?
@@ -448,6 +456,7 @@ export function gapsForNode(nodeId: string, limit = 20): string[] {
         `SELECT gap FROM attempts
           WHERE node_id = ? AND verdict IN ('partial', 'incorrect')
             AND gap IS NOT NULL AND gap != ''
+            AND gap NOT IN ${NON_GAP_SENTINELS_SQL}
           ORDER BY id DESC
           LIMIT ?`
       )
