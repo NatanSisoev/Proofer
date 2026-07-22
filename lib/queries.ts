@@ -984,7 +984,11 @@ export function linkSuggestions(limit = 60): LinkSuggestion[] {
   const results: LinkSuggestion[] = [];
 
   for (const src of nodes) {
-    if (!src.content || results.length >= limit) break;
+    if (results.length >= limit) break;
+    // Skip a note with no usable content — but `continue`, not `break`: an
+    // empty-content stub anywhere in the scan must not silently abort
+    // suggestions for every node after it.
+    if (!src.content || !src.content.trim()) continue;
     const contentLower = src.content.toLowerCase();
 
     for (const tgt of nodes) {
