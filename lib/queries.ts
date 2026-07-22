@@ -357,6 +357,11 @@ export function recurringWeakPrerequisites(limit = 8): WeakPrerequisite[] {
         WHERE a.blamed_prereq IS NOT NULL
           AND a.blamed_prereq != ''
           AND a.blamed_prereq != 'none'
+          -- A weak prerequisite is one blamed when the student STRUGGLED. The
+          -- grader can attach a blamed_prereq to a 'correct' verdict too, and
+          -- counting that as a foundational gap would both be wrong and
+          -- disagree with nodeBlamedPrereqs (which already filters this way).
+          AND a.verdict IN ('partial', 'incorrect')
         GROUP BY a.blamed_prereq
        HAVING concept_count >= 2
         ORDER BY concept_count DESC, blame_count DESC
