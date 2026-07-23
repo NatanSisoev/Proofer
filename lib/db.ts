@@ -17,10 +17,13 @@ export const BACKUP_DIR = join(process.cwd(), "data", "backups");
 const BACKUPS_TO_KEEP = 14;
 
 // The student is in Europe/Madrid, not UTC — matches lib/queries.ts's
-// localDateStr so "today's backup" lines up with the same day boundary used
-// everywhere else (streaks, due-dates), not a UTC one that could roll over
-// mid-evening.
-function localDateStr(d: Date): string {
+// Local-day key (YYYY-MM-DD) in the machine's timezone, NOT UTC. The student is
+// in Europe/Madrid, so `Date#toISOString().slice(0,10)` buckets by UTC day and
+// shifts the boundary 1-2h — enough to falsely break a streak or reset the
+// daily goal at 1-2am local. Every JS-side day key uses this, matching the SQL
+// side's `'localtime'` modifier; shared here (the base module) so streaks,
+// backups, and due-dates all agree on the boundary.
+export function localDateStr(d: Date): string {
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, "0");
   const day = String(d.getDate()).padStart(2, "0");

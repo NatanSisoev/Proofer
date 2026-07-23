@@ -86,6 +86,10 @@ CREATE TABLE IF NOT EXISTS attempts (
 
 CREATE INDEX IF NOT EXISTS idx_attempts_node       ON attempts(node_id);
 CREATE INDEX IF NOT EXISTS idx_attempts_created_at ON attempts(created_at DESC);
+-- /history filters by verdict and kind on demand; cheap insurance before the
+-- attempt log grows past a few thousand rows.
+CREATE INDEX IF NOT EXISTS idx_attempts_verdict    ON attempts(verdict);
+CREATE INDEX IF NOT EXISTS idx_attempts_kind       ON attempts(kind);
 
 -- mastery(p) speeds up weak-spot and frontier queries (filter by p range).
 -- mastery(last_seen) speeds up due-for-review queries (julianday diff).

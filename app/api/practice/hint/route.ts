@@ -7,7 +7,12 @@ export const maxDuration = 30;
 export async function POST(req: NextRequest) {
   if (!hasKey()) return NextResponse.json({ error: "No AI provider configured" }, { status: 400 });
 
-  const { problemId } = await req.json();
+  let problemId: number | undefined;
+  try {
+    ({ problemId } = await req.json());
+  } catch {
+    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+  }
   if (!problemId) return NextResponse.json({ error: "problemId required" }, { status: 400 });
 
   const row = db()

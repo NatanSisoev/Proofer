@@ -1,21 +1,9 @@
-import { db, MASTERED_SUBQUERY, MASTERY_THRESHOLD, type NodeRow, type EdgeRow } from "./db";
+import { db, MASTERED_SUBQUERY, MASTERY_THRESHOLD, localDateStr, type NodeRow, type EdgeRow } from "./db";
 import { getMasteryP, setKnown as masterySetKnown, P_INIT, HL_INIT, halfLifeFactor } from "./mastery";
 import { hasEmbeddings, embedText } from "./llm";
 import { decodeVector, cosineSimilarity } from "./vectors";
 import { getExamDates } from "./settings";
 import { computeStreak } from "./streak";
-
-// The student is in Europe/Madrid, not UTC. `Date#toISOString().slice(0,10)`
-// buckets by UTC day, which shifts the whole day boundary by 1-2 hours and
-// can falsely break/survive a streak or reset the daily goal at 1-2am local
-// time. Every JS-side day key must use this instead, matching the SQL side's
-// `'localtime'` modifier.
-function localDateStr(d: Date): string {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
-}
 
 export function getNode(id: string): NodeRow | undefined {
   return db().prepare("SELECT * FROM nodes WHERE id = ?").get(id) as NodeRow | undefined;

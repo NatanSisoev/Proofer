@@ -1,14 +1,4 @@
-import { db } from "./db";
-
-// Matches lib/queries.ts's localDateStr — the student is in Europe/Madrid,
-// not UTC, so every day-boundary check must use local time, not
-// Date#toISOString().slice(0,10).
-function localDateStr(d: Date): string {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
-}
+import { db, localDateStr } from "./db";
 
 // Calendar arithmetic, NOT `Date.now() - i * 86_400_000`. Subtracting a fixed
 // 24h across a DST transition lands on the same local date twice (or skips

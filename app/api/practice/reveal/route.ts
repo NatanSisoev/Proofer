@@ -3,7 +3,13 @@ import { db } from "@/lib/db";
 import { applyAttempt } from "@/lib/mastery";
 
 export async function POST(req: NextRequest) {
-  const { problemId } = await req.json();
+  let problemId: number | undefined;
+  try {
+    ({ problemId } = await req.json());
+  } catch {
+    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+  }
+  if (!problemId) return NextResponse.json({ error: "problemId required" }, { status: 400 });
   const row = db()
     .prepare("SELECT * FROM problems WHERE id = ?")
     .get(problemId) as any;
