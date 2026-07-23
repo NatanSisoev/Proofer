@@ -158,7 +158,31 @@ their own error states; `ExamPacingSettings` gates state on `res.ok`).
   rendered 40 attempts; now 8, with an "All N attempts" pill in the header
   linking to `/history` (the existing filterable, paginated log).
 
-### 2. Learning Pathways M4 — adaptive remediation detours
+### 2. Learning Pathways M4 — adaptive remediation detours — ✅ done (shipped as a diagnostic callout)
+
+Shipped, but two structural mismatches with the original spec forced a design
+correction (both verified against real data before landing):
+
+1. **"blamed_prerequisite is unmastered" never fires.** The current unit is the
+   first *gated* unit, so its direct prerequisites — the only ones the grader
+   blames — are already above threshold. The useful case is the inverse: a
+   blamed-but-*mastered* prereq is a **blind spot** the model thinks you've got.
+   `selectDetourPrereqs` therefore keeps blamed prereqs regardless of mastery and
+   labels the high-mastery ones "blind spot".
+2. **The blame data isn't on the current unit.** It's on the concepts the student
+   actually practiced and missed — overwhelmingly the *target*, not the deepest
+   still-locked foundation the lane makes "current". So the detour reads the
+   **target's** blame history and surfaces it as a lane-level callout at the top
+   ("Your misses on X keep tracing back to: …"), with a "Shore up" link per
+   foundation. This keeps the spine stable (the design's own risk mitigation) —
+   it's a marked branch, not a re-shuffle.
+
+`selectDetourPrereqs` is a pure, unit-tested helper (5 cases: gap kept, blind spot
+kept, ghost dropped, self dropped, mixed list). Verified live: `/path/Asymptotic
+Behavior of Linear Recurrences` renders the callout with its two real blamed
+foundations (Spectral Radius, General Solution Theorem). Original design intent:
+
+
 
 `LEARNING_PATHWAYS.md`'s M4 milestone is unbuilt: today a failed quiz-dot in
 `/path/[target]` just sits there. `blamed_prerequisite` is already captured on

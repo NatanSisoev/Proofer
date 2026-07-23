@@ -1,6 +1,45 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { unitSteps, quizKindsFor } from "../lib/pathway.ts";
+import { unitSteps, quizKindsFor, selectDetourPrereqs } from "../lib/pathway.ts";
+
+const blamed = (over: Partial<{ prereq: string; blame_count: number; exists_: number; mastery_p: number }>) => ({
+  prereq: "P", blame_count: 2, exists_: 1, mastery_p: 0.3, ...over,
+});
+
+test("selectDetourPrereqs: keeps a blamed, unmastered, existing prerequisite (a gap)", () => {
+  const out = selectDetourPrereqs([blamed({ prereq: "Limits", mastery_p: 0.2, blame_count: 3 })], "Continuity");
+  assert.deepEqual(out, [{ id: "Limits", blameCount: 3, masteryP: 0.2 }]);
+});
+
+test("selectDetourPrereqs: KEEPS a blamed but mastered prerequisite (a blind spot)", () => {
+  // The whole point: the current unit's direct prereqs are already mastered, so
+  // a strict unmastered filter would leave this empty. A high-mastery, repeatedly
+  // blamed prereq is a blind spot worth surfacing — carry its mastery through.
+  assert.deepEqual(selectDetourPrereqs([blamed({ prereq: "Sets", mastery_p: 0.95 })], "Continuity"), [
+    { id: "Sets", blameCount: 2, masteryP: 0.95 },
+  ]);
+});
+
+test("selectDetourPrereqs: drops a ghost prerequisite (no note to practice from)", () => {
+  assert.deepEqual(selectDetourPrereqs([blamed({ exists_: 0 })], "Continuity"), []);
+});
+
+test("selectDetourPrereqs: never routes a unit to itself", () => {
+  assert.deepEqual(selectDetourPrereqs([blamed({ prereq: "Continuity" })], "Continuity"), []);
+});
+
+test("selectDetourPrereqs: keeps every real, non-self blamed prereq from a mixed list", () => {
+  const out = selectDetourPrereqs(
+    [
+      blamed({ prereq: "Limits", mastery_p: 0.1 }),      // gap → keep
+      blamed({ prereq: "Sets", mastery_p: 0.95 }),        // blind spot → keep
+      blamed({ prereq: "Ghost", exists_: 0 }),            // ghost → drop
+      blamed({ prereq: "Continuity" }),                   // self → drop
+    ],
+    "Continuity"
+  );
+  assert.deepEqual(out.map((d) => d.id), ["Limits", "Sets"]);
+});
 
 test("quizKindsFor: theorem-like types get a prove dot, others get compute", () => {
   assert.deepEqual(quizKindsFor("Theorem"), ["explain", "prove"]);

@@ -3,9 +3,9 @@
 import { useState } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import type { Pathway, PathwayUnit, PathwayStep } from "@/lib/pathway";
+import type { Pathway, PathwayUnit, PathwayStep, DetourPrereq } from "@/lib/pathway";
 import MathText from "./MathText";
-import { ArrowRight, Check, HelpCircle, Lock, Sparkles } from "./Icons";
+import { ArrowRight, Check, HelpCircle, Lock, Sparkles, AlertCircle } from "./Icons";
 
 const Markdown = dynamic(() => import("./Markdown"));
 
@@ -13,7 +13,7 @@ type ReadStep = Extract<PathwayStep, { kind: "read" }>;
 type QuizStep = Extract<PathwayStep, { kind: "quiz" }>;
 
 export default function PathwayLane({ pathway }: { pathway: Pathway }) {
-  const { units, currentIndex, targetTitle } = pathway;
+  const { units, currentIndex, targetTitle, detour } = pathway;
 
   if (currentIndex === -1) {
     const ghosts = units.filter((u) => u.ghost);
@@ -40,15 +40,51 @@ export default function PathwayLane({ pathway }: { pathway: Pathway }) {
   }
 
   return (
-    <div className="pathway-lane" style={{ marginTop: 20 }}>
-      {units.map((unit, i) => (
-        <PathwayUnitRow
-          key={unit.id}
-          unit={unit}
-          isTarget={i === units.length - 1}
-          state={i < currentIndex ? "done" : i === currentIndex ? "current" : "locked"}
-        />
+    <>
+      <DetourCallout detour={detour} targetTitle={targetTitle} />
+      <div className="pathway-lane" style={{ marginTop: detour.length > 0 ? 12 : 20 }}>
+        {units.map((unit, i) => (
+          <PathwayUnitRow
+            key={unit.id}
+            unit={unit}
+            isTarget={i === units.length - 1}
+            state={i < currentIndex ? "done" : i === currentIndex ? "current" : "locked"}
+          />
+        ))}
+      </div>
+    </>
+  );
+}
+
+/** M4 remediation detour — surfaced at the top of the lane: the prerequisites the
+ *  target's failures keep tracing to, so the walk down has a diagnosed focus. */
+function DetourCallout({ detour, targetTitle }: { detour: DetourPrereq[]; targetTitle: string }) {
+  if (detour.length === 0) return null;
+  return (
+    <div className="pathway-detour" style={{ marginTop: 20 }}>
+      <p className="pathway-detour-head icon-label">
+        <AlertCircle size={13} /> Your misses on <MathText>{targetTitle}</MathText> keep tracing back to:
+      </p>
+      {detour.map((d) => (
+        <div key={d.id} className="pathway-detour-item">
+          {d.type && <span className={`type-badge t-${d.type}`}>{d.type}</span>}
+          <Link href={`/node/${encodeURIComponent(d.id)}`} className="text-link">
+            <MathText>{d.title}</MathText>
+          </Link>
+          {d.masteryP >= 0.8 ? (
+            <span className="pill pill-red pill-xs" title="The model rates this mastered, but your misses keep tracing to it">
+              blind spot
+            </span>
+          ) : null}
+          <span className="muted small">{Math.round(d.masteryP * 100)}% · blamed {d.blameCount}×</span>
+          <Link href={`/learn?node=${encodeURIComponent(d.id)}`} className="pill pill-accent icon-label" style={{ marginLeft: "auto" }}>
+            Shore up <ArrowRight size={10} />
+          </Link>
+        </div>
       ))}
+      <p className="muted small" style={{ margin: "6px 0 0" }}>
+        Shoring these foundations up first should make the rest of the path come easier.
+      </p>
     </div>
   );
 }

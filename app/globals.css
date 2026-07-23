@@ -989,6 +989,14 @@ details[open].practice-history > .attempt-list { animation: accordion-fade 0.25s
 .pathway-unit-title:hover { text-decoration: underline; }
 .pathway-target-star { color: var(--accent); margin-left: auto; flex-shrink: 0; }
 .pathway-unit-current { margin: 4px 0; }
+/* M4 remediation detour — a marked branch, not a spine re-shuffle */
+.pathway-detour {
+  margin-top: 12px; padding: 12px 14px;
+  background: var(--amber-soft); border: 1px solid var(--amber);
+  border-radius: var(--radius-md);
+}
+.pathway-detour-head { font-size: 13px; font-weight: 700; color: var(--amber); margin: 0 0 8px; }
+.pathway-detour-item { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 4px 0; }
 .pathway-read-dot { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
 .pathway-read-actions { display: flex; gap: 8px; margin-top: 14px; }
 .pathway-quiz-section { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }

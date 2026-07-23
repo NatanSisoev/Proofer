@@ -6,7 +6,7 @@
 // derived live from current mastery on every call, so it self-updates as
 // the student practices elsewhere.
 import { MASTERY_THRESHOLD } from "./db";
-import { getNode, learningPath, type BrowseNode } from "./queries";
+import { getNode, learningPath, nodeBlamedPrereqs, type BrowseNode } from "./queries";
 import { getMasteryP } from "./mastery";
 import { splitSections } from "./sections";
 import type { ProblemKind } from "./llm";
@@ -29,6 +29,13 @@ export type PathwayUnit = {
   steps: PathwayStep[];
 };
 
+// A prerequisite the grader keeps blaming on the unit you're currently stuck on
+// (M4 "adaptive remediation detour"). Surfaced as a marked detour on the current
+// unit rather than a spine re-shuffle — the design's own risk note is "remediation
+// as marked detours, not a re-shuffle" (stable spine keeps the path feeling like
+// a path). Routes you to shore the foundation up, then you return to the unit.
+export type DetourPrereq = { id: string; title: string; type: string | null; masteryP: number; blameCount: number };
+
 export type Pathway = {
   targetId: string;
   targetTitle: string;
@@ -37,7 +44,33 @@ export type Pathway = {
   // on; everything after it is locked, everything before it is done. -1
   // means every unit (including the target) already cleared the gate.
   currentIndex: number;
+  // Blamed, still-unmastered prerequisites of the current unit — the diagnosed
+  // reason recent attempts on it failed. Empty until you've actually missed on it.
+  detour: DetourPrereq[];
 };
+
+/**
+ * Pure selector for the current unit's remediation detour: of the prerequisites
+ * the grader blamed on it, keep the ones that (a) have a note to practice from
+ * and (b) aren't the unit itself. Pure so the rule is unit-testable without a DB.
+ *
+ * Note the deliberate absence of an "unmastered prerequisite" filter, which the
+ * original M4 spec called for. The current unit is the first *gated* unit, so
+ * its direct prerequisites (the only ones the grader ever blames) are already
+ * above the mastery threshold — a strict unmastered filter would leave this
+ * empty for every normally-progressed lane. A blamed-but-mastered prerequisite
+ * is exactly the useful case: a blind spot the model thinks you've got but your
+ * misses keep tracing to. The caller carries `mastery_p` through so the UI can
+ * frame each detour as a gap (low mastery) or a blind spot (high mastery).
+ */
+export function selectDetourPrereqs(
+  blamed: { prereq: string; blame_count: number; exists_: number; mastery_p: number }[],
+  currentUnitId: string
+): { id: string; blameCount: number; masteryP: number }[] {
+  return blamed
+    .filter((b) => b.exists_ === 1 && b.prereq !== currentUnitId)
+    .map((b) => ({ id: b.prereq, blameCount: b.blame_count, masteryP: b.mastery_p }));
+}
 
 // Preferred read-dot ordering: lead with whichever intuition-style section
 // exists, then the formal Statement (skip it if it was already the intro).
@@ -107,5 +140,21 @@ export function pathway(targetId: string): Pathway | null {
   const units = [...prereqUnits, targetUnit];
   const currentIndex = units.findIndex((u) => u.gated);
 
-  return { targetId, targetTitle: target.title, units, currentIndex };
+  // M4 remediation detour. The diagnostic signal (blamed prerequisites) lives on
+  // the concepts the student has actually practiced and missed — overwhelmingly
+  // the target itself, not the deepest still-locked foundation the lane happens
+  // to make "current". So the detour reads the *target's* blame history: the
+  // prerequisites its failures keep tracing to, which are exactly the
+  // foundations to shore up on the way down. Only meaningful while the lane is
+  // still in progress. See selectDetourPrereqs for the mastered-is-a-blind-spot
+  // reasoning.
+  let detour: DetourPrereq[] = [];
+  if (currentIndex >= 0) {
+    detour = selectDetourPrereqs(nodeBlamedPrereqs(target.id, 3), target.id).map((d) => {
+      const n = getNode(d.id);
+      return { id: d.id, title: n?.title ?? d.id, type: n?.type ?? null, masteryP: d.masteryP, blameCount: d.blameCount };
+    });
+  }
+
+  return { targetId, targetTitle: target.title, units, currentIndex, detour };
 }
