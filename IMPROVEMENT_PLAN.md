@@ -198,31 +198,29 @@ Two smaller follow-ups on the same feature:
 **Effort**: Low–Medium. **Impact**: closes the gap between the documented
 design and what actually ships; mostly polish once #2 lands.
 
-### 4. Quick wins — mechanical, low-risk, bundle into one tick
+### 4. Quick wins — mechanical, low-risk, bundle into one tick — ✅ done (`52fe724`)
 
-- **Dedupe `localDateStr()`** — byte-identical function defined separately in
-  `lib/db.ts:23` and `lib/queries.ts:13`. Export the one in `lib/db.ts` and
-  import it in `lib/queries.ts`.
-- **Add `idx_attempts_verdict` / `idx_attempts_kind`** — `attemptHistory()`
-  (`lib/queries.ts:733-735`) filters `/history` by `a.verdict`/`a.kind` on
-  demand with neither column indexed (only `node_id` and `created_at` are).
-  Harmless at ~50 rows today; cheap insurance before it's 1,000+.
-- **JSON-parse guards** on the couple of routes still missing a try/catch
-  around `req.json()` (e.g. `practice/reveal`, `practice/hint`) — defensive,
-  not a currently-observed failure (the app only ever calls itself with
-  `JSON.stringify`'d bodies), but a clean 400 beats a raw 500 if that ever
-  changes.
+- **Dedupe `localDateStr()`** — ✅ was copy-pasted in *three* files (the two
+  listed plus `lib/streak.ts`). Exported the canonical one from `lib/db.ts`
+  (the base module) and imported it in `lib/queries.ts` and `lib/streak.ts`.
+- **Add `idx_attempts_verdict` / `idx_attempts_kind`** — ✅ added to
+  `db/schema.sql`; applied on `db()` init, verified both indexes now exist.
+- **JSON-parse guards** — ✅ `practice/reveal` and `practice/hint` now wrap
+  `req.json()` in try/catch and return a clean 400 (verified with a malformed
+  body); also added the missing `problemId` presence check to `reveal`.
 
 **Effort**: Low. **Impact**: small, safe correctness/maintainability wins with
 no product-visible change.
 
-### 5. README refresh
+### 5. README refresh — ✅ done
 
-`README.md`'s "What's here" section predates most of Cycle 2: multi-turn
-Socratic dialogue, grading-trust labels, local embeddings/semantic search,
-Learning Pathways, exam pacing + multi-source import, and the streak/freeze
-system are all live and unmentioned. Update the feature list and "Next steps"
-section to reflect current reality.
+`README.md`'s "What's here" section predated most of Cycle 2. Rewrote it grouped
+by the three pillars — now covers multi-turn Socratic remediation, trust-labelled
+grading, local-embedding semantic search, Learning Pathways, exam pacing +
+multi-source import, streak/freeze, calibration/blind-spots, misconception
+clustering, and TikZ figures. Refreshed the stack line, the current-graph counts
+(767 · 3,069 · 1,049 · 93), and "Next steps" to the two real blockers (Lean cut,
+Postgres/multi-user infra).
 
 **Effort**: Low. **Impact**: no code risk; matters if this is ever shown to
 anyone (a collaborator, or future-you).
