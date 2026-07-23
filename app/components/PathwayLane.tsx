@@ -138,8 +138,22 @@ function CurrentUnit({ unit, isTarget }: { unit: PathwayUnit; isTarget: boolean 
   const readSteps = unit.steps.filter((s): s is ReadStep => s.kind === "read");
   const quizSteps = unit.steps.filter((s): s is QuizStep => s.kind === "quiz");
   const [readIndex, setReadIndex] = useState(0);
+  // Sections the student flagged "not sure" on — kept in-session so the read-dot
+  // self-assessment isn't inert (the "Got it / Not sure" split used to do the
+  // exact same thing). Surfaced at the quiz step so the flag actually informs
+  // where to focus. (A persisted read-dot → calibration signal, per
+  // LEARNING_PATHWAYS.md §3, is deliberately left for later: pre-seeding the
+  // quiz's confidence from this would corrupt calibration's independence — a
+  // product decision, not just plumbing.)
+  const [unsure, setUnsure] = useState<string[]>([]);
   const allRead = readIndex >= readSteps.length;
   const currentRead = readSteps[readIndex];
+
+  const advance = () => setReadIndex((i) => i + 1);
+  const flagUnsure = () => {
+    if (currentRead) setUnsure((u) => (u.includes(currentRead.section) ? u : [...u, currentRead.section]));
+    advance();
+  };
 
   return (
     <div className="panel pathway-unit-current">
@@ -167,10 +181,10 @@ function CurrentUnit({ unit, isTarget }: { unit: PathwayUnit; isTarget: boolean 
             <Markdown>{currentRead.content}</Markdown>
           </div>
           <div className="pathway-read-actions">
-            <button className="btn-ghost btn-sm" onClick={() => setReadIndex((i) => i + 1)}>
+            <button className="btn-ghost btn-sm" onClick={flagUnsure}>
               Not sure yet
             </button>
-            <button className="btn-primary btn-sm icon-label" onClick={() => setReadIndex((i) => i + 1)}>
+            <button className="btn-primary btn-sm icon-label" onClick={advance}>
               Got it <ArrowRight size={12} />
             </button>
           </div>
@@ -179,6 +193,11 @@ function CurrentUnit({ unit, isTarget }: { unit: PathwayUnit; isTarget: boolean 
 
       {allRead && (
         <div className="pathway-quiz-section">
+          {unsure.length > 0 && (
+            <p className="pathway-unsure-note icon-label small">
+              <HelpCircle size={12} /> You flagged {unsure.join(", ")} as unclear — the practice below targets exactly that.
+            </p>
+          )}
           <p className="muted small" style={{ marginBottom: 10 }}>
             {quizSteps.length > 0
               ? `Next: prove you've got it — ${quizSteps.map((q) => q.problemKind).join(", ")}.`

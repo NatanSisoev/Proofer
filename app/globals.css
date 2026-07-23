@@ -999,6 +999,7 @@ details[open].practice-history > .attempt-list { animation: accordion-fade 0.25s
 .pathway-detour-item { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 4px 0; }
 .pathway-read-dot { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
 .pathway-read-actions { display: flex; gap: 8px; margin-top: 14px; }
+.pathway-unsure-note { color: var(--amber); margin: 0 0 10px; }
 .pathway-quiz-section { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
 
 /* circular mastery indicator */

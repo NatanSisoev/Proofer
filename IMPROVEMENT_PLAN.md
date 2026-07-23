@@ -204,23 +204,29 @@ table.
 **Effort**: Medium. **Impact**: turns the guided path from a checklist into
 the thing the whole product claims to uniquely do.
 
-### 3. Learning Pathways — read-dot calibration signal + M5 remainder
+### 3. Learning Pathways — read-dot signal + M5 remainder — ◐ partly done
 
-Two smaller follow-ups on the same feature:
-- **Read-dot "Got it / Not sure" is currently inert.** `PathwayLane.tsx`'s
-  `CurrentUnit` advances local `readIndex` React state on click but calls no
-  API at all — `LEARNING_PATHWAYS.md` §3 point 4 explicitly designs this as
-  feeding the calibration signal ("a section you marked 'got it' but then
-  fail the quiz on is a textbook blind spot"). Wire it to actually record
-  something so the blind-spot machinery can eventually use it.
-- **M5 remainder**: review-dot interleaving (resurface a due review from an
-  earlier, already-cleared unit while walking the lane) and a "unit complete"
-  celebration beat (reuse the session-summary treatment). The home-page entry
-  point ("Learning goal" panel → "Guided path" CTA) already shipped in phase
-  1 — that part of M5 is done, don't redo it.
+- **Read-dot "Got it / Not sure" was inert** (both buttons ran the identical
+  `setReadIndex(i+1)`). ✅ Fixed: "Not sure" now records the flagged section in
+  session state and the quiz step surfaces it ("You flagged X as unclear — the
+  practice targets exactly that"), so the self-assessment is no longer a no-op.
+- **Persisted read-dot → calibration signal: deliberately deferred, not
+  forgotten.** `LEARNING_PATHWAYS.md` §3 imagines feeding this into the
+  blind-spot machinery, but the obvious wiring — pre-seeding the subsequent
+  quiz's `predicted_correct` from the read-dot rating — would **corrupt
+  calibration's independence** (the Brier score is supposed to measure a fresh
+  pre-answer prediction, not echo a read-dot tap). Recording a separate,
+  read-dot-only signal is write-only until a distinct consumer exists. That's a
+  product/measurement decision, not just plumbing — left for the owner.
+- **M5 remainder — blocked on the lane's interaction model, not on code.**
+  Review-dot interleaving and a "unit complete" celebration both need an
+  *in-lane* completion/quiz event to hang off, but the lane deliberately
+  delegates practice to `/learn` (no in-lane quiz loop). Building them means
+  first deciding whether the lane grows its own embedded quiz — a design call.
+  The home entry point ("Learning goal" → "Guided path") already shipped.
 
-**Effort**: Low–Medium. **Impact**: closes the gap between the documented
-design and what actually ships; mostly polish once #2 lands.
+**Status**: the inert-button gap is closed; the rest is genuinely design-gated,
+documented here so it isn't mistaken for unwritten code.
 
 ### 4. Quick wins — mechanical, low-risk, bundle into one tick — ✅ done (`52fe724`)
 
